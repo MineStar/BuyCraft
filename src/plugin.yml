@@ -1,0 +1,7 @@
+name: BuyCraft
+main: com.bukkit.gemo.BuyCraft.BCCore
+version: 0.8
+commands:
+  buycraft:
+    description: Buycraft-related commands
+    usage: /<command>
