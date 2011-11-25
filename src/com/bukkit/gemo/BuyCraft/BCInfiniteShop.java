@@ -32,9 +32,30 @@ public class BCInfiniteShop extends BCShop implements Serializable {
 
     // /////////////////////////////////
     //
-    // GET
+    // HANDLE LEFTCLICK
     //
     // /////////////////////////////////
+    public void handleLeftClick(Player player, Sign sign, Chest chest) {
+        String[] itemSplit = BCShop.getSplit(BCShop.getSpecialTextOnLine(sign.getLine(1), "{", "}"));
+        Integer[] buyRatios = BCShop.getRatios(sign.getLine(2));
+        Integer[] sellRatios = buyRatios;
+        if (sign.getLine(3).length() > 0)
+            sellRatios = BCShop.getRatios(sign.getLine(3));
+
+        int sellItemId = BCCore.getItemId(itemSplit[0]);
+
+        if (!BCCore.isAllowedItem(itemSplit[0]))
+            return;
+
+        if (buyRatios[0] > 0 && buyRatios[1] > 0)
+            BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + Material.getMaterial(sellItemId) + "' für " + buyRatios[1] + " Goldbarren.");
+        else
+            BCChatUtils.printInfo(player, ChatColor.GOLD, "Dieser Shop verkauft nichts.");
+        if (sellRatios[0] > 0 && sellRatios[1] > 0)
+            BCChatUtils.printInfo(player, ChatColor.GOLD, "VERKAUFEN: " + sellRatios[0] + " '" + Material.getMaterial(sellItemId) + "' für " + sellRatios[1] + " Goldbarren.");
+        else
+            BCChatUtils.printInfo(player, ChatColor.GOLD, "Dieser Shop kauft nichts an.");
+    }
 
     // /////////////////////////////////
     //
@@ -57,7 +78,7 @@ public class BCInfiniteShop extends BCShop implements Serializable {
         int sellItemCountInChest = BCShop.countItemInInventory(chest.getInventory(), sellItemId, sellItemData);
         int nuggetItemCountInChest = BCShop.countItemInInventory(chest.getInventory(), Material.GOLD_NUGGET.getId());
         int goldIngotItemCountInChest = BCShop.countItemInInventory(chest.getInventory(), Material.GOLD_INGOT.getId());
-        int goldBlockItemCountInChest = BCShop.countItemInInventory(chest.getInventory(), Material.GOLD_BLOCK.getId());        
+        int goldBlockItemCountInChest = BCShop.countItemInInventory(chest.getInventory(), Material.GOLD_BLOCK.getId());
         nuggetItemCountInChest = nuggetItemCountInChest + (9 * goldIngotItemCountInChest) + (9 * 9 * goldBlockItemCountInChest);
 
         // ////////////////////////////
@@ -72,9 +93,9 @@ public class BCInfiniteShop extends BCShop implements Serializable {
 
             if ((item.getTypeId() != sellItemId && item.getTypeId() != Material.GOLD_INGOT.getId() && item.getTypeId() != Material.GOLD_NUGGET.getId() && item.getTypeId() != Material.GOLD_BLOCK.getId()) || (item.getTypeId() == sellItemId && item.getDurability() != sellItemData)) {
                 if (buyRatios[0] > 0 && buyRatios[1] > 0)
-                    BCChatUtils.printInfo(player, ChatColor.GOLD, "You can BUY " + buyRatios[0] + " '" + Material.getMaterial(sellItemId) + "' for " + buyRatios[1] + " goldingots.");
+                    BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + Material.getMaterial(sellItemId) + "' für " + buyRatios[1] + " Goldbarren.");
                 if (sellRatios[0] > 0 && sellRatios[1] > 0)
-                    BCChatUtils.printInfo(player, ChatColor.GOLD, "You can SELL " + sellRatios[0] + " '" + Material.getMaterial(sellItemId) + "' for " + sellRatios[1] + " goldingots.");
+                    BCChatUtils.printInfo(player, ChatColor.GOLD, "VERKAUFEN: " + sellRatios[0] + " '" + Material.getMaterial(sellItemId) + "' für " + sellRatios[1] + " Goldbarren.");
 
                 return;
             }
@@ -85,13 +106,13 @@ public class BCInfiniteShop extends BCShop implements Serializable {
         // ////////////////////////////
         if (sellItemCountInChest == 0 && nuggetItemCountInChest == 0) {
             if (buyRatios[0] > 0 && buyRatios[1] > 0)
-                BCChatUtils.printInfo(player, ChatColor.GOLD, "You can BUY " + buyRatios[0] + " '" + Material.getMaterial(sellItemId) + "' for " + buyRatios[1] + " goldingots.");
+                BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN " + buyRatios[0] + " '" + Material.getMaterial(sellItemId) + "' für " + buyRatios[1] + " Goldbarren.");
             if (sellRatios[0] > 0 && sellRatios[1] > 0)
-                BCChatUtils.printInfo(player, ChatColor.GOLD, "You can SELL " + sellRatios[0] + " '" + Material.getMaterial(sellItemId) + "' for " + sellRatios[1] + " goldingots.");
+                BCChatUtils.printInfo(player, ChatColor.GOLD, "VERKAUFEN: " + sellRatios[0] + " '" + Material.getMaterial(sellItemId) + "' für " + sellRatios[1] + " Goldbarren.");
             return;
         }
         if (sellItemCountInChest > 0 && nuggetItemCountInChest > 0) {
-            BCChatUtils.printError(player, "You can only sell OR buy things, not both at the same time.");
+            BCChatUtils.printError(player, "Du kannst nur kaufen ODER verkaufen, nicht beides zugleich.");
             return;
         }
 
@@ -102,7 +123,7 @@ public class BCInfiniteShop extends BCShop implements Serializable {
             if (buyRatios[0] > 0 && buyRatios[1] > 0) {
                 /** CHECK PERMISSION */
                 if (!UtilPermissions.playerCanUseCommand(player, "buycraft.infinite.buy." + Material.getMaterial(sellItemId).name().toLowerCase())) {
-                    BCChatUtils.printError(player, "You are not allowed to buy '" + Material.getMaterial(sellItemId).name() + "'.");
+                    BCChatUtils.printError(player, "Du darfst kein '" + Material.getMaterial(sellItemId).name() + "' kaufen.");
                     return;
                 }
 
@@ -111,18 +132,18 @@ public class BCInfiniteShop extends BCShop implements Serializable {
                 double bBlocks = Math.floor(blockPerNugget * nuggetItemCountInChest);
                 int boughtBlocks = (int) bBlocks;
                 double restBlocks = (double) ((double) (blockPerNugget * nuggetItemCountInChest) - (double) boughtBlocks);
-                
+
                 // AT LEAST ONE BLOCK MUST BE BOUGHT
                 if (boughtBlocks < 1) {
-                    BCChatUtils.printError(player, "You cannot get any blocks for " + nuggetItemCountInChest + " goldnuggets.");
-                    BCChatUtils.printInfo(player, ChatColor.GRAY, "Please insert more nuggets.");
+                    BCChatUtils.printError(player, "Du bekommst keine Blöcke für " + nuggetItemCountInChest + " Goldnuggets.");
+                    BCChatUtils.printInfo(player, ChatColor.GRAY, "Bitte mehr Gold in die Kiste legen.");
                     return;
                 }
 
                 // MORE BLOCKS THAN INVENTORYSIZE?
                 if (boughtBlocks > 27 * 64) {
-                    BCChatUtils.printError(player, "The maximum amount of items you can buy at once is " + (27 * 64));
-                    BCChatUtils.printInfo(player, ChatColor.GRAY, "You tried to buy " + boughtBlocks);
+                    BCChatUtils.printError(player, "Du kannst nur maximal " + (27 * 64) + " Items auf einmal kaufen.");
+                    BCChatUtils.printInfo(player, ChatColor.GRAY, "Du hast versucht " + boughtBlocks + " Items zu kaufen.");
                     return;
                 }
 
@@ -136,86 +157,87 @@ public class BCInfiniteShop extends BCShop implements Serializable {
                 chest.getInventory().addItem(newItem);
 
                 // PRINT SUCCESS
-                BCChatUtils.printInfo(player, ChatColor.GOLD, "You bought " + boughtBlocks + " '" + Material.getMaterial(sellItemId) + "' for " + nuggetItemCountInChest + " goldnuggets.");
+                BCChatUtils.printInfo(player, ChatColor.GOLD, "Du hast " + boughtBlocks + " x '" + Material.getMaterial(sellItemId) + "' für " + nuggetItemCountInChest + " Goldnuggets gekauft.");
                 if (restBlocks > 0f) {
-                    BCChatUtils.printInfo(player, ChatColor.GRAY, "You lost " + decimalFormat.format(restBlocks) + " '" + Material.getMaterial(sellItemId) + "' in this transaction.");
+                    BCChatUtils.printInfo(player, ChatColor.GRAY, "Bei dieser Transaktion hast du " + decimalFormat.format(restBlocks) + " '" + Material.getMaterial(sellItemId) + "' verloren.");
                 }
                 return;
             } else {
-                BCChatUtils.printInfo(player, ChatColor.RED, "This shop does not sell anything.");
+                BCChatUtils.printInfo(player, ChatColor.RED, "Dieser Shop verkauft nichts.");
                 return;
             }
         } else {
             if (sellRatios[0] > 0 && sellRatios[1] > 0) {
                 /** CHECK PERMISSION */
                 if (!UtilPermissions.playerCanUseCommand(player, "buycraft.infinite.sell." + Material.getMaterial(sellItemId).name().toLowerCase())) {
-                    BCChatUtils.printError(player, "You are not allowed to sell '" + Material.getMaterial(sellItemId).name() + "'.");
+                    BCChatUtils.printError(player, "Du darfst kein '" + Material.getMaterial(sellItemId).name() + "' verkaufen.");
                     return;
                 }
 
                 /** SELL ITEMS */
                 float blocksPerNugget = (float) ((float) sellRatios[0] / (float) sellRatios[1] / 9.0f);
-                float bNuggets = (float) ((float)sellItemCountInChest / (float)blocksPerNugget);
+                float bNuggets = (float) ((float) sellItemCountInChest / (float) blocksPerNugget);
                 int boughtNuggets = (int) (Math.floor(bNuggets));
                 int goldIngotCount = (int) Math.floor(boughtNuggets / 9);
-                int goldNuggetCount = boughtNuggets - goldIngotCount*9;                
+                int goldNuggetCount = boughtNuggets - goldIngotCount * 9;
                 int goldBlockCount = (int) Math.floor(goldIngotCount / 9);
-                goldIngotCount = goldIngotCount - goldBlockCount*9;                  
-                
+                goldIngotCount = goldIngotCount - goldBlockCount * 9;
+
                 // GET STACKCOUNTS
-                int stacksizeGoldNugget = (int) Math.ceil((float)goldNuggetCount / 64);
-                int stacksizeGoldIngot = (int) Math.ceil((float)goldIngotCount / 64);
-                int stacksizeGoldBlock = (int) Math.ceil((float)goldBlockCount / 64);
+                int stacksizeGoldNugget = (int) Math.ceil((float) goldNuggetCount / 64);
+                int stacksizeGoldIngot = (int) Math.ceil((float) goldIngotCount / 64);
+                int stacksizeGoldBlock = (int) Math.ceil((float) goldBlockCount / 64);
 
                 // AT LEAST ONE NUGGET/INGOT/BLOCK IS NEEDED
                 if (goldNuggetCount < 1 && goldIngotCount < 1 && goldBlockCount < 1) {
-                    BCChatUtils.printError(player, "You cannot get any gold for " + sellItemCountInChest + " of '" + Material.getMaterial(sellItemId).name().toLowerCase() + "'.");
-                    BCChatUtils.printInfo(player, ChatColor.GRAY, "Please insert more blocks.");
+                    BCChatUtils.printError(player, "Für " + sellItemCountInChest + " x '" + Material.getMaterial(sellItemId).name().toLowerCase() + "' bekommst du keine Goldnuggets.");
+                    BCChatUtils.printInfo(player, ChatColor.GRAY, "Bitte mehr Items in die Kiste legen.");
                     return;
                 }
 
                 // MORE BLOCKS THAN INVENTORYSIZE?
                 if (stacksizeGoldNugget + stacksizeGoldIngot + stacksizeGoldBlock > 27) {
-                    BCChatUtils.printError(player, "You want to sell to many blocks.");
+                    BCChatUtils.printError(player, "Du hast versucht zu viel auf einmal zu verkaufen.");
+                    BCChatUtils.printInfo(player, ChatColor.GRAY, "Bitte entferne ein paar Items.");
                     return;
                 }
 
                 // CLEAR INVENTORY
                 chest.getInventory().clear();
-                
+
                 // ADD GOLD
-                if(goldNuggetCount > 0) {
+                if (goldNuggetCount > 0) {
                     ItemStack newGoldNugget = new ItemStack(Material.GOLD_NUGGET.getId(), goldNuggetCount);
                     chest.getInventory().addItem(newGoldNugget);
                 }
-                if(goldIngotCount > 0) {
+                if (goldIngotCount > 0) {
                     ItemStack newGoldIngot = new ItemStack(Material.GOLD_INGOT.getId(), goldIngotCount);
                     chest.getInventory().addItem(newGoldIngot);
                 }
-                if(goldBlockCount > 0) {
+                if (goldBlockCount > 0) {
                     ItemStack newGoldBlock = new ItemStack(Material.GOLD_BLOCK.getId(), goldBlockCount);
                     chest.getInventory().addItem(newGoldBlock);
                 }
 
                 // PRINT INFO
                 String text = "";
-                if(goldNuggetCount > 0) {
-                    text += goldNuggetCount + " goldnuggets";
+                if (goldNuggetCount > 0) {
+                    text += goldNuggetCount + " Goldnuggets";
                 }
-                if(goldIngotCount > 0) {
-                    if(!text.equalsIgnoreCase(""))
+                if (goldIngotCount > 0) {
+                    if (!text.equalsIgnoreCase(""))
                         text += ", ";
-                    text += goldIngotCount + " goldingots";
+                    text += goldIngotCount + " Goldbarren";
                 }
-                if(goldBlockCount > 0) {
-                    if(!text.equalsIgnoreCase(""))
+                if (goldBlockCount > 0) {
+                    if (!text.equalsIgnoreCase(""))
                         text += ", ";
-                    text += goldBlockCount + " goldblocks";
+                    text += goldBlockCount + " Goldblöcke";
                 }
-                BCChatUtils.printInfo(player, ChatColor.GOLD, "You sold " + sellItemCountInChest + " '" + Material.getMaterial(sellItemId) + "' for " + text + ".");
+                BCChatUtils.printInfo(player, ChatColor.GOLD, "Du hast " + sellItemCountInChest + " x '" + Material.getMaterial(sellItemId) + "' für " + text + " verkauft.");
                 return;
             } else {
-                BCChatUtils.printInfo(player, ChatColor.RED, "This shop does not buy anything.");
+                BCChatUtils.printInfo(player, ChatColor.RED, "Dieser Shop kauft nichts an.");
                 return;
             }
         }
