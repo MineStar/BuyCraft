@@ -1,5 +1,7 @@
 package com.bukkit.gemo.BuyCraft;
 
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -12,7 +14,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map.Entry;
-
+import javax.imageio.ImageIO;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.Command;
@@ -31,10 +33,15 @@ public class BCCore extends JavaPlugin {
     private static HashMap<Integer, String> itemListByID = new HashMap<Integer, String>();
     private static HashMap<String, Integer> itemListByName = new HashMap<String, Integer>();
 
+    private static HashMap<String, BufferedImage> imageList;
+    
+    private static BCCore PluginInstance = null;
+
     // VARIABLEN
     public BCBlockListener blockListener;
     public BCEntityListener entityListener;
     public BCPlayerListener playerListener;
+    
     // /////////////////////////////////
     //
     // MAIN METHODS
@@ -56,10 +63,14 @@ public class BCCore extends JavaPlugin {
     // ON ENABLE
     @Override
     public void onEnable() {
+        PluginInstance = this;
         server = getServer();
         loadAliases();
         loadItems();
         PluginManager pm = getServer().getPluginManager();
+
+        // LOAD TEXTURES
+        loadTextures();
 
         // LISTENER REGISTRIEREN
         blockListener = new BCBlockListener(this);
@@ -75,6 +86,55 @@ public class BCCore extends JavaPlugin {
         // PluginDescriptionFile LESEN
         PluginDescriptionFile pdfFile = this.getDescription();
         System.out.println(pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!");
+    }
+
+    // /////////////////////////////////
+    //
+    // LOAD TEXTURES
+    //
+    // /////////////////////////////////
+    public void loadTextures() {
+        imageList = new HashMap<String, BufferedImage>();
+
+        File dir = new File("plugins/BuyCraft/textures/");
+        if (!dir.exists())
+            return;
+
+        File[] fileList = dir.listFiles();
+        for (File file : fileList) {
+            if (!file.isFile())
+                continue;
+
+            if (!file.getName().endsWith(".png"))
+                continue;
+
+            try {
+                BufferedImage image = ImageIO.read(file);
+                if (image != null) {
+                    imageList.put(file.getCanonicalFile().getName().replace(".png", ""), image);
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    // /////////////////////////////////
+    //
+    // DRAW BLOCK
+    //
+    // /////////////////////////////////
+    public void drawBlock(Graphics2D graphic, int x, int z, int TypeID, byte SubID) {
+        String picture = "" + TypeID;
+        if (TypeID == 17 || TypeID == 35 || TypeID == 43 || TypeID == 44 || TypeID == 98) {
+            picture += "-" + SubID;
+        }
+
+        BufferedImage blockTex = imageList.get(picture);
+        if (blockTex != null) {
+            graphic.drawImage(blockTex, x, z, null);
+        }
+        blockTex = null;
     }
 
     // /////////////////////////////////
@@ -127,6 +187,21 @@ public class BCCore extends JavaPlugin {
                 return -1;
             }
         }
+    }
+    
+    public static boolean isItemAllowed(String itemName) {
+        int ID = getItemId(itemName);
+        return isItemAllowed(ID);        
+    }
+    
+    public static boolean isItemAllowed(int TypeID) {
+        return itemListByID.containsKey(TypeID);
+    }
+    
+    public static String getItemName(int TypeID) {
+        if(!isItemAllowed(TypeID))
+            return "";        
+        return itemListByID.get(TypeID);
     }
 
     // /////////////////////////////////
@@ -241,5 +316,9 @@ public class BCCore extends JavaPlugin {
             aliasList = new HashMap<String, String>();
             BCCore.printInConsole("Error while reading file: plugins/BuyCraft/aliases.bcf");
         }
+    }
+    
+    public static BCCore getPlugin() {
+        return PluginInstance;
     }
 }

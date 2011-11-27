@@ -272,6 +272,12 @@ public class BCBlockListener extends BlockListener {
         if (shopType == -1)
             return;
 
+        // CATCH EMPTY LINES
+        if(event.getLine(2).length() < 1 && event.getLine(3).length() < 1) {
+            event.setLine(2, "1:1");
+            event.setLine(3, "1:1");
+        }
+        
         Player player = event.getPlayer();
 
         // //////////////////////////
@@ -336,9 +342,11 @@ public class BCBlockListener extends BlockListener {
         // //////////////////////////
         String[] itemSplit = BCShop.getSplit(BCShop.getSpecialTextOnLine(event.getLine(1), "{", "}"));
         if (!BCCore.isAllowedItem(itemSplit[0])) {
-            BCChatUtils.printError(player, "Item '" + itemSplit[0] + "' nicht gefunden.");
-            SignUtils.cancelSignCreation(event);
-            return;
+            if (shopType == 0 || (shopType == 1 && event.getLine(1).length() > 0)) {
+                BCChatUtils.printError(player, "Item '" + itemSplit[0] + "' nicht gefunden.");
+                SignUtils.cancelSignCreation(event);
+                return;
+            }
         }
 
         // CHECK BUYRATIOS
@@ -359,9 +367,16 @@ public class BCBlockListener extends BlockListener {
             /** USER SHOP */
             event.setLine(0, "$" + BCCore.getAlias(player.getName()) + "$");
             BCUserShop shop = new BCUserShop(sign.getBlock().getWorld().getName(), sign.getX(), sign.getY(), sign.getZ());
+            if (event.getLine(1).length() < 1) {
+                shop.setShopFinished(false);                
+            }       
+            
             userShopList.put(shop.toString(), shop);
             shop.saveShop();
             BCChatUtils.printSuccess(player, "Usershop erstellt!");
+            if (event.getLine(1).length() < 1) {
+                BCChatUtils.printInfo(player, ChatColor.GRAY, "Bitte mit dem Item auf das Schild klicken um den Shop fertig zu stellen.");             
+            }
         }
     }
 

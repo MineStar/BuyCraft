@@ -8,10 +8,13 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import net.minecraft.server.Packet130UpdateSign;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -22,6 +25,7 @@ public class BCUserShop extends BCShop implements Serializable {
     private boolean isActive = false;
     private ArrayList<BCItemStack> shopInventory = null;
     private long creationTime, lastUsedTime = 0;
+    private boolean shopFinished = true;
 
     // /////////////////////////////////
     //
@@ -46,6 +50,64 @@ public class BCUserShop extends BCShop implements Serializable {
     //
     // /////////////////////////////////
     public void handleLeftClick(Player player, Sign sign, Chest chest) {
+
+        if (!isShopFinished()) {
+            String playerName = BCShop.getSpecialTextOnLine(sign.getLine(0), "$", "$");
+            if (BCCore.isShopOwner(player.getName(), playerName)) {
+                // GET ITEM IN HAND
+                ItemStack item = player.getItemInHand();
+                if (item == null) {
+                    BCChatUtils.printInfo(player, ChatColor.RED, "Bitte ein Item in die Hand nehmen um den Shop fertig zu stellen.");
+                    return;
+                }
+                
+                // IS ITEM ALLOWED?
+                int ItemID = item.getTypeId();
+                short SubData = item.getDurability();                 
+                if (!BCCore.isItemAllowed(ItemID)) {
+                    BCChatUtils.printInfo(player, ChatColor.RED, "Dieses Item ist im Moment nicht erlaubt.");
+                    return;
+                }
+
+                // GET ITEMNAME OR ID
+                String name = BCCore.getItemName(ItemID);
+                if (SubData > 0)
+                    name += ":" + SubData;
+
+                if (name.length() > 13) {
+                    name = ItemID + ":" + SubData;
+                }
+
+                // UPDATE SIGN
+                Sign worldSign = (Sign) (sign.getWorld().getBlockAt(sign.getBlock().getLocation()).getState());
+                if (worldSign == null) {
+                    BCChatUtils.printInfo(player, ChatColor.GREEN, "Fehler beim Update des Schildes. Bitte wende dich an einen Admin.");
+                    return;
+                }
+                worldSign.setLine(1, "{" + name + "}");
+                worldSign.update();
+                
+                // SEND UPDATE => NEED HELP OF ORIGINAL MC-SERVERSOFTWARE
+                CraftPlayer cPlayer = (CraftPlayer)player;
+                Packet130UpdateSign signPacket = null;
+                signPacket = new Packet130UpdateSign(sign.getX(), sign.getY(), sign.getZ(), sign.getLines());
+                cPlayer.getHandle().netServerHandler.sendPacket(signPacket);
+
+                // SAVE SHOP
+                setShopFinished(true);
+                sign = worldSign;
+
+                // PRINT SUCCESS
+                saveShop();
+                BCChatUtils.printInfo(player, ChatColor.GREEN, "Das Item wurde erfolgreich gesetzt.");
+                return;
+            } else {
+                // NOT THE SHOPOWNER
+                BCChatUtils.printInfo(player, ChatColor.RED, "Dieser Shop ist noch nicht fertiggestellt.");
+                return;
+            }
+        }
+
         String[] itemSplit = BCShop.getSplit(BCShop.getSpecialTextOnLine(sign.getLine(1), "{", "}"));
         Integer[] buyRatios = BCShop.getRatios(sign.getLine(2));
         Integer[] sellRatios = buyRatios;
@@ -77,13 +139,17 @@ public class BCUserShop extends BCShop implements Serializable {
         else
             BCChatUtils.printInfo(player, ChatColor.GOLD, "Dieser Shop kauft nichts an.");
     }
-
     // /////////////////////////////////
     //
     // HANDLE RIGHTCLICK
     //
     // /////////////////////////////////
     public void handleRightClick(Player player, Sign sign, Chest chest) {
+        if (!isShopFinished()) {
+            BCChatUtils.printInfo(player, ChatColor.RED, "Dieser Shop ist noch nicht fertiggestellt.");
+            return;
+        }
+
         String playerName = BCShop.getSpecialTextOnLine(sign.getLine(0), "$", "$");
         if (BCCore.isShopOwner(player.getName(), playerName)) {
             /** IF PLAYER IS THE SHOPOWNER */
@@ -180,6 +246,8 @@ public class BCUserShop extends BCShop implements Serializable {
                         float blockPerNugget = (float) ((float) buyRatios[0] / (float) buyRatios[1] / 9.0f);
                         double bBlocks = Math.floor(blockPerNugget * nuggetItemCountInChest);
                         int boughtBlocks = (int) bBlocks;
+                        double ratio = ((double) buyRatios[0] / (double) buyRatios[1]);
+                        int restGoldNuggets = (int) (nuggetItemCountInChest - (boughtBlocks / ratio * 9));
 
                         // AT LEAST ONE BLOCK MUST BE BOUGHT
                         if (boughtBlocks < 1) {
@@ -204,7 +272,7 @@ public class BCUserShop extends BCShop implements Serializable {
 
                         // GET NEW SHOPINVENTORY
                         int blockCount = countItemInShopInventory(sellItemId, sellItemData);
-                        int goldNuggetCount = nuggetItemCountInChest + countItemInShopInventory(Material.GOLD_NUGGET.getId(), (byte) 0);
+                        int goldNuggetCount = nuggetItemCountInChest - restGoldNuggets + countItemInShopInventory(Material.GOLD_NUGGET.getId(), (byte) 0);
                         int goldIngotCount = countItemInShopInventory(Material.GOLD_INGOT.getId(), (byte) 0);
                         int goldBlockCount = countItemInShopInventory(Material.GOLD_BLOCK.getId(), (byte) 0);
                         goldNuggetCount = goldNuggetCount + goldIngotCount * 9 + goldBlockCount * 9 * 9;
@@ -248,10 +316,55 @@ public class BCUserShop extends BCShop implements Serializable {
                             newItem.setDurability(sellItemData);
                         chest.getInventory().addItem(newItem);
 
+                        // ADD RESTGOLD
+                        int restSave = restGoldNuggets;
+                        if (restGoldNuggets > 0) {
+                            int restIngotCount = (int) Math.floor(restGoldNuggets / 9);
+                            restGoldNuggets = restGoldNuggets - restIngotCount * 9;
+                            int restBlockCount = (int) Math.floor(restIngotCount / 9);
+                            restIngotCount = restIngotCount - restBlockCount * 9;
+
+                            if (restGoldNuggets > 0) {
+                                ItemStack restNuggets = new ItemStack(Material.GOLD_NUGGET.getId(), restGoldNuggets);
+                                chest.getInventory().addItem(restNuggets);
+                            }
+                            if (restIngotCount > 0) {
+                                ItemStack restIngots = new ItemStack(Material.GOLD_INGOT.getId(), restIngotCount);
+                                chest.getInventory().addItem(restIngots);
+                            }
+                            if (restBlockCount > 0) {
+                                ItemStack restBlocks = new ItemStack(Material.GOLD_BLOCK.getId(), restBlockCount);
+                                chest.getInventory().addItem(restBlocks);
+                            }
+                        }
+
                         // SAVE SHOP
                         setLastUsedTime(System.currentTimeMillis());
                         saveShop();
-                        BCChatUtils.printInfo(player, ChatColor.GOLD, "Du hast " + boughtBlocks + " x '" + Material.getMaterial(sellItemId) + "' für " + nuggetItemCountInChest + " Goldnuggets gekauft.");
+
+                        int usedNuggets = nuggetItemCountInChest - restSave;
+                        int usedIngots = (int) Math.floor(usedNuggets / 9);
+                        usedNuggets = usedNuggets - (usedIngots * 9);
+                        int usedBlocks = (int) Math.floor(usedIngots / 9);
+                        usedIngots = usedIngots - usedBlocks * 9;
+
+                        // PRINT INFO
+                        String text = "";
+                        if (usedNuggets > 0) {
+                            text += usedNuggets + " Goldnuggets";
+                        }
+                        if (usedIngots > 0) {
+                            if (!text.equalsIgnoreCase(""))
+                                text += ", ";
+                            text += usedIngots + " Goldbarren";
+                        }
+                        if (usedBlocks > 0) {
+                            if (!text.equalsIgnoreCase(""))
+                                text += ", ";
+                            text += usedBlocks + " Goldblöcke";
+                        }
+
+                        BCChatUtils.printInfo(player, ChatColor.GOLD, "Du hast " + boughtBlocks + " x '" + Material.getMaterial(sellItemId) + "' für " + text + " gekauft.");
                         return;
                     } else {
                         BCChatUtils.printInfo(player, ChatColor.RED, "Dieser Shop verkauft nichts.");
@@ -513,5 +626,13 @@ public class BCUserShop extends BCShop implements Serializable {
 
     public void setLastUsedTime(long lastUsedTime) {
         this.lastUsedTime = lastUsedTime;
+    }
+
+    public boolean isShopFinished() {
+        return shopFinished;
+    }
+
+    public void setShopFinished(boolean shopFinished) {
+        this.shopFinished = shopFinished;
     }
 }

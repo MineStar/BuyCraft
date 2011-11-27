@@ -33,7 +33,7 @@ public class BCPlayerListener extends PlayerListener {
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.LEFT_CLICK_BLOCK)
             return;
-
+        
         if (event.getClickedBlock().getTypeId() == Material.WALL_SIGN.getId()) {
             Sign sign = (Sign) event.getClickedBlock().getState();
             if (sign == null)
