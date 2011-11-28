@@ -1,6 +1,7 @@
 package com.bukkit.gemo.BuyCraft;
 
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -13,17 +14,23 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
+
 import javax.imageio.ImageIO;
 import org.bukkit.ChatColor;
 import org.bukkit.Server;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.event.Event;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
+
+import com.bukkit.gemo.utils.FlatFile;
 import com.bukkit.gemo.utils.UtilPermissions;
 
 public class BCCore extends JavaPlugin {
@@ -34,14 +41,19 @@ public class BCCore extends JavaPlugin {
     private static HashMap<String, Integer> itemListByName = new HashMap<String, Integer>();
 
     private static HashMap<String, BufferedImage> imageList;
-    
+
+    private static TreeMap<String, MarketArea> marketList;
+
     private static BCCore PluginInstance = null;
+
+    //private final int TEXTURE_SIZE = 32;
+    private final int TEXTURE_BLOCK_SIZE = 24;
 
     // VARIABLEN
     public BCBlockListener blockListener;
     public BCEntityListener entityListener;
     public BCPlayerListener playerListener;
-    
+
     // /////////////////////////////////
     //
     // MAIN METHODS
@@ -65,6 +77,7 @@ public class BCCore extends JavaPlugin {
     public void onEnable() {
         PluginInstance = this;
         server = getServer();
+        loadMarkets();
         loadAliases();
         loadItems();
         PluginManager pm = getServer().getPluginManager();
@@ -124,17 +137,62 @@ public class BCCore extends JavaPlugin {
     // DRAW BLOCK
     //
     // /////////////////////////////////
-    public void drawBlock(Graphics2D graphic, int x, int z, int TypeID, byte SubID) {
+    private void drawBlock(Graphics2D graphic, int x, int z, int TypeID, int SubID) {
         String picture = "" + TypeID;
-        if (TypeID == 17 || TypeID == 35 || TypeID == 43 || TypeID == 44 || TypeID == 98) {
+        if (TypeID == 17 || TypeID == 35 || TypeID == 43 || TypeID == 44 || TypeID == 50 || TypeID == 63 || TypeID == 65 || TypeID == 66 || TypeID == 68 || TypeID == 75 || TypeID == 76 || TypeID == 98) {
             picture += "-" + SubID;
         }
-
+        
         BufferedImage blockTex = imageList.get(picture);
         if (blockTex != null) {
-            graphic.drawImage(blockTex, x, z, null);
+            graphic.drawImage(blockTex, x * TEXTURE_BLOCK_SIZE, z * TEXTURE_BLOCK_SIZE, TEXTURE_BLOCK_SIZE, TEXTURE_BLOCK_SIZE, null);
         }
         blockTex = null;
+    }
+
+    private void exportMarketPicture(MarketArea area) {
+        try {
+            // CREATE IMAGE
+            BufferedImage image = new BufferedImage(area.getAreaBlockWidth() * TEXTURE_BLOCK_SIZE, area.getAreaBlockLength() * TEXTURE_BLOCK_SIZE, BufferedImage.TRANSLUCENT);
+
+            File outputDir = new File("plugins/BuyCraft/markets/");
+            outputDir.mkdir();
+            File output = new File("plugins/BuyCraft/markets/" + area.getAreaName() + ".png");
+            output.createNewFile();
+            
+            Graphics2D graphic = (Graphics2D) image.getGraphics();
+            graphic.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            
+            // GET WORLDS
+            CraftWorld cWorld = (CraftWorld) area.getCorner1().getWorld();
+            net.minecraft.server.World nWorld = cWorld.getHandle();
+
+            // PAINT AREA
+            for (int x = 0; x < area.getAreaBlockWidth(); x++) {
+                for (int z = 0; z < area.getAreaBlockLength(); z++) {
+                    for (int y = 0; y <= area.getAreaBlockHeight(); y++) {
+                        int TypeID = nWorld.getTypeId(x + area.getCorner1().getBlockX(), y + area.getCorner1().getBlockY(), z + area.getCorner1().getBlockZ());
+                        int SubID = nWorld.getData(x + area.getCorner1().getBlockX(), y + area.getCorner1().getBlockY(), z + area.getCorner1().getBlockZ());
+
+                        this.drawBlock(graphic, x, z, TypeID, SubID);
+                    }
+                }
+            }
+
+            // SAVE FILE
+            ImageIO.write(image, "png", output);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // /////////////////////////////////
+    //
+    // SPECIAL ITEMS
+    //
+    // /////////////////////////////////
+    public int getSubID(net.minecraft.server.World world, int x, int y, int z, int TypeID, int SubID) {
+        return SubID;
     }
 
     // /////////////////////////////////
@@ -188,19 +246,19 @@ public class BCCore extends JavaPlugin {
             }
         }
     }
-    
+
     public static boolean isItemAllowed(String itemName) {
         int ID = getItemId(itemName);
-        return isItemAllowed(ID);        
+        return isItemAllowed(ID);
     }
-    
+
     public static boolean isItemAllowed(int TypeID) {
         return itemListByID.containsKey(TypeID);
     }
-    
+
     public static String getItemName(int TypeID) {
-        if(!isItemAllowed(TypeID))
-            return "";        
+        if (!isItemAllowed(TypeID))
+            return "";
         return itemListByID.get(TypeID);
     }
 
@@ -223,6 +281,24 @@ public class BCCore extends JavaPlugin {
                             }
                             return true;
                         }
+                        if (args[0].equalsIgnoreCase("activateshops")) {
+                            for (BCUserShop shop : BCBlockListener.userShopList.values()) {
+                                shop.setShopFinished(true);
+                                shop.saveShop();
+                            }
+                            BCChatUtils.printLine(player, ChatColor.AQUA, BCBlockListener.userShopList.size() + " Shops updated!");
+                            return true;
+                        }
+                        if (args[0].equalsIgnoreCase("marketmode")) {
+                            if (playerListener.getSelections().containsKey(player.getName())) {
+                                playerListener.getSelections().remove(player.getName());
+                                BCChatUtils.printLine(player, ChatColor.AQUA, "You are no longer in selectionmode!");
+                            } else {
+                                playerListener.getSelections().put(player.getName(), new MarketSelection());
+                                BCChatUtils.printLine(player, ChatColor.AQUA, "You are now in selectionmode!");
+                            }
+                            return true;
+                        }
                     }
                     if (args.length == 2) {
                         if (args[0].equalsIgnoreCase("delalias")) {
@@ -233,6 +309,39 @@ public class BCCore extends JavaPlugin {
                             aliasList.remove(args[1].toLowerCase());
                             BCChatUtils.printSuccess(player, "Alias für Spieler '" + args[1] + "' entfernt!");
                             saveAliases();
+                            return true;
+                        }
+                        if (args[0].equalsIgnoreCase("savemarket")) {
+                            if (playerListener.getSelections().containsKey(player.getName())) {
+                                MarketSelection selection = playerListener.getSelections().get(player.getName());
+                                if (selection.isValid()) {
+                                    if (marketList.containsKey(args[1])) {
+                                        BCChatUtils.printError(player, "A market with that name already exists!");
+                                    } else {
+                                        MarketArea area = new MarketArea(args[1], selection.getCorner1(), selection.getCorner2());
+                                        if (area.isValidArea()) {
+                                            marketList.put(args[1], area);
+                                            this.saveMarkets();
+                                            BCChatUtils.printSuccess(player, "Market saved as '" + args[1] + "'!");
+                                        } else
+                                            BCChatUtils.printError(player, "Internal error while saving market!");
+                                    }
+                                } else {
+                                    BCChatUtils.printError(player, "Please select 2 Points!");
+
+                                }
+                            } else {
+                                BCChatUtils.printError(player, "You are not in selectionmode!");
+                            }
+                            return true;
+                        }
+                        if (args[0].equalsIgnoreCase("exportmarket")) {
+                            if (!marketList.containsKey(args[1])) {
+                                BCChatUtils.printError(player, "Market '" + args[1] + "' not found!");
+                            } else {
+                                MarketArea area = marketList.get(args[1]);
+                                exportMarketPicture(area);
+                            }
                             return true;
                         }
                     } else if (args.length == 3) {
@@ -317,7 +426,53 @@ public class BCCore extends JavaPlugin {
             BCCore.printInConsole("Error while reading file: plugins/BuyCraft/aliases.bcf");
         }
     }
-    
+
+    private void loadMarkets() {
+        marketList = new TreeMap<String, MarketArea>();
+        String FileName = "BuyCraft/Markets.db";
+        try {
+            FlatFile config = new FlatFile(FileName, false);
+            if (config.readFile()) {
+                String areaString = config.getString("markets", "");
+                String[] areaSplit = areaString.split(",");
+                for (String thisArea : areaSplit) {
+                    MarketArea area = new MarketArea(thisArea);
+                    if (area.isValidArea()) {
+                        marketList.put(area.getAreaName(), area);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        printInConsole(marketList.size() + " Markets loaded!");
+    }
+
+    private boolean saveMarkets() {
+        String FileName = "BuyCraft/Markets.db";
+        File folder = new File("plugins/BuyCraft");
+        folder.mkdirs();
+
+        // SAVE MARKETS
+        if (new File(FileName).exists())
+            new File(FileName).delete();
+
+        try {
+            FlatFile config = new FlatFile(FileName, false);
+            String areaString = "";
+            for (Map.Entry<String, MarketArea> entry : marketList.entrySet()) {
+                areaString += entry.getValue().exportArea() + ",";
+            }
+            config.setString("markets", areaString);
+            config.writeFile();
+            return true;
+        } catch (IOException e) {
+            printInConsole("Error while saving file: plugins/" + FileName);
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public static BCCore getPlugin() {
         return PluginInstance;
     }

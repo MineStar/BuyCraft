@@ -56,6 +56,11 @@ public class BCShop implements Serializable {
 
     public static boolean checkCreation(String[] lines) {
         try {
+            String[] split = lines[1].split(":");
+            if(split.length > 1) {
+                Integer.valueOf(split[1]);
+            }
+            
             String[] myLines = lines.clone();
             if (myLines[2].length() < 1)
                 myLines[2] = "0:0";

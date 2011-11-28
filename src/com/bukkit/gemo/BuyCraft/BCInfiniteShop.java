@@ -42,8 +42,16 @@ public class BCInfiniteShop extends BCShop implements Serializable {
         if (sign.getLine(3).length() > 0)
             sellRatios = BCShop.getRatios(sign.getLine(3));
 
-        int sellItemId = BCCore.getItemId(itemSplit[0]);
+        int sellItemId = 0;
 
+        try {
+            sellItemId = BCCore.getItemId(itemSplit[0]);
+        } catch (Exception e) {
+            System.out.println("LOCATION: " + sign.getBlock().getLocation().toString());
+            e.printStackTrace();
+            return;
+        }
+        
         if (!BCCore.isAllowedItem(itemSplit[0]))
             return;
 
@@ -69,9 +77,18 @@ public class BCInfiniteShop extends BCShop implements Serializable {
         if (sign.getLine(3).length() > 0)
             sellRatios = BCShop.getRatios(sign.getLine(3));
 
-        int sellItemId = BCCore.getItemId(itemSplit[0]);
-        byte sellItemData = Byte.valueOf(itemSplit[1]);
+        int sellItemId = 0;
+        byte sellItemData = 0;
 
+        try {
+            sellItemId = BCCore.getItemId(itemSplit[0]);
+            sellItemData = Byte.valueOf(itemSplit[1]);
+        } catch (Exception e) {
+            System.out.println("LOCATION: " + sign.getBlock().getLocation().toString());
+            e.printStackTrace();
+            return;
+        }
+        
         if (!BCCore.isAllowedItem(itemSplit[0]))
             return;
 

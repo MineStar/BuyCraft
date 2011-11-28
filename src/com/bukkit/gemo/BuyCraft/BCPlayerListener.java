@@ -1,5 +1,7 @@
 package com.bukkit.gemo.BuyCraft;
 
+import java.util.TreeMap;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -13,7 +15,8 @@ import org.bukkit.event.player.PlayerListener;
 import com.bukkit.gemo.utils.UtilPermissions;
 
 public class BCPlayerListener extends PlayerListener {
-    BCCore plugin = null;
+
+    private TreeMap<String, MarketSelection> selections;
 
     // /////////////////////////////
     //
@@ -21,7 +24,7 @@ public class BCPlayerListener extends PlayerListener {
     //
     // /////////////////////////////
     public BCPlayerListener(BCCore plugin) {
-        this.plugin = plugin;
+        selections = new TreeMap<String, MarketSelection>();
     }
 
     // /////////////////////////////
@@ -32,8 +35,32 @@ public class BCPlayerListener extends PlayerListener {
     @Override
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.LEFT_CLICK_BLOCK)
-            return;
-        
+            return;        
+       
+        ////////////////////////////////
+        // HANDLE SELECTION
+        ////////////////////////////////
+        if (selections.containsKey(event.getPlayer().getName())) {
+            event.getPlayer().sendMessage("SubID: " + event.getClickedBlock().getData());
+
+            MarketSelection thisSelection = selections.get(event.getPlayer().getName());
+            if (thisSelection.getCorner1() == null) {
+                thisSelection.setCorner1(event.getClickedBlock().getLocation());
+                BCChatUtils.printInfo(event.getPlayer(), ChatColor.GRAY, "Position 1 set.");
+            } else if (thisSelection.getCorner1() != null && thisSelection.getCorner2() == null) {
+                thisSelection.setCorner2(event.getClickedBlock().getLocation());
+                BCChatUtils.printInfo(event.getPlayer(), ChatColor.GRAY, "Position 2 set.");
+            } else if (thisSelection.getCorner1() != null && thisSelection.getCorner2() != null) {
+                thisSelection.setCorner1(event.getClickedBlock().getLocation());
+                thisSelection.setCorner2(null);
+                BCChatUtils.printInfo(event.getPlayer(), ChatColor.GRAY, "Position 1 set and Position 2 cleared.");
+            }
+            selections.put(event.getPlayer().getName(), thisSelection);
+            event.setUseInteractedBlock(Event.Result.DENY);
+            event.setUseItemInHand(Event.Result.DENY);
+            event.setCancelled(true);
+        }
+
         if (event.getClickedBlock().getTypeId() == Material.WALL_SIGN.getId()) {
             Sign sign = (Sign) event.getClickedBlock().getState();
             if (sign == null)
@@ -147,5 +174,9 @@ public class BCPlayerListener extends PlayerListener {
                 // IST INFINITE SHOP?
             }
         }
+    }
+
+    public TreeMap<String, MarketSelection> getSelections() {
+        return selections;
     }
 }

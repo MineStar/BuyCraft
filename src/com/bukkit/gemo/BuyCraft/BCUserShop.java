@@ -60,10 +60,10 @@ public class BCUserShop extends BCShop implements Serializable {
                     BCChatUtils.printInfo(player, ChatColor.RED, "Bitte ein Item in die Hand nehmen um den Shop fertig zu stellen.");
                     return;
                 }
-                
+
                 // IS ITEM ALLOWED?
                 int ItemID = item.getTypeId();
-                short SubData = item.getDurability();                 
+                short SubData = item.getDurability();
                 if (!BCCore.isItemAllowed(ItemID)) {
                     BCChatUtils.printInfo(player, ChatColor.RED, "Dieses Item ist im Moment nicht erlaubt.");
                     return;
@@ -86,9 +86,9 @@ public class BCUserShop extends BCShop implements Serializable {
                 }
                 worldSign.setLine(1, "{" + name + "}");
                 worldSign.update();
-                
+
                 // SEND UPDATE => NEED HELP OF ORIGINAL MC-SERVERSOFTWARE
-                CraftPlayer cPlayer = (CraftPlayer)player;
+                CraftPlayer cPlayer = (CraftPlayer) player;
                 Packet130UpdateSign signPacket = null;
                 signPacket = new Packet130UpdateSign(sign.getX(), sign.getY(), sign.getZ(), sign.getLines());
                 cPlayer.getHandle().netServerHandler.sendPacket(signPacket);
@@ -114,8 +114,17 @@ public class BCUserShop extends BCShop implements Serializable {
         if (sign.getLine(3).length() > 0)
             sellRatios = BCShop.getRatios(sign.getLine(3));
 
-        int sellItemId = BCCore.getItemId(itemSplit[0]);
-        byte sellItemData = Byte.valueOf(itemSplit[1]);
+        int sellItemId = 0;
+        byte sellItemData = 0;
+
+        try {
+            sellItemId = BCCore.getItemId(itemSplit[0]);
+            sellItemData = Byte.valueOf(itemSplit[1]);
+        } catch (Exception e) {
+            System.out.println("LOCATION: " + sign.getBlock().getLocation().toString());
+            e.printStackTrace();
+            return;
+        }
 
         if (!BCCore.isAllowedItem(itemSplit[0]))
             return;
@@ -185,8 +194,17 @@ public class BCUserShop extends BCShop implements Serializable {
                 if (sign.getLine(3).length() > 0)
                     sellRatios = BCShop.getRatios(sign.getLine(3));
 
-                int sellItemId = BCCore.getItemId(itemSplit[0]);
-                byte sellItemData = Byte.valueOf(itemSplit[1]);
+                int sellItemId = 0;
+                byte sellItemData = 0;
+
+                try {
+                    sellItemId = BCCore.getItemId(itemSplit[0]);
+                    sellItemData = Byte.valueOf(itemSplit[1]);
+                } catch (Exception e) {
+                    System.out.println("LOCATION: " + sign.getBlock().getLocation().toString());
+                    e.printStackTrace();
+                    return;
+                }
 
                 if (!BCCore.isAllowedItem(itemSplit[0]))
                     return;
