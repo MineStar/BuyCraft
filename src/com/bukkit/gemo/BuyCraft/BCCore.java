@@ -46,13 +46,16 @@ public class BCCore extends JavaPlugin {
 
     private static BCCore PluginInstance = null;
 
-    //private final int TEXTURE_SIZE = 32;
+    // private final int TEXTURE_SIZE = 32;
     private final int TEXTURE_BLOCK_SIZE = 24;
 
     // VARIABLEN
     public BCBlockListener blockListener;
     public BCEntityListener entityListener;
     public BCPlayerListener playerListener;
+
+    // Happy Hour Item : If -1 No Happy Hour :(
+    public static int happyHourItem = -1;
 
     // /////////////////////////////////
     //
@@ -89,16 +92,23 @@ public class BCCore extends JavaPlugin {
         blockListener = new BCBlockListener(this);
         entityListener = new BCEntityListener(this);
         playerListener = new BCPlayerListener(this);
-        pm.registerEvent(Event.Type.BLOCK_BREAK, this.blockListener, Event.Priority.Monitor, this);
-        pm.registerEvent(Event.Type.BLOCK_PISTON_EXTEND, this.blockListener, Event.Priority.Monitor, this);
-        pm.registerEvent(Event.Type.BLOCK_PISTON_RETRACT, this.blockListener, Event.Priority.Monitor, this);
-        pm.registerEvent(Event.Type.SIGN_CHANGE, this.blockListener, Event.Priority.Normal, this);
-        pm.registerEvent(Event.Type.ENTITY_EXPLODE, this.entityListener, Event.Priority.Normal, this);
-        pm.registerEvent(Event.Type.PLAYER_INTERACT, this.playerListener, Event.Priority.Normal, this);
+        pm.registerEvent(Event.Type.BLOCK_BREAK, this.blockListener,
+                Event.Priority.Monitor, this);
+        pm.registerEvent(Event.Type.BLOCK_PISTON_EXTEND, this.blockListener,
+                Event.Priority.Monitor, this);
+        pm.registerEvent(Event.Type.BLOCK_PISTON_RETRACT, this.blockListener,
+                Event.Priority.Monitor, this);
+        pm.registerEvent(Event.Type.SIGN_CHANGE, this.blockListener,
+                Event.Priority.Normal, this);
+        pm.registerEvent(Event.Type.ENTITY_EXPLODE, this.entityListener,
+                Event.Priority.Normal, this);
+        pm.registerEvent(Event.Type.PLAYER_INTERACT, this.playerListener,
+                Event.Priority.Normal, this);
 
         // PluginDescriptionFile LESEN
         PluginDescriptionFile pdfFile = this.getDescription();
-        System.out.println(pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!");
+        System.out.println(pdfFile.getName() + " version "
+                + pdfFile.getVersion() + " is enabled!");
     }
 
     // /////////////////////////////////
@@ -124,9 +134,12 @@ public class BCCore extends JavaPlugin {
             try {
                 BufferedImage image = ImageIO.read(file);
                 if (image != null) {
-                    imageList.put(file.getCanonicalFile().getName().replace(".png", ""), image);
+                    imageList.put(
+                            file.getCanonicalFile().getName()
+                                    .replace(".png", ""), image);
                 }
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 e.printStackTrace();
             }
         }
@@ -137,15 +150,20 @@ public class BCCore extends JavaPlugin {
     // DRAW BLOCK
     //
     // /////////////////////////////////
-    private void drawBlock(Graphics2D graphic, int x, int z, int TypeID, int SubID) {
+    private void drawBlock(Graphics2D graphic, int x, int z, int TypeID,
+            int SubID) {
         String picture = "" + TypeID;
-        if (TypeID == 17 || TypeID == 35 || TypeID == 43 || TypeID == 44 || TypeID == 50 || TypeID == 63 || TypeID == 65 || TypeID == 66 || TypeID == 68 || TypeID == 75 || TypeID == 76 || TypeID == 98) {
+        if (TypeID == 17 || TypeID == 35 || TypeID == 43 || TypeID == 44
+                || TypeID == 50 || TypeID == 63 || TypeID == 65 || TypeID == 66
+                || TypeID == 68 || TypeID == 75 || TypeID == 76 || TypeID == 98) {
             picture += "-" + SubID;
         }
-        
+
         BufferedImage blockTex = imageList.get(picture);
         if (blockTex != null) {
-            graphic.drawImage(blockTex, x * TEXTURE_BLOCK_SIZE, z * TEXTURE_BLOCK_SIZE, TEXTURE_BLOCK_SIZE, TEXTURE_BLOCK_SIZE, null);
+            graphic.drawImage(blockTex, x * TEXTURE_BLOCK_SIZE, z
+                    * TEXTURE_BLOCK_SIZE, TEXTURE_BLOCK_SIZE,
+                    TEXTURE_BLOCK_SIZE, null);
         }
         blockTex = null;
     }
@@ -153,16 +171,20 @@ public class BCCore extends JavaPlugin {
     private void exportMarketPicture(MarketArea area) {
         try {
             // CREATE IMAGE
-            BufferedImage image = new BufferedImage(area.getAreaBlockWidth() * TEXTURE_BLOCK_SIZE, area.getAreaBlockLength() * TEXTURE_BLOCK_SIZE, BufferedImage.TRANSLUCENT);
+            BufferedImage image = new BufferedImage(area.getAreaBlockWidth()
+                    * TEXTURE_BLOCK_SIZE, area.getAreaBlockLength()
+                    * TEXTURE_BLOCK_SIZE, BufferedImage.TRANSLUCENT);
 
             File outputDir = new File("plugins/BuyCraft/markets/");
             outputDir.mkdir();
-            File output = new File("plugins/BuyCraft/markets/" + area.getAreaName() + ".png");
+            File output = new File("plugins/BuyCraft/markets/"
+                    + area.getAreaName() + ".png");
             output.createNewFile();
-            
+
             Graphics2D graphic = (Graphics2D) image.getGraphics();
-            graphic.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            
+            graphic.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                    RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
             // GET WORLDS
             CraftWorld cWorld = (CraftWorld) area.getCorner1().getWorld();
             net.minecraft.server.World nWorld = cWorld.getHandle();
@@ -171,8 +193,14 @@ public class BCCore extends JavaPlugin {
             for (int x = 0; x < area.getAreaBlockWidth(); x++) {
                 for (int z = 0; z < area.getAreaBlockLength(); z++) {
                     for (int y = 0; y <= area.getAreaBlockHeight(); y++) {
-                        int TypeID = nWorld.getTypeId(x + area.getCorner1().getBlockX(), y + area.getCorner1().getBlockY(), z + area.getCorner1().getBlockZ());
-                        int SubID = nWorld.getData(x + area.getCorner1().getBlockX(), y + area.getCorner1().getBlockY(), z + area.getCorner1().getBlockZ());
+                        int TypeID = nWorld.getTypeId(x
+                                + area.getCorner1().getBlockX(), y
+                                + area.getCorner1().getBlockY(), z
+                                + area.getCorner1().getBlockZ());
+                        int SubID = nWorld.getData(x
+                                + area.getCorner1().getBlockX(), y
+                                + area.getCorner1().getBlockY(), z
+                                + area.getCorner1().getBlockZ());
 
                         this.drawBlock(graphic, x, z, TypeID, SubID);
                     }
@@ -181,7 +209,8 @@ public class BCCore extends JavaPlugin {
 
             // SAVE FILE
             ImageIO.write(image, "png", output);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -191,7 +220,8 @@ public class BCCore extends JavaPlugin {
     // SPECIAL ITEMS
     //
     // /////////////////////////////////
-    public int getSubID(net.minecraft.server.World world, int x, int y, int z, int TypeID, int SubID) {
+    public int getSubID(net.minecraft.server.World world, int x, int y, int z,
+            int TypeID, int SubID) {
         return SubID;
     }
 
@@ -202,20 +232,25 @@ public class BCCore extends JavaPlugin {
     // /////////////////////////////////
     public void loadItems() {
         try {
-            BufferedReader in = new BufferedReader(new FileReader("plugins/BuyCraft/items.txt"));
+            BufferedReader in = new BufferedReader(new FileReader(
+                    "plugins/BuyCraft/items.txt"));
             String zeile = null;
             while ((zeile = in.readLine()) != null) {
                 String[] split = zeile.split(",");
                 if (split.length > 1) {
                     try {
-                        itemListByID.put(Integer.valueOf(split[1]), split[0].toLowerCase());
-                        itemListByName.put(split[0].toLowerCase(), Integer.valueOf(split[1]));
-                    } catch (Exception e) {
+                        itemListByID.put(Integer.valueOf(split[1]),
+                                split[0].toLowerCase());
+                        itemListByName.put(split[0].toLowerCase(),
+                                Integer.valueOf(split[1]));
+                    }
+                    catch (Exception e) {
                         printInConsole("Cannot parse: " + zeile);
                     }
                 }
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
             printInConsole("Fehler beim lesen der Datei: plugins/BuyCraft/items.txt");
         }
@@ -225,7 +260,8 @@ public class BCCore extends JavaPlugin {
         txt = txt.toLowerCase();
         try {
             return itemListByID.containsKey(Integer.valueOf(txt));
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             return itemListByName.containsKey(txt.toLowerCase());
         }
     }
@@ -235,13 +271,16 @@ public class BCCore extends JavaPlugin {
         try {
             if (itemListByID.containsKey(Integer.valueOf(txt))) {
                 return Integer.valueOf(txt);
-            } else {
+            }
+            else {
                 return -1;
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             if (itemListByName.containsKey(txt)) {
                 return itemListByName.get(txt);
-            } else {
+            }
+            else {
                 return -1;
             }
         }
@@ -268,34 +307,53 @@ public class BCCore extends JavaPlugin {
     //
     // /////////////////////////////////
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
+    public boolean onCommand(CommandSender sender, Command command,
+            String commandLabel, String[] args) {
         if (sender instanceof Player) {
             Player player = (Player) sender;
-            if (commandLabel.equalsIgnoreCase("buycraft") && UtilPermissions.playerCanUseCommand(player, "buycraft.*")) {
+            if (commandLabel.equalsIgnoreCase("buycraft")
+                    && UtilPermissions
+                            .playerCanUseCommand(player, "buycraft.*")) {
                 if (args != null) {
                     if (args.length == 1) {
                         if (args[0].equalsIgnoreCase("listalias")) {
-                            BCChatUtils.printLine(player, ChatColor.AQUA, "Derzeitige Aliasnamen:");
-                            for (Entry<String, String> entry : aliasList.entrySet()) {
-                                BCChatUtils.printLine(player, ChatColor.GRAY, entry.getKey() + " - Alias: " + entry.getValue());
+                            BCChatUtils.printLine(player, ChatColor.AQUA,
+                                    "Derzeitige Aliasnamen:");
+                            for (Entry<String, String> entry : aliasList
+                                    .entrySet()) {
+                                BCChatUtils.printLine(
+                                        player,
+                                        ChatColor.GRAY,
+                                        entry.getKey() + " - Alias: "
+                                                + entry.getValue());
                             }
                             return true;
                         }
                         if (args[0].equalsIgnoreCase("activateshops")) {
-                            for (BCUserShop shop : BCBlockListener.userShopList.values()) {
+                            for (BCUserShop shop : BCBlockListener.userShopList
+                                    .values()) {
                                 shop.setShopFinished(true);
                                 shop.saveShop();
                             }
-                            BCChatUtils.printLine(player, ChatColor.AQUA, BCBlockListener.userShopList.size() + " Shops updated!");
+                            BCChatUtils.printLine(player, ChatColor.AQUA,
+                                    BCBlockListener.userShopList.size()
+                                            + " Shops updated!");
                             return true;
                         }
                         if (args[0].equalsIgnoreCase("marketmode")) {
-                            if (playerListener.getSelections().containsKey(player.getName())) {
-                                playerListener.getSelections().remove(player.getName());
-                                BCChatUtils.printLine(player, ChatColor.AQUA, "You are no longer in selectionmode!");
-                            } else {
-                                playerListener.getSelections().put(player.getName(), new MarketSelection());
-                                BCChatUtils.printLine(player, ChatColor.AQUA, "You are now in selectionmode!");
+                            if (playerListener.getSelections().containsKey(
+                                    player.getName())) {
+                                playerListener.getSelections().remove(
+                                        player.getName());
+                                BCChatUtils.printLine(player, ChatColor.AQUA,
+                                        "You are no longer in selectionmode!");
+                            }
+                            else {
+                                playerListener.getSelections()
+                                        .put(player.getName(),
+                                                new MarketSelection());
+                                BCChatUtils.printLine(player, ChatColor.AQUA,
+                                        "You are now in selectionmode!");
                             }
                             return true;
                         }
@@ -303,58 +361,86 @@ public class BCCore extends JavaPlugin {
                     if (args.length == 2) {
                         if (args[0].equalsIgnoreCase("delalias")) {
                             if (!aliasList.containsKey(args[1].toLowerCase())) {
-                                BCChatUtils.printError(player, "Spieler '" + args[1] + "' hat keinen Aliasnamen!");
+                                BCChatUtils.printError(player, "Spieler '"
+                                        + args[1] + "' hat keinen Aliasnamen!");
                                 return true;
                             }
                             aliasList.remove(args[1].toLowerCase());
-                            BCChatUtils.printSuccess(player, "Alias für Spieler '" + args[1] + "' entfernt!");
+                            BCChatUtils.printSuccess(player,
+                                    "Alias für Spieler '" + args[1]
+                                            + "' entfernt!");
                             saveAliases();
                             return true;
                         }
                         if (args[0].equalsIgnoreCase("savemarket")) {
-                            if (playerListener.getSelections().containsKey(player.getName())) {
-                                MarketSelection selection = playerListener.getSelections().get(player.getName());
+                            if (playerListener.getSelections().containsKey(
+                                    player.getName())) {
+                                MarketSelection selection = playerListener
+                                        .getSelections().get(player.getName());
                                 if (selection.isValid()) {
                                     if (marketList.containsKey(args[1])) {
-                                        BCChatUtils.printError(player, "A market with that name already exists!");
-                                    } else {
-                                        MarketArea area = new MarketArea(args[1], selection.getCorner1(), selection.getCorner2());
+                                        BCChatUtils
+                                                .printError(player,
+                                                        "A market with that name already exists!");
+                                    }
+                                    else {
+                                        MarketArea area = new MarketArea(
+                                                args[1],
+                                                selection.getCorner1(),
+                                                selection.getCorner2());
                                         if (area.isValidArea()) {
                                             marketList.put(args[1], area);
                                             this.saveMarkets();
-                                            BCChatUtils.printSuccess(player, "Market saved as '" + args[1] + "'!");
-                                        } else
-                                            BCChatUtils.printError(player, "Internal error while saving market!");
+                                            BCChatUtils.printSuccess(player,
+                                                    "Market saved as '"
+                                                            + args[1] + "'!");
+                                        }
+                                        else
+                                            BCChatUtils
+                                                    .printError(player,
+                                                            "Internal error while saving market!");
                                     }
-                                } else {
-                                    BCChatUtils.printError(player, "Please select 2 Points!");
+                                }
+                                else {
+                                    BCChatUtils.printError(player,
+                                            "Please select 2 Points!");
 
                                 }
-                            } else {
-                                BCChatUtils.printError(player, "You are not in selectionmode!");
+                            }
+                            else {
+                                BCChatUtils.printError(player,
+                                        "You are not in selectionmode!");
                             }
                             return true;
                         }
                         if (args[0].equalsIgnoreCase("exportmarket")) {
                             if (!marketList.containsKey(args[1])) {
-                                BCChatUtils.printError(player, "Market '" + args[1] + "' not found!");
-                            } else {
+                                BCChatUtils.printError(player, "Market '"
+                                        + args[1] + "' not found!");
+                            }
+                            else {
                                 MarketArea area = marketList.get(args[1]);
                                 exportMarketPicture(area);
                             }
                             return true;
                         }
-                    } else if (args.length == 3) {
+                    }
+                    else if (args.length == 3) {
                         if (args[0].equalsIgnoreCase("setalias")) {
                             for (String thisName : aliasList.values()) {
                                 if (thisName.equalsIgnoreCase(args[2])) {
-                                    BCChatUtils.printError(player, "Alias '" + args[2] + "' wird schon benutzt!");
+                                    BCChatUtils
+                                            .printError(player, "Alias '"
+                                                    + args[2]
+                                                    + "' wird schon benutzt!");
                                     return true;
                                 }
                             }
                             aliasList.put(args[1].toLowerCase(), args[2]);
                             saveAliases();
-                            BCChatUtils.printSuccess(player, "Alias '" + args[2] + "' für Spieler '" + args[1] + "' angelegt.");
+                            BCChatUtils.printSuccess(player, "Alias '"
+                                    + args[2] + "' für Spieler '" + args[1]
+                                    + "' angelegt.");
                         }
                     }
                 }
@@ -378,7 +464,8 @@ public class BCCore extends JavaPlugin {
         if (!aliasList.containsKey(playerName.toLowerCase()))
             return false;
 
-        return aliasList.get(playerName.toLowerCase()).equalsIgnoreCase(aliasName);
+        return aliasList.get(playerName.toLowerCase()).equalsIgnoreCase(
+                aliasName);
     }
 
     // GET ALIAS
@@ -399,10 +486,13 @@ public class BCCore extends JavaPlugin {
         }
 
         try {
-            ObjectOutputStream objOut = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream("plugins/BuyCraft/aliases.bcf")));
+            ObjectOutputStream objOut = new ObjectOutputStream(
+                    new BufferedOutputStream(new FileOutputStream(
+                            "plugins/BuyCraft/aliases.bcf")));
             objOut.writeObject(aliasList);
             objOut.close();
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -418,10 +508,13 @@ public class BCCore extends JavaPlugin {
         }
 
         try {
-            ObjectInputStream objIn = new ObjectInputStream(new BufferedInputStream(new FileInputStream("plugins/BuyCraft/aliases.bcf")));
+            ObjectInputStream objIn = new ObjectInputStream(
+                    new BufferedInputStream(new FileInputStream(
+                            "plugins/BuyCraft/aliases.bcf")));
             aliasList = (HashMap<String, String>) objIn.readObject();
             objIn.close();
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             aliasList = new HashMap<String, String>();
             BCCore.printInConsole("Error while reading file: plugins/BuyCraft/aliases.bcf");
         }
@@ -442,7 +535,8 @@ public class BCCore extends JavaPlugin {
                     }
                 }
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
         printInConsole(marketList.size() + " Markets loaded!");
@@ -466,7 +560,8 @@ public class BCCore extends JavaPlugin {
             config.setString("markets", areaString);
             config.writeFile();
             return true;
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             printInConsole("Error while saving file: plugins/" + FileName);
             e.printStackTrace();
             return false;
