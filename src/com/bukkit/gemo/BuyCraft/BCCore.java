@@ -8,11 +8,14 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -188,14 +191,85 @@ public class BCCore extends JavaPlugin {
         }
     }
 
+    private ArrayList<String> replaceText(ArrayList<String> lines, String placeHolder, String newText) {
+        String line = "";
+        for (int i = 0; i < lines.size(); i++) {
+            line = lines.get(i);
+            if (line.contains(placeHolder)) {
+                lines.set(i, line.replace(placeHolder, newText));
+            }
+        }
+        return lines;
+    }
+
     private void exportMarketHtmlPage(MarketArea area) {
-        System.out.println("Marketlist for '" + area.getAreaName() + "' :");
+        BufferedReader reader = null;
+        ArrayList<String> lineList = new ArrayList<String>();
+        try {
+            if (!new File("plugins/BuyCraft/markets/template.html").exists())
+                return;
+
+            reader = new BufferedReader(new FileReader(new File("plugins/BuyCraft/markets/template.html")));
+            String text = null;
+            while ((text = reader.readLine()) != null) {
+                lineList.add(text.replace("\r\n", ""));
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+        }
+
+        StringBuilder areaBuilder = new StringBuilder();
+        StringBuilder detailBuilder = new StringBuilder();
+        HashMap<String, Integer> shopCount = new HashMap<String, Integer>();
         for (BCUserShop shop : BCBlockListener.userShopList.values()) {
-            if (shop.getSign() != null) {
+            if (shop.isActive() && shop.getSign() != null) {
                 if (area.isBlockInArea(shop.getSign().getBlock().getLocation())) {
-                    System.out.println(shop.getShopOwner() + " || " + BCCore.getItemName(shop.getItemID()) + ":" + shop.getSubID());
+                    int relX = shop.getX() - area.getCorner1().getBlockX();
+                    int relZ = shop.getZ() - area.getCorner1().getBlockZ();
+                    int thisID = 1;
+                    if (shopCount.containsKey(shop.getShopOwner()))
+                        thisID = shopCount.get(shop.getShopOwner());
+
+                    areaBuilder.append(shop.getHTML_Area(thisID, relX, relZ, TEXTURE_BLOCK_SIZE));
+                    detailBuilder.append(shop.getHTML_ShopDetails(thisID));
+
+                    thisID++;
+                    shopCount.put(shop.getShopOwner(), thisID);
                 }
             }
+        }
+        lineList = this.replaceText(lineList, "%PICTURE%", area.getAreaName() + ".png");
+        lineList = this.replaceText(lineList, "%AREATEXT%", areaBuilder.toString());
+        lineList = this.replaceText(lineList, "%SHOPDETAILS%", detailBuilder.toString());
+        this.savePage("plugins/BuyCraft/markets/" + area.getAreaName() + ".html", lineList);
+    }
+
+    private void savePage(String fileName, ArrayList<String> lines) {
+        try {
+            File datei = new File(fileName);
+            if (datei.exists()) {
+                datei.delete();
+            }
+            File savedFile = new File(fileName);
+            FileWriter writer = new FileWriter(savedFile, false);
+            for (int i = 0; i < lines.size(); i++) {
+                writer.write(lines.get(i) + System.getProperty("line.separator"));
+            }
+            writer.flush();
+            writer.close();
+        } catch (Exception e) {
+            printInConsole("Error while writing Page: " + fileName);
         }
     }
 

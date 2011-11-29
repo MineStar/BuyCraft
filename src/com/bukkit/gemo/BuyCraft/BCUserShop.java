@@ -47,6 +47,37 @@ public class BCUserShop extends BCShop implements Serializable {
         lastUsedTime = System.currentTimeMillis();
     }
 
+    public String getHTML_Area(int uniqueUserID, int posX, int posZ, int texSize) {
+        StringBuilder builder = new StringBuilder();
+        String uniqueName = this.getShopOwner() + "_" + uniqueUserID;
+        builder.append("<area href=\"#\" onmouseover=\"toggleShops('.");
+        builder.append(uniqueName);
+        builder.append("')\" onmouseout=\"toggleShops('.");
+        builder.append(uniqueName);
+        builder.append("')\" shape=\"poly\" coords=\"");
+        builder.append(posX * texSize + "," + posZ * texSize + " ,");
+        builder.append((posX + 1) * texSize + "," + posZ * texSize + " ,");
+        builder.append((posX + 1) * texSize + "," + (posZ + 1) * texSize + " ,");
+        builder.append(posX * texSize + "," + (posZ + 1) * texSize);
+        builder.append("\" title=\"" + BCCore.getItemName(this.getItemID()) + "\" name=\"" + uniqueName + "\"");
+        builder.append(">");
+        return builder.toString();
+    }
+
+    public String getHTML_ShopDetails(int uniqueUserID) {
+        StringBuilder builder = new StringBuilder();
+        String uniqueName = this.getShopOwner() + "_" + uniqueUserID;
+        builder.append("<div class=\"usershop " + BCCore.getItemName(this.getItemID()) + " " + this.getShopOwner() + " " + uniqueName + "\">");
+        builder.append("<div class=\"inner\">");
+
+        builder.append("<span class=\"material\">" + BCCore.getItemName(this.getItemID()) + "</span> (<span class=\"price\">" + this.getBuyRatio()[0] + ":" + this.getBuyRatio()[1] + "</span>)");
+        builder.append("<div class=\"user\">" + this.getShopOwner() + "</div>");
+        builder.append("<div class=\"available\">verfügbar: " + this.countItemInShopInventory(this.getItemID(), this.getSubID()) + "</div>");
+
+        builder.append("</div>");
+        builder.append("</div>");
+        return builder.toString();
+    }
     // /////////////////////////////////
     //
     // METHODS FOR GETTING SHOP-PROPERTIES
@@ -55,7 +86,9 @@ public class BCUserShop extends BCShop implements Serializable {
 
     /**
      * getSign()
-     * @return <b>The sign</b>, if the sign was found.<br/>otherwise <b>null</b>
+     * 
+     * @return <b>The sign</b>, if the sign was found.<br/>
+     *         otherwise <b>null</b>
      */
     public Sign getSign() {
         Block block = this.getBlock();
@@ -64,11 +97,12 @@ public class BCUserShop extends BCShop implements Serializable {
 
         return ((Sign) block.getState());
     }
-    
-    
+
     /**
      * getLines()
-     * @return <b>All lines</b>, if the sign was found.<br/>otherwise <b>null</b>
+     * 
+     * @return <b>All lines</b>, if the sign was found.<br/>
+     *         otherwise <b>null</b>
      */
     public String[] getLines() {
         Sign sign = getSign();
@@ -77,79 +111,77 @@ public class BCUserShop extends BCShop implements Serializable {
 
         return sign.getLines();
     }
-    
+
     /**
      * getLine(int linenumber)
+     * 
      * @param linenumber
-     * @return <b>Linecontent</b>, if the sign was found.<br/>otherwise <b>null</b>
+     * @return <b>Linecontent</b>, if the sign was found.<br/>
+     *         otherwise <b>null</b>
      */
     public String getLine(int linenumber) {
         Sign sign = getSign();
         if (sign == null)
             return null;
 
-        if(linenumber < 0 || linenumber > 3)
+        if (linenumber < 0 || linenumber > 3)
             return null;
         return sign.getLines()[linenumber];
     }
 
     public String getShopOwner() {
         String line = getLine(0);
-        if(line == null)
+        if (line == null)
             return null;
-        
+
         line = getSpecialTextOnLine(line, "$", "$");
         return line;
     }
-    
+
     public int getItemID() {
         String line = getLine(1);
-        if(line == null)
+        if (line == null)
             return 0;
-        
+
         line = getSpecialTextOnLine(line, "{", "}");
         String[] split = line.split(":");
         try {
             return BCCore.getItemId(split[0]);
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             return 0;
         }
     }
-    
-    public int getSubID() {
+
+    public byte getSubID() {
         String line = getLine(1);
-        if(line == null)
+        if (line == null)
             return 0;
-        
+
         line = getSpecialTextOnLine(line, "{", "}");
         String[] split = line.split(":");
         try {
             return Byte.valueOf(split[1]);
-        }
-        catch(Exception e)
-        {
+        } catch (Exception e) {
             return 0;
         }
     }
-    
+
     public Integer[] getBuyRatio() {
         String line = getLine(2);
-        if(line == null)
+        if (line == null)
             return null;
-        
+
         return BCShop.getRatios(line);
     }
-    
+
     public Integer[] getSellRatio() {
         String line = getLine(3);
-        if(line == null)
+        if (line == null)
             return null;
-        
+
         return BCShop.getRatios(line);
     }
-    
+
     // /////////////////////////////////
     //
     // HANDLE LEFTCLICK
