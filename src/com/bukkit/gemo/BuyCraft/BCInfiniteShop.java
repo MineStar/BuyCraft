@@ -51,7 +51,7 @@ public class BCInfiniteShop extends BCShop implements Serializable {
             e.printStackTrace();
             return;
         }
-        
+
         if (!BCCore.isAllowedItem(itemSplit[0]))
             return;
 
@@ -88,7 +88,7 @@ public class BCInfiniteShop extends BCShop implements Serializable {
             e.printStackTrace();
             return;
         }
-        
+
         if (!BCCore.isAllowedItem(itemSplit[0]))
             return;
 

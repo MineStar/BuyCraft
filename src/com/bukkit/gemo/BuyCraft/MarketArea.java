@@ -86,16 +86,16 @@ public class MarketArea {
     public boolean isValidArea() {
         return corner1 != null && corner2 != null && areaName != null;
     }
-    
+
     public int getAreaBlockWidth() {
         return Math.abs(corner2.getBlockX() - corner1.getBlockX()) + 1;
     }
-    
+
     public int getAreaBlockLength() {
         return Math.abs(corner2.getBlockZ() - corner1.getBlockZ()) + 1;
     }
-    
+
     public int getAreaBlockHeight() {
         return Math.abs(corner2.getBlockY() - corner1.getBlockY()) + 1;
-    }    
+    }
 }

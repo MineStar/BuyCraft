@@ -35,11 +35,11 @@ public class BCPlayerListener extends PlayerListener {
     @Override
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.LEFT_CLICK_BLOCK)
-            return;        
-       
-        ////////////////////////////////
+            return;
+
+        // //////////////////////////////
         // HANDLE SELECTION
-        ////////////////////////////////
+        // //////////////////////////////
         if (selections.containsKey(event.getPlayer().getName())) {
             event.getPlayer().sendMessage("SubID: " + event.getClickedBlock().getData());
 

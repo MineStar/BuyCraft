@@ -42,6 +42,8 @@ public class BCUserShop extends BCShop implements Serializable {
     public BCUserShop(String worldName, int x, int y, int z) {
         super(worldName, x, y, z);
         shopInventory = new ArrayList<BCItemStack>();
+        creationTime = System.currentTimeMillis();
+        lastUsedTime = System.currentTimeMillis();
     }
 
     // /////////////////////////////////

@@ -32,14 +32,12 @@ public class StartHappyHThread extends TimerTask {
         int item = 0;
         do {
             item = itemIDs[rand.nextInt(itemIDs.length)];
-        }
-        while (!isOnMarket(item));
+        } while (!isOnMarket(item));
 
         ItemStack i = new ItemStack(item);
         // calculate bonus blocks given by server - 1 to 2
         double bonus = rand.nextDouble() + 1;
-        String text = "Stullen Andi : Auf dem Usermarkt gibt es " + bonus
-                + "%  Bonus auf " + i.getType().toString();
+        String text = "Stullen Andi : Auf dem Usermarkt gibt es " + bonus + "%  Bonus auf " + i.getType().toString();
         for (Player p : server.getOnlinePlayers())
             p.sendMessage(text);
 
@@ -56,7 +54,7 @@ public class StartHappyHThread extends TimerTask {
         return false;
     }
 
-    @SuppressWarnings({ "unchecked" })
+    @SuppressWarnings({"unchecked"})
     private void loadItems() {
         YamlConfiguration config = new YamlConfiguration();
         try {
@@ -65,8 +63,7 @@ public class StartHappyHThread extends TimerTask {
             itemIDs = new int[list.size()];
             for (int i = 0; i < list.size(); ++i)
                 itemIDs[i] = list.get(i);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
