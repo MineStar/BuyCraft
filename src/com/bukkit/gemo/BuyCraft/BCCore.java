@@ -1,38 +1,35 @@
 package com.bukkit.gemo.BuyCraft;
 
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import javax.imageio.ImageIO;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.ChunkSnapshot;
+import org.bukkit.Location;
 import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.craftbukkit.CraftWorld;
 import org.bukkit.event.Event;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
 
+import com.bukkit.gemo.BuyCraft.threading.RenderMarketThread;
 import com.bukkit.gemo.utils.FlatFile;
 import com.bukkit.gemo.utils.UtilPermissions;
 
@@ -42,8 +39,6 @@ public class BCCore extends JavaPlugin {
     private static HashMap<String, String> aliasList = new HashMap<String, String>();
     private static HashMap<Integer, String> itemListByID = new HashMap<Integer, String>();
     private static HashMap<String, Integer> itemListByName = new HashMap<String, Integer>();
-
-    private static HashMap<String, BufferedImage> imageList;
 
     private static TreeMap<String, MarketArea> marketList;
 
@@ -88,9 +83,6 @@ public class BCCore extends JavaPlugin {
         loadItems();
         PluginManager pm = getServer().getPluginManager();
 
-        // LOAD TEXTURES
-        loadTextures();
-
         // LISTENER REGISTRIEREN
         blockListener = new BCBlockListener(this);
         entityListener = new BCEntityListener(this);
@@ -105,172 +97,6 @@ public class BCCore extends JavaPlugin {
         // PluginDescriptionFile LESEN
         PluginDescriptionFile pdfFile = this.getDescription();
         System.out.println(pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!");
-    }
-
-    // /////////////////////////////////
-    //
-    // LOAD TEXTURES
-    //
-    // /////////////////////////////////
-    private void loadTextures() {
-        imageList = new HashMap<String, BufferedImage>();
-
-        File dir = new File("plugins/BuyCraft/textures/");
-        if (!dir.exists())
-            return;
-
-        File[] fileList = dir.listFiles();
-        for (File file : fileList) {
-            if (!file.isFile())
-                continue;
-
-            if (!file.getName().endsWith(".png"))
-                continue;
-
-            try {
-                BufferedImage image = ImageIO.read(file);
-                if (image != null) {
-                    imageList.put(file.getCanonicalFile().getName().replace(".png", ""), image);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    // /////////////////////////////////
-    //
-    // DRAW BLOCK
-    //
-    // /////////////////////////////////
-    private void drawBlock(Graphics2D graphic, int x, int z, int TypeID, int SubID) {
-        String picture = "" + TypeID;
-        if (TypeID == 17 || TypeID == 35 || TypeID == 43 || TypeID == 44 || TypeID == 50 || TypeID == 63 || TypeID == 65 || TypeID == 66 || TypeID == 68 || TypeID == 75 || TypeID == 76 || TypeID == 98) {
-            picture += "-" + SubID;
-        }
-
-        BufferedImage blockTex = imageList.get(picture);
-        if (blockTex != null) {
-            graphic.drawImage(blockTex, x * TEXTURE_BLOCK_SIZE, z * TEXTURE_BLOCK_SIZE, TEXTURE_BLOCK_SIZE, TEXTURE_BLOCK_SIZE, null);
-        }
-        blockTex = null;
-    }
-
-    private void exportMarketPicture(MarketArea area) {
-        try {
-            // CREATE IMAGE
-            BufferedImage image = new BufferedImage(area.getAreaBlockWidth() * TEXTURE_BLOCK_SIZE, area.getAreaBlockLength() * TEXTURE_BLOCK_SIZE, BufferedImage.TRANSLUCENT);
-
-            File outputDir = new File("plugins/BuyCraft/markets/");
-            outputDir.mkdir();
-            File output = new File("plugins/BuyCraft/markets/" + area.getAreaName() + ".png");
-            output.createNewFile();
-
-            Graphics2D graphic = (Graphics2D) image.getGraphics();
-            graphic.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-
-            // GET WORLDS
-            CraftWorld cWorld = (CraftWorld) area.getCorner1().getWorld();
-            net.minecraft.server.World nWorld = cWorld.getHandle();
-
-            // PAINT AREA
-            for (int x = 0; x < area.getAreaBlockWidth(); x++) {
-                for (int z = 0; z < area.getAreaBlockLength(); z++) {
-                    for (int y = 0; y <= area.getAreaBlockHeight(); y++) {
-                        int TypeID = nWorld.getTypeId(x + area.getCorner1().getBlockX(), y + area.getCorner1().getBlockY(), z + area.getCorner1().getBlockZ());
-                        int SubID = nWorld.getData(x + area.getCorner1().getBlockX(), y + area.getCorner1().getBlockY(), z + area.getCorner1().getBlockZ());
-                        this.drawBlock(graphic, x, z, TypeID, SubID);
-                    }
-                }
-            }
-
-            // SAVE FILE
-            ImageIO.write(image, "png", output);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private ArrayList<String> replaceText(ArrayList<String> lines, String placeHolder, String newText) {
-        String line = "";
-        for (int i = 0; i < lines.size(); i++) {
-            line = lines.get(i);
-            if (line.contains(placeHolder)) {
-                lines.set(i, line.replace(placeHolder, newText));
-            }
-        }
-        return lines;
-    }
-
-    private void exportMarketHtmlPage(MarketArea area) {
-        BufferedReader reader = null;
-        ArrayList<String> lineList = new ArrayList<String>();
-        try {
-            if (!new File("plugins/BuyCraft/markets/template.html").exists())
-                return;
-
-            reader = new BufferedReader(new FileReader(new File("plugins/BuyCraft/markets/template.html")));
-            String text = null;
-            while ((text = reader.readLine()) != null) {
-                lineList.add(text.replace("\r\n", ""));
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (reader != null) {
-                    reader.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            }
-        }
-
-        StringBuilder areaBuilder = new StringBuilder();
-        StringBuilder detailBuilder = new StringBuilder();
-        HashMap<String, Integer> shopCount = new HashMap<String, Integer>();
-        for (BCUserShop shop : BCBlockListener.userShopList.values()) {
-            if (shop.isActive() && shop.getSign() != null) {
-                if (area.isBlockInArea(shop.getSign().getBlock().getLocation())) {
-                    int relX = shop.getX() - area.getCorner1().getBlockX();
-                    int relZ = shop.getZ() - area.getCorner1().getBlockZ();
-                    int thisID = 1;
-                    if (shopCount.containsKey(shop.getShopOwner()))
-                        thisID = shopCount.get(shop.getShopOwner());
-
-                    areaBuilder.append(shop.getHTML_Area(thisID, relX, relZ, TEXTURE_BLOCK_SIZE));
-                    detailBuilder.append(shop.getHTML_ShopDetails(thisID));
-
-                    thisID++;
-                    shopCount.put(shop.getShopOwner(), thisID);
-                }
-            }
-        }
-        lineList = this.replaceText(lineList, "%PICTURE%", area.getAreaName() + ".png");
-        lineList = this.replaceText(lineList, "%AREATEXT%", areaBuilder.toString());
-        lineList = this.replaceText(lineList, "%SHOPDETAILS%", detailBuilder.toString());
-        this.savePage("plugins/BuyCraft/markets/" + area.getAreaName() + ".html", lineList);
-    }
-
-    private void savePage(String fileName, ArrayList<String> lines) {
-        try {
-            File datei = new File(fileName);
-            if (datei.exists()) {
-                datei.delete();
-            }
-            File savedFile = new File(fileName);
-            FileWriter writer = new FileWriter(savedFile, false);
-            for (int i = 0; i < lines.size(); i++) {
-                writer.write(lines.get(i) + System.getProperty("line.separator"));
-            }
-            writer.flush();
-            writer.close();
-        } catch (Exception e) {
-            printInConsole("Error while writing Page: " + fileName);
-        }
     }
 
     // /////////////////////////////////
@@ -406,7 +232,6 @@ public class BCCore extends JavaPlugin {
                                     }
                                 } else {
                                     BCChatUtils.printError(player, "Please select 2 Points!");
-
                                 }
                             } else {
                                 BCChatUtils.printError(player, "You are not in selectionmode!");
@@ -418,9 +243,28 @@ public class BCCore extends JavaPlugin {
                                 BCChatUtils.printError(player, "Market '" + args[1] + "' not found!");
                             } else {
                                 MarketArea area = marketList.get(args[1]);
-                                exportMarketPicture(area);
-                                exportMarketHtmlPage(area);
-                                BCChatUtils.printSuccess(player, "Market '" + args[1] + "' exported!");
+                                
+                                // CREATE SNAPSHOTLIST
+                                Location loc1 = area.getCorner1();
+                                Location loc2 = area.getCorner2();
+                                TreeMap<String, ChunkSnapshot> chunkList = new TreeMap<String, ChunkSnapshot>();
+                                int minChunkX = loc1.getBlock().getChunk().getX();
+                                int maxChunkX = loc2.getBlock().getChunk().getX();
+                                int minChunkZ = loc1.getBlock().getChunk().getZ();
+                                int maxChunkZ = loc2.getBlock().getChunk().getZ();
+                                World world = loc1.getWorld();
+                                ChunkSnapshot snap = null;
+                                for(int x = minChunkX; x <= maxChunkX; x++) {
+                                    for(int z = minChunkZ; z <= maxChunkZ; z++) {
+                                        snap = world.getChunkAt(x, z).getChunkSnapshot(true, true, true);
+                                        if(snap != null) {
+                                            chunkList.put(x + "_" + z, snap);
+                                        }
+                                    }
+                                }
+                                RenderMarketThread market = new RenderMarketThread(player.getName(), chunkList, BCBlockListener.userShopList, this.TEXTURE_BLOCK_SIZE, area);
+                                Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(this, market, 1);                                
+                                BCChatUtils.printSuccess(player, "Rendering of '" + args[1] + "' started!");
                             }
                             return true;
                         }
@@ -442,7 +286,6 @@ public class BCCore extends JavaPlugin {
         }
         return true;
     }
-
     // /////////////////////////////////
     //
     // ALIASES

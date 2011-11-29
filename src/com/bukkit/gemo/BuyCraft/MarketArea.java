@@ -111,4 +111,10 @@ public class MarketArea {
         
         return true;
     }
+
+    public MarketArea clone() {
+        return new MarketArea(getAreaName(), corner1, corner2);
+    }
+    
+    
 }
