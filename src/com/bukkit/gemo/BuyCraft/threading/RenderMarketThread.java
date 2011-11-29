@@ -28,13 +28,12 @@ public class RenderMarketThread implements Runnable {
     private int TEXTURE_BLOCK_SIZE = 32;
     private TreeMap<String, ChunkSnapshot> snapList;
     private HashMap<String, BCUserShop> userShopList;
-    private HashMap<String, BufferedImage> imageList;
+    public static HashMap<String, BufferedImage> imageList;
     private MarketArea market;
     private String playerName;
 
     @SuppressWarnings("unchecked")
     public RenderMarketThread(final String playerName, final TreeMap<String, ChunkSnapshot> chunkList, final HashMap<String, BCUserShop> userShopList, int texSize, MarketArea market) {
-        this.loadTextures();
         this.playerName = playerName;
         this.snapList = (TreeMap<String, ChunkSnapshot>) chunkList.clone();
         this.userShopList = (HashMap<String, BCUserShop>) userShopList.clone();
@@ -42,6 +41,11 @@ public class RenderMarketThread implements Runnable {
         this.market = market.clone();
     }
 
+    // /////////////////////////////////
+    //
+    // RENDERING THREAD
+    //
+    // /////////////////////////////////
     @Override
     public void run() {
         long startTime = System.currentTimeMillis();
@@ -98,17 +102,16 @@ public class RenderMarketThread implements Runnable {
             e.printStackTrace();
         }
 
+        exportMarketHtmlPage(market);
+
+        long endTime = System.currentTimeMillis();
+        long duration = endTime - startTime;
+
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(duration, playerName, market.getAreaName()), 1);
+
         // COLLECT GARBAGE
         snapList.clear();
-        imageList.clear();
         market = null;
-
-        exportMarketHtmlPage(market);
-        
-        long endTime = System.currentTimeMillis();
-        long duration = endTime - startTime;       
-       
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(duration, playerName, market.getAreaName()), 1);
     }
 
     // /////////////////////////////////
@@ -323,7 +326,7 @@ public class RenderMarketThread implements Runnable {
     // LOAD TEXTURES
     //
     // /////////////////////////////////
-    private void loadTextures() {
+    public static void loadTextures() {
         imageList = new HashMap<String, BufferedImage>();
 
         File dir = new File("plugins/BuyCraft/textures/");

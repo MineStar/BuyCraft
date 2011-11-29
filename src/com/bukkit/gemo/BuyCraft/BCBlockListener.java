@@ -236,7 +236,6 @@ public class BCBlockListener extends BlockListener {
                 objIn.close();
                 
                 userShopList.put(shop.toString(), shop);
-                System.out.println(shop.toString());
             } catch (Exception e) {
                 e.printStackTrace();
                 BCCore.printInConsole("Error while reading file: " + file.getName());

@@ -78,6 +78,7 @@ public class BCCore extends JavaPlugin {
     public void onEnable() {
         PluginInstance = this;
         server = getServer();
+        RenderMarketThread.loadTextures();
         loadMarkets();
         loadAliases();
         loadItems();
@@ -244,7 +245,7 @@ public class BCCore extends JavaPlugin {
                             } else {
                                 MarketArea area = marketList.get(args[1]);
                                 
-                                // CREATE SNAPSHOTLIST
+                                // CREATE SNAPSHOT-LIST
                                 Location loc1 = area.getCorner1();
                                 Location loc2 = area.getCorner2();
                                 TreeMap<String, ChunkSnapshot> chunkList = new TreeMap<String, ChunkSnapshot>();
