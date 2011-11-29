@@ -12,6 +12,7 @@ import net.minecraft.server.Packet130UpdateSign;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
@@ -35,8 +36,6 @@ public class BCUserShop extends BCShop implements Serializable {
     public BCUserShop() {
         super();
         shopInventory = new ArrayList<BCItemStack>();
-        creationTime = System.currentTimeMillis();
-        lastUsedTime = System.currentTimeMillis();
     }
 
     public BCUserShop(String worldName, int x, int y, int z) {
@@ -46,6 +45,109 @@ public class BCUserShop extends BCShop implements Serializable {
         lastUsedTime = System.currentTimeMillis();
     }
 
+    // /////////////////////////////////
+    //
+    // METHODS FOR GETTING SHOP-PROPERTIES
+    //
+    // /////////////////////////////////
+
+    /**
+     * getSign()
+     * @return <b>The sign</b>, if the sign was found.<br/>otherwise <b>null</b>
+     */
+    public Sign getSign() {
+        Block block = this.getBlock();
+        if (block.getTypeId() != Material.WALL_SIGN.getId())
+            return null;
+
+        return ((Sign) block.getState());
+    }
+    
+    
+    /**
+     * getLines()
+     * @return <b>All lines</b>, if the sign was found.<br/>otherwise <b>null</b>
+     */
+    public String[] getLines() {
+        Sign sign = getSign();
+        if (sign == null)
+            return null;
+
+        return sign.getLines();
+    }
+    
+    /**
+     * getLine(int linenumber)
+     * @param linenumber
+     * @return <b>Linecontent</b>, if the sign was found.<br/>otherwise <b>null</b>
+     */
+    public String getLine(int linenumber) {
+        Sign sign = getSign();
+        if (sign == null)
+            return null;
+
+        if(linenumber < 0 || linenumber > 3)
+            return null;
+        return sign.getLines()[linenumber];
+    }
+
+    public String getShopOwner() {
+        String line = getLine(0);
+        if(line == null)
+            return null;
+        
+        line = getSpecialTextOnLine(line, "$", "$");
+        return line;
+    }
+    
+    public int getItemID() {
+        String line = getLine(1);
+        if(line == null)
+            return 0;
+        
+        line = getSpecialTextOnLine(line, "{", "}");
+        String[] split = line.split(":");
+        try {
+            return BCCore.getItemId(split[0]);
+        }
+        catch(Exception e)
+        {
+            return 0;
+        }
+    }
+    
+    public int getSubID() {
+        String line = getLine(1);
+        if(line == null)
+            return 0;
+        
+        line = getSpecialTextOnLine(line, "{", "}");
+        String[] split = line.split(":");
+        try {
+            return Byte.valueOf(split[1]);
+        }
+        catch(Exception e)
+        {
+            return 0;
+        }
+    }
+    
+    public Integer[] getBuyRatio() {
+        String line = getLine(2);
+        if(line == null)
+            return null;
+        
+        return BCShop.getRatios(line);
+    }
+    
+    public Integer[] getSellRatio() {
+        String line = getLine(3);
+        if(line == null)
+            return null;
+        
+        return BCShop.getRatios(line);
+    }
+    
     // /////////////////////////////////
     //
     // HANDLE LEFTCLICK
