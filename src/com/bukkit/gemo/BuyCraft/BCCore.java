@@ -109,7 +109,7 @@ public class BCCore extends JavaPlugin {
     // LOAD TEXTURES
     //
     // /////////////////////////////////
-    public void loadTextures() {
+    private void loadTextures() {
         imageList = new HashMap<String, BufferedImage>();
 
         File dir = new File("plugins/BuyCraft/textures/");
@@ -176,7 +176,6 @@ public class BCCore extends JavaPlugin {
                     for (int y = 0; y <= area.getAreaBlockHeight(); y++) {
                         int TypeID = nWorld.getTypeId(x + area.getCorner1().getBlockX(), y + area.getCorner1().getBlockY(), z + area.getCorner1().getBlockZ());
                         int SubID = nWorld.getData(x + area.getCorner1().getBlockX(), y + area.getCorner1().getBlockY(), z + area.getCorner1().getBlockZ());
-
                         this.drawBlock(graphic, x, z, TypeID, SubID);
                     }
                 }
@@ -189,13 +188,15 @@ public class BCCore extends JavaPlugin {
         }
     }
 
-    // /////////////////////////////////
-    //
-    // SPECIAL ITEMS
-    //
-    // /////////////////////////////////
-    public int getSubID(net.minecraft.server.World world, int x, int y, int z, int TypeID, int SubID) {
-        return SubID;
+    private void exportMarketHtmlPage(MarketArea area) {
+        System.out.println("Marketlist for '" + area.getAreaName() + "' :");
+        for (BCUserShop shop : BCBlockListener.userShopList.values()) {
+            if (shop.getSign() != null) {
+                if (area.isBlockInArea(shop.getSign().getBlock().getLocation())) {
+                    System.out.println(shop.getShopOwner() + " || " + BCCore.getItemName(shop.getItemID()) + ":" + shop.getSubID());
+                }
+            }
+        }
     }
 
     // /////////////////////////////////
@@ -344,6 +345,8 @@ public class BCCore extends JavaPlugin {
                             } else {
                                 MarketArea area = marketList.get(args[1]);
                                 exportMarketPicture(area);
+                                exportMarketHtmlPage(area);
+                                BCChatUtils.printSuccess(player, "Market '" + args[1] + "' exported!");
                             }
                             return true;
                         }

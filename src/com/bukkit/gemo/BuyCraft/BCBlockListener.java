@@ -234,8 +234,9 @@ public class BCBlockListener extends BlockListener {
                 ObjectInputStream objIn = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file.getAbsolutePath())));
                 BCUserShop shop = (BCUserShop) objIn.readObject();
                 objIn.close();
-
+                
                 userShopList.put(shop.toString(), shop);
+                System.out.println(shop.toString());
             } catch (Exception e) {
                 e.printStackTrace();
                 BCCore.printInConsole("Error while reading file: " + file.getName());
@@ -370,7 +371,6 @@ public class BCBlockListener extends BlockListener {
             if (event.getLine(1).length() < 1) {
                 shop.setShopFinished(false);
             }
-
             userShopList.put(shop.toString(), shop);
             shop.saveShop();
             BCChatUtils.printSuccess(player, "Usershop erstellt!");
