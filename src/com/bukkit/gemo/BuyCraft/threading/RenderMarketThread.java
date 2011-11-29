@@ -28,7 +28,7 @@ public class RenderMarketThread implements Runnable {
     private int TEXTURE_BLOCK_SIZE = 32;
     private TreeMap<String, ChunkSnapshot> snapList;
     private HashMap<String, BCUserShop> userShopList;
-    public static HashMap<String, BufferedImage> imageList;
+    private static HashMap<String, BufferedImage> imageList;
     private MarketArea market;
     private String playerName;
 
