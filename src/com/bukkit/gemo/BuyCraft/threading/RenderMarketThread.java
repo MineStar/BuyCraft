@@ -1,5 +1,7 @@
 package com.bukkit.gemo.BuyCraft.threading;
 
+import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -14,8 +16,8 @@ import java.util.HashMap;
 import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
-
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.ChunkSnapshot;
 
 import com.bukkit.gemo.BuyCraft.BCCore;
@@ -25,7 +27,7 @@ import com.bukkit.gemo.BuyCraft.MarketArea;
 
 public class RenderMarketThread implements Runnable {
 
-    private int TEXTURE_BLOCK_SIZE = 32;
+    private static int TEXTURE_BLOCK_SIZE = 32;
     private TreeMap<String, ChunkSnapshot> snapList;
     private HashMap<String, BCUserShop> userShopList;
     private static HashMap<String, BufferedImage> imageList;
@@ -33,11 +35,10 @@ public class RenderMarketThread implements Runnable {
     private String playerName;
 
     @SuppressWarnings("unchecked")
-    public RenderMarketThread(final String playerName, final TreeMap<String, ChunkSnapshot> chunkList, final HashMap<String, BCUserShop> userShopList, int texSize, MarketArea market) {
+    public RenderMarketThread(final String playerName, final TreeMap<String, ChunkSnapshot> chunkList, final HashMap<String, BCUserShop> userShopList, MarketArea market) {
         this.playerName = playerName;
         this.snapList = (TreeMap<String, ChunkSnapshot>) chunkList.clone();
         this.userShopList = (HashMap<String, BCUserShop>) userShopList.clone();
-        this.TEXTURE_BLOCK_SIZE = texSize;
         this.market = market.clone();
     }
 
@@ -51,67 +52,235 @@ public class RenderMarketThread implements Runnable {
         long startTime = System.currentTimeMillis();
         try {
             // CREATE IMAGE
-            BufferedImage image = new BufferedImage(market.getAreaBlockWidth() * TEXTURE_BLOCK_SIZE, market.getAreaBlockLength() * TEXTURE_BLOCK_SIZE, BufferedImage.TRANSLUCENT);
+            BufferedImage image = new BufferedImage(market.getAreaBlockWidth() * TEXTURE_BLOCK_SIZE, market.getAreaBlockLength() * TEXTURE_BLOCK_SIZE, BufferedImage.TYPE_INT_RGB);
 
             File outputDir = new File("plugins/BuyCraft/markets/");
             outputDir.mkdir();
+            outputDir = new File("plugins/BuyCraft/markets/tiles/");
+            outputDir.mkdir();
+
             File output = new File("plugins/BuyCraft/markets/" + market.getAreaName() + ".png");
+            if (output.exists())
+                output.delete();
+
             output.createNewFile();
 
-            Graphics2D graphic = (Graphics2D) image.getGraphics();
-            graphic.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            // ///////////////////////////////////////////
+            // BEGIN PAINTING
+            // Method 1 : Iterate through all blocks (blockwise drawing)
+            // Method 2 : Iterate through chunklist (chunkwise drawing)
+            // NOTE: Method 2 seems to be faster, so we use it
+            // ///////////////////////////////////////////
+            this.renderWithMethod2(image);
+            // ///////////////////////////////////////////
+            // END PAINTING
+            // ///////////////////////////////////////////
 
-            // PAINT AREA
-            int blockChunkX;
-            int blockChunkZ;
-            int blockX, blockZ;
-            int highestY;
+            
+            long endTime = System.currentTimeMillis();
+            long duration = endTime - startTime;
+            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Terraingeneration of '" + market.getAreaName() + "' finished in " + duration + "ms"), 1);
 
-            ArrayList<BCMinimalItem> queuedBlocks = new ArrayList<BCMinimalItem>();
-            int TypeID, SubID;
-            for (int x = 0; x < market.getAreaBlockWidth(); x++) {
-                blockX = (x + market.getCorner1().getBlockX()) & 0xF;
-                blockChunkX = (x + market.getCorner1().getBlockX()) >> 4;
-                for (int z = 0; z < market.getAreaBlockLength(); z++) {
-                    blockZ = (z + market.getCorner1().getBlockZ()) & 0xF;
-                    blockChunkZ = (z + market.getCorner1().getBlockZ()) >> 4;
-                    highestY = snapList.get(blockChunkX + "_" + blockChunkZ).getHighestBlockYAt(blockX, blockZ);
-                    if (highestY > market.getCorner2().getBlockY())
-                        highestY = market.getCorner2().getBlockY();
-
-                    TypeID = snapList.get(blockChunkX + "_" + blockChunkZ).getBlockTypeId(blockX, highestY, blockZ);
-                    while (isTextureTransparent(TypeID) && highestY > 0) {
-                        SubID = snapList.get(blockChunkX + "_" + blockChunkZ).getBlockData(blockX, highestY, blockZ);
-                        queuedBlocks.add(new BCMinimalItem(TypeID, SubID));
-                        highestY--;
-                        TypeID = snapList.get(blockChunkX + "_" + blockChunkZ).getBlockTypeId(blockX, highestY, blockZ);
-                    }
-                    SubID = snapList.get(blockChunkX + "_" + blockChunkZ).getBlockData(blockX, highestY, blockZ);
-                    this.drawBlock(graphic, x, z, TypeID, SubID);
-                    // DRAW QUEUED BLOCKS
-                    for (int i = queuedBlocks.size() - 1; i >= 0; i--) {
-                        this.drawBlock(graphic, x, z, queuedBlocks.get(i).getID(), queuedBlocks.get(i).getSubID());
-                    }
-                    queuedBlocks.clear();
-                }
-            }
+            // CREATE TILES
+            createAllTiles(image, 256);
 
             // SAVE FILE
+            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Saving large image..."), 1);
+            startTime = System.currentTimeMillis();
             ImageIO.write(image, "png", output);
+            image.flush();
+            duration = System.currentTimeMillis() - startTime;
+            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Large image saved to HDD in " + duration + "ms."), 1);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        exportMarketHtmlPage(market);
-
-        long endTime = System.currentTimeMillis();
-        long duration = endTime - startTime;
-
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(duration, playerName, market.getAreaName()), 1);
+        exportMarketHtmlPage(market);        
 
         // COLLECT GARBAGE
         snapList.clear();
         market = null;
+    }
+
+    // /////////////////////////////////
+    //
+    // CREATE TILE-SET
+    //
+    // /////////////////////////////////
+    public void createAllTiles(BufferedImage image, final int tileSize) {
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Creating tiles..."), 1);
+        int maxTilesX = (int) (image.getWidth() / tileSize);
+        int maxTilesZ = (int) (image.getHeight() / tileSize);
+
+        int cutRight = ((maxTilesX + 1) * tileSize) - image.getWidth();
+        int cutBottom = ((maxTilesZ + 1) * tileSize) - image.getHeight();
+
+        BufferedImage tileImage = new BufferedImage(tileSize, tileSize, BufferedImage.TYPE_INT_RGB);
+        Graphics tileGraphic = tileImage.getGraphics();
+        File f;
+
+        tileGraphic.setColor(Color.BLACK);
+        int tileCount = 0;
+        long startTime = System.currentTimeMillis();
+        for (int x = 0; x <= maxTilesX; x++) {
+            for (int z = 0; z <= maxTilesZ; z++) {                
+                try {
+                    // DRAW IMAGE
+                    tileGraphic.drawImage(image, -(x * 256), -(z * 256), null);
+                    
+                    // CREATE TILE-FILE
+                    f = new File("plugins/BuyCraft/markets/tiles/" + x + "_" + z + ".png");
+                    if (f.exists())
+                        f.delete();
+                    f.createNewFile();
+
+                    // REPAINT THE SIDES, IF NEEDED
+                    if (x == maxTilesX && z == maxTilesZ) {
+                        // CUT OFF RIGHT AND BOTTOM
+                        tileGraphic.fillRect(tileSize - cutRight, 0, cutRight, tileSize);
+                        tileGraphic.fillRect(0, tileSize - cutBottom, tileSize, cutBottom);
+                    }
+                    else if (x == maxTilesX) {
+                        // CUT OFF RIGHT
+                        tileGraphic.fillRect(tileSize - cutRight, 0, cutRight, tileSize);
+                    }
+                    else if (z == maxTilesZ) {
+                        // CUT OF BOTTOM
+                        tileGraphic.fillRect(0, tileSize - cutBottom, tileSize, cutBottom);
+                    }
+                    
+                    // SAVE FILE TO HDD
+                    ImageIO.write(tileImage, "png", f);
+                    tileCount++;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }                
+            }
+        }
+        long duration = System.currentTimeMillis() - startTime;        
+        float timePerTile = (float)duration / (float)tileCount;        
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Tilecreation finished in " + duration + "ms. (Aprox. " + timePerTile + "ms per tile)"), 1);
+    }
+
+    // ///////////////////////////////////////////
+    //
+    // METHOD 1 - ITERATE THROUGH ALL BLOCKS
+    //
+    // ///////////////////////////////////////////
+    public void renderWithMethod1(BufferedImage image) {
+        Graphics2D graphic = (Graphics2D) image.getGraphics();
+        int blockChunkX;
+        int blockChunkZ;
+        int blockX, blockZ;
+        int highestY;
+
+        ArrayList<BCMinimalItem> queuedBlocks = new ArrayList<BCMinimalItem>();
+
+        int TypeID, SubID;
+        String chunkString = "";
+        int textureX = 0;
+        int textureZ = 0;
+        for (int x = 0; x < market.getAreaBlockWidth(); x++) {
+            blockX = (x + market.getCorner1().getBlockX()) & 0xF;
+            blockChunkX = (x + market.getCorner1().getBlockX()) >> 4;
+            textureZ = 0;
+            for (int z = 0; z < market.getAreaBlockLength(); z++) {
+                blockZ = (z + market.getCorner1().getBlockZ()) & 0xF;
+                blockChunkZ = (z + market.getCorner1().getBlockZ()) >> 4;
+                chunkString = blockChunkX + "_" + blockChunkZ;
+
+                highestY = snapList.get(chunkString).getHighestBlockYAt(blockX, blockZ);
+                if (highestY > market.getCorner2().getBlockY())
+                    highestY = market.getCorner2().getBlockY();
+
+                TypeID = snapList.get(chunkString).getBlockTypeId(blockX, highestY, blockZ);
+
+                while (isTextureTransparent(TypeID) && highestY > 0) {
+                    SubID = snapList.get(chunkString).getBlockData(blockX, highestY, blockZ);
+                    queuedBlocks.add(new BCMinimalItem(TypeID, SubID));
+                    highestY--;
+                    TypeID = snapList.get(chunkString).getBlockTypeId(blockX, highestY, blockZ);
+                }
+
+                SubID = snapList.get(chunkString).getBlockData(blockX, highestY, blockZ);
+                this.drawBlock(graphic, textureX, textureZ, image.getWidth(), image.getHeight(), TypeID, SubID);
+                // DRAW QUEUED BLOCKS
+                for (int i = queuedBlocks.size() - 1; i >= 0; i--) {
+                    this.drawBlock(graphic, textureX, textureZ, image.getWidth(), image.getHeight(), queuedBlocks.get(i).getID(), queuedBlocks.get(i).getSubID());
+                }
+                queuedBlocks.clear();
+                textureZ += TEXTURE_BLOCK_SIZE;
+            }
+            textureX += TEXTURE_BLOCK_SIZE;
+        }
+    }
+
+    // ///////////////////////////////////////////
+    //
+    // METHOD 2 - ITERATE THROUGH CHUNKLIST
+    //
+    // ///////////////////////////////////////////
+    public void renderWithMethod2(BufferedImage image) {
+        Graphics2D graphic = (Graphics2D) image.getGraphics();
+        int minChunkX = market.getCorner1().getBlock().getChunk().getX();
+        int minChunkZ = market.getCorner1().getBlock().getChunk().getZ();
+        int maxChunkX = market.getCorner2().getBlock().getChunk().getX();
+        int maxChunkZ = market.getCorner2().getBlock().getChunk().getZ();
+
+        int startPosX, startPosZ;
+        int offsetBlockX = market.getCorner1().getBlockX() & 0xF;
+        int offsetBlockZ = market.getCorner1().getBlockZ() & 0xF;
+        startPosX = 0 - (offsetBlockX * TEXTURE_BLOCK_SIZE);
+        startPosZ = 0 - (offsetBlockZ * TEXTURE_BLOCK_SIZE);
+        int chunkSize = 16 * TEXTURE_BLOCK_SIZE;
+        for (int x = minChunkX; x <= maxChunkX; x++) {
+            startPosZ = 0 - (offsetBlockZ * TEXTURE_BLOCK_SIZE);
+            for (int z = minChunkZ; z <= maxChunkZ; z++) {
+                this.drawCompleteChunk(graphic, snapList.get(x + "_" + z), startPosX, startPosZ, image.getWidth(), image.getHeight());
+                startPosZ += chunkSize;
+            }
+            startPosX += chunkSize;
+        }
+    }
+
+    // /////////////////////////////////
+    //
+    // DRAW COMPLETE CHUNK
+    //
+    // /////////////////////////////////
+    private void drawCompleteChunk(Graphics2D graphic, ChunkSnapshot snapshot, int startPosX, int startPosZ, final int maxWidth, final int maxHeight) {
+        int TypeID, SubID;
+        int textureX = startPosX;
+        int textureZ = startPosZ;
+        int highestY = 0;
+        ArrayList<BCMinimalItem> queuedBlocks = new ArrayList<BCMinimalItem>();
+        for (int blockX = 0; blockX < 16; blockX++) {
+            textureZ = startPosZ;
+            for (int blockZ = 0; blockZ < 16; blockZ++) {
+                highestY = snapshot.getHighestBlockYAt(blockX, blockZ);
+                if (highestY > market.getCorner2().getBlockY())
+                    highestY = market.getCorner2().getBlockY();
+
+                TypeID = snapshot.getBlockTypeId(blockX, highestY, blockZ);
+
+                while (isTextureTransparent(TypeID) && highestY > 0) {
+                    SubID = snapshot.getBlockData(blockX, highestY, blockZ);
+                    queuedBlocks.add(new BCMinimalItem(TypeID, SubID));
+                    highestY--;
+                    TypeID = snapshot.getBlockTypeId(blockX, highestY, blockZ);
+                }
+
+                SubID = snapshot.getBlockData(blockX, highestY, blockZ);
+                this.drawBlock(graphic, textureX, textureZ, maxWidth, maxHeight, TypeID, SubID);
+                // DRAW QUEUED BLOCKS
+                for (int i = queuedBlocks.size() - 1; i >= 0; i--) {
+                    this.drawBlock(graphic, textureX, textureZ, maxWidth, maxHeight, queuedBlocks.get(i).getID(), queuedBlocks.get(i).getSubID());
+                }
+                queuedBlocks.clear();
+                textureZ += TEXTURE_BLOCK_SIZE;
+            }
+            textureX += TEXTURE_BLOCK_SIZE;
+        }
     }
 
     // /////////////////////////////////
@@ -177,7 +346,10 @@ public class RenderMarketThread implements Runnable {
     // DRAW BLOCK
     //
     // /////////////////////////////////
-    private void drawBlock(Graphics2D graphic, int x, int z, int TypeID, int SubID) {
+    private void drawBlock(Graphics2D graphic, final int x, final int z, final int maxWidth, final int maxHeight, final int TypeID, final int SubID) {
+        if (x < 0 || z < 0 || x > maxWidth || z > maxHeight)
+            return;
+
         String picture = "" + TypeID;
         if (TypeID == 17 || TypeID == 35 || TypeID == 43 || TypeID == 44 || TypeID == 50 || TypeID == 63 || TypeID == 65 || TypeID == 66 || TypeID == 68 || TypeID == 75 || TypeID == 76 || TypeID == 98) {
             picture += "-" + SubID;
@@ -185,7 +357,7 @@ public class RenderMarketThread implements Runnable {
 
         BufferedImage blockTex = imageList.get(picture);
         if (blockTex != null) {
-            graphic.drawImage(blockTex, x * TEXTURE_BLOCK_SIZE, z * TEXTURE_BLOCK_SIZE, TEXTURE_BLOCK_SIZE, TEXTURE_BLOCK_SIZE, null);
+            graphic.drawImage(blockTex, x, z, null);
         }
         blockTex = null;
     }
@@ -326,7 +498,8 @@ public class RenderMarketThread implements Runnable {
     // LOAD TEXTURES
     //
     // /////////////////////////////////
-    public static void loadTextures() {
+    public static void loadTextures(int texSize) {
+        TEXTURE_BLOCK_SIZE = texSize;
         imageList = new HashMap<String, BufferedImage>();
 
         File dir = new File("plugins/BuyCraft/textures/");
@@ -344,8 +517,10 @@ public class RenderMarketThread implements Runnable {
             try {
                 BufferedImage image = ImageIO.read(file);
                 if (image != null) {
+                    image = resize(image, TEXTURE_BLOCK_SIZE, TEXTURE_BLOCK_SIZE);
                     imageList.put(file.getCanonicalFile().getName().replace(".png", ""), image);
                 }
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -354,7 +529,23 @@ public class RenderMarketThread implements Runnable {
 
     // /////////////////////////////////
     //
-    // SAVE TEXTURES
+    // RESIZE IMAGE
+    //
+    // /////////////////////////////////
+    public static BufferedImage resize(BufferedImage img, int newW, int newH) {
+        int w = img.getWidth();
+        int h = img.getHeight();
+        BufferedImage dimg = new BufferedImage(newW, newH, BufferedImage.TRANSLUCENT);
+        Graphics2D g = dimg.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g.drawImage(img, 0, 0, newW, newH, 0, 0, w, h, null);
+        g.dispose();
+        return dimg;
+    }
+
+    // /////////////////////////////////
+    //
+    // SAVE PAGE
     //
     // /////////////////////////////////
     private void savePage(String fileName, ArrayList<String> lines) {

@@ -1,25 +1,21 @@
 package com.bukkit.gemo.BuyCraft.threading;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
-public class RenderMarketFinishedThread implements Runnable {
-    
-    private long duration;
+public class RenderMarketFinishedThread implements Runnable {    
     private String playerName;
-    private String marketName;
+    private String text;
     
-    public RenderMarketFinishedThread(long duration, final String playerName, final String marketName) {
-        this.duration = duration;
+    public RenderMarketFinishedThread(final String playerName, final String text) {
         this.playerName = playerName;
-        this.marketName = marketName;
+        this.text = text;
     }
     
     @Override
     public void run() {
         Player player = Bukkit.getServer().getPlayer(playerName);
         if(player != null)
-            player.sendMessage(ChatColor.GREEN + "Rendering of '" + this.marketName + "' finished in " + duration + "ms.");
+            player.sendMessage(text);
     }
 }

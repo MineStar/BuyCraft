@@ -78,7 +78,7 @@ public class BCCore extends JavaPlugin {
     public void onEnable() {
         PluginInstance = this;
         server = getServer();
-        RenderMarketThread.loadTextures();
+        RenderMarketThread.loadTextures(TEXTURE_BLOCK_SIZE);
         loadMarkets();
         loadAliases();
         loadItems();
@@ -263,7 +263,7 @@ public class BCCore extends JavaPlugin {
                                         }
                                     }
                                 }
-                                RenderMarketThread market = new RenderMarketThread(player.getName(), chunkList, BCBlockListener.userShopList, this.TEXTURE_BLOCK_SIZE, area);
+                                RenderMarketThread market = new RenderMarketThread(player.getName(), chunkList, BCBlockListener.userShopList, area);
                                 Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(this, market, 1);                                
                                 BCChatUtils.printSuccess(player, "Rendering of '" + args[1] + "' started!");
                             }
