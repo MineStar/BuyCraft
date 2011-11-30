@@ -269,6 +269,36 @@ public class BCCore extends JavaPlugin {
                             }
                             return true;
                         }
+                        if (args[0].equalsIgnoreCase("exporttile")) {
+                            if (!marketList.containsKey(args[1])) {
+                                BCChatUtils.printError(player, "Market '" + args[1] + "' not found!");
+                            } else {
+                                MarketArea area = marketList.get(args[1]);
+                                
+                                // CREATE SNAPSHOT-LIST
+                                Location loc1 = area.getCorner1();
+                                Location loc2 = area.getCorner2();
+                                TreeMap<String, ChunkSnapshot> chunkList = new TreeMap<String, ChunkSnapshot>();
+                                int minChunkX = loc1.getBlock().getChunk().getX();
+                                int maxChunkX = loc2.getBlock().getChunk().getX();
+                                int minChunkZ = loc1.getBlock().getChunk().getZ();
+                                int maxChunkZ = loc2.getBlock().getChunk().getZ();
+                                World world = loc1.getWorld();
+                                ChunkSnapshot snap = null;
+                                for(int x = minChunkX; x <= maxChunkX; x++) {
+                                    for(int z = minChunkZ; z <= maxChunkZ; z++) {
+                                        snap = world.getChunkAt(x, z).getChunkSnapshot(true, true, true);
+                                        if(snap != null) {
+                                            chunkList.put(x + "_" + z, snap);
+                                        }
+                                    }
+                                }
+                                RenderMarketThread market = new RenderMarketThread(player.getName(), player.getLocation(), chunkList, BCBlockListener.userShopList, area);
+                                Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(this, market, 1);                                
+                                BCChatUtils.printSuccess(player, "Rendering of '" + args[1] + "' started! (Single tile)");
+                            }
+                            return true;
+                        }
                     } else if (args.length == 3) {
                         if (args[0].equalsIgnoreCase("setalias")) {
                             for (String thisName : aliasList.values()) {

@@ -19,6 +19,7 @@ import javax.imageio.ImageIO;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.ChunkSnapshot;
+import org.bukkit.Location;
 
 import com.bukkit.gemo.BuyCraft.BCCore;
 import com.bukkit.gemo.BuyCraft.BCMinimalItem;
@@ -33,13 +34,35 @@ public class RenderMarketThread implements Runnable {
     private static HashMap<String, BufferedImage> imageList;
     private MarketArea market;
     private String playerName;
+    private boolean renderAll = true;
+    private Location changedLocation = null;
 
+    private int maxTilesX, maxTilesZ, cutRight, cutBottom;
+
+    private static final int TILE_SIZE = 256;
+
+    // ////////////////////////////////////////////
+    //
+    // CONSTRUCTOR FOR FULL-RENDERING
+    //
+    // ////////////////////////////////////////////
     @SuppressWarnings("unchecked")
     public RenderMarketThread(final String playerName, final TreeMap<String, ChunkSnapshot> chunkList, final HashMap<String, BCUserShop> userShopList, MarketArea market) {
         this.playerName = playerName;
         this.snapList = (TreeMap<String, ChunkSnapshot>) chunkList.clone();
         this.userShopList = (HashMap<String, BCUserShop>) userShopList.clone();
         this.market = market.clone();
+    }
+
+    // ////////////////////////////////////////////
+    //
+    // CONSTRUCTOR FOR SINGLE-TILE-RENDERING
+    //
+    // ////////////////////////////////////////////
+    public RenderMarketThread(final String playerName, final Location changedLocation, final TreeMap<String, ChunkSnapshot> chunkList, final HashMap<String, BCUserShop> userShopList, MarketArea market) {
+        this(playerName, chunkList, userShopList, market);
+        this.changedLocation = changedLocation.clone();
+        this.renderAll = false;
     }
 
     // /////////////////////////////////
@@ -65,6 +88,12 @@ public class RenderMarketThread implements Runnable {
 
             output.createNewFile();
 
+            maxTilesX = (int) (image.getWidth() / TILE_SIZE);
+            maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
+
+            cutRight = ((maxTilesX + 1) * TILE_SIZE) - image.getWidth();
+            cutBottom = ((maxTilesZ + 1) * TILE_SIZE) - image.getHeight();
+
             // ///////////////////////////////////////////
             // BEGIN PAINTING
             // Method 1 : Iterate through all blocks (blockwise drawing)
@@ -76,26 +105,59 @@ public class RenderMarketThread implements Runnable {
             // END PAINTING
             // ///////////////////////////////////////////
 
-            
             long endTime = System.currentTimeMillis();
             long duration = endTime - startTime;
             Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Terraingeneration of '" + market.getAreaName() + "' finished in " + duration + "ms"), 1);
 
-            // CREATE TILES
-            createAllTiles(image, 256);
+            if (renderAll) {
+                // ////////////////////////////
+                // CREATE A FULLRENDER
+                // ////////////////////////////
 
-            // SAVE FILE
-            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Saving large image..."), 1);
-            startTime = System.currentTimeMillis();
-            ImageIO.write(image, "png", output);
-            image.flush();
-            duration = System.currentTimeMillis() - startTime;
-            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Large image saved to HDD in " + duration + "ms."), 1);
+                // CREATE TILES
+                createAllTiles(image);
+
+                // SAVE LARGE IMAGE
+                Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Saving large image..."), 1);
+                startTime = System.currentTimeMillis();
+                ImageIO.write(image, "png", output);
+                image.flush();
+                duration = System.currentTimeMillis() - startTime;
+                Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Large image saved to HDD in " + duration + "ms."), 1);
+            } else {
+                // ////////////////////////////
+                // SPECIFIC TILE-RENDER
+                // ////////////////////////////
+
+                // WE NEED A LOCATION
+                if (changedLocation == null)
+                    return;
+                
+                // SAME WORLD?
+                if (!changedLocation.getWorld().getName().equalsIgnoreCase(market.getCorner1().getWorld().getName()))
+                    return;
+
+                // GET TILE POSITION
+                int singleTileX = 0, singleTileZ = 0;
+                int distX = changedLocation.getBlockX() - market.getCorner1().getBlockX();
+                int distZ = changedLocation.getBlockZ() - market.getCorner1().getBlockZ();
+                singleTileX = (int) (distX * TEXTURE_BLOCK_SIZE / TILE_SIZE);
+                singleTileZ = (int) (distZ * TEXTURE_BLOCK_SIZE / TILE_SIZE);
+
+                if (singleTileX < 0 || singleTileZ < 0 || singleTileX > maxTilesX || singleTileZ > maxTilesZ)
+                {
+                    System.out.println("not in area");
+                    return;                
+                }
+                
+                // EXPORT SINGLE TILE
+                createSingleTile(image, singleTileX, singleTileZ);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        exportMarketHtmlPage(market);        
+        exportMarketHtmlPage(market);
 
         // COLLECT GARBAGE
         snapList.clear();
@@ -107,15 +169,10 @@ public class RenderMarketThread implements Runnable {
     // CREATE TILE-SET
     //
     // /////////////////////////////////
-    public void createAllTiles(BufferedImage image, final int tileSize) {
+    public void createAllTiles(BufferedImage image) {
         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Creating tiles..."), 1);
-        int maxTilesX = (int) (image.getWidth() / tileSize);
-        int maxTilesZ = (int) (image.getHeight() / tileSize);
 
-        int cutRight = ((maxTilesX + 1) * tileSize) - image.getWidth();
-        int cutBottom = ((maxTilesZ + 1) * tileSize) - image.getHeight();
-
-        BufferedImage tileImage = new BufferedImage(tileSize, tileSize, BufferedImage.TYPE_INT_RGB);
+        BufferedImage tileImage = new BufferedImage(TILE_SIZE, TILE_SIZE, BufferedImage.TYPE_INT_RGB);
         Graphics tileGraphic = tileImage.getGraphics();
         File f;
 
@@ -123,11 +180,11 @@ public class RenderMarketThread implements Runnable {
         int tileCount = 0;
         long startTime = System.currentTimeMillis();
         for (int x = 0; x <= maxTilesX; x++) {
-            for (int z = 0; z <= maxTilesZ; z++) {                
+            for (int z = 0; z <= maxTilesZ; z++) {
                 try {
                     // DRAW IMAGE
-                    tileGraphic.drawImage(image, -(x * 256), -(z * 256), null);
-                    
+                    tileGraphic.drawImage(image, -(x * TILE_SIZE), -(z * TILE_SIZE), null);
+
                     // CREATE TILE-FILE
                     f = new File("plugins/BuyCraft/markets/tiles/" + x + "_" + z + ".png");
                     if (f.exists())
@@ -137,29 +194,74 @@ public class RenderMarketThread implements Runnable {
                     // REPAINT THE SIDES, IF NEEDED
                     if (x == maxTilesX && z == maxTilesZ) {
                         // CUT OFF RIGHT AND BOTTOM
-                        tileGraphic.fillRect(tileSize - cutRight, 0, cutRight, tileSize);
-                        tileGraphic.fillRect(0, tileSize - cutBottom, tileSize, cutBottom);
-                    }
-                    else if (x == maxTilesX) {
+                        tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
+                        tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
+                    } else if (x == maxTilesX) {
                         // CUT OFF RIGHT
-                        tileGraphic.fillRect(tileSize - cutRight, 0, cutRight, tileSize);
-                    }
-                    else if (z == maxTilesZ) {
+                        tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
+                    } else if (z == maxTilesZ) {
                         // CUT OF BOTTOM
-                        tileGraphic.fillRect(0, tileSize - cutBottom, tileSize, cutBottom);
+                        tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
                     }
-                    
+
                     // SAVE FILE TO HDD
                     ImageIO.write(tileImage, "png", f);
                     tileCount++;
                 } catch (Exception e) {
                     e.printStackTrace();
-                }                
+                }
             }
         }
-        long duration = System.currentTimeMillis() - startTime;        
-        float timePerTile = (float)duration / (float)tileCount;        
+        long duration = System.currentTimeMillis() - startTime;
+        float timePerTile = (float) duration / (float) tileCount;
         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Tilecreation finished in " + duration + "ms. (Aprox. " + timePerTile + "ms per tile)"), 1);
+    }
+
+    // /////////////////////////////////
+    //
+    // CREATE SINGLE TILE
+    //
+    // /////////////////////////////////
+    public void createSingleTile(BufferedImage image, final int tileX, final int tileZ) {
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Creating single tile : " + tileX + " / " + tileZ), 1);
+
+        BufferedImage tileImage = new BufferedImage(TILE_SIZE, TILE_SIZE, BufferedImage.TYPE_INT_RGB);
+        Graphics tileGraphic = tileImage.getGraphics();
+        File f;
+
+        tileGraphic.setColor(Color.BLACK);
+        long startTime = System.currentTimeMillis();
+
+        try {
+            // DRAW IMAGE
+            tileGraphic.drawImage(image, -(tileX * TILE_SIZE), -(tileZ * TILE_SIZE), null);
+
+            // CREATE TILE-FILE
+            f = new File("plugins/BuyCraft/markets/tiles/" + tileX + "_" + tileZ + ".png");
+            if (f.exists())
+                f.delete();
+            f.createNewFile();
+
+            // REPAINT THE SIDES, IF NEEDED
+            if (tileX == maxTilesX && tileZ == maxTilesZ) {
+                // CUT OFF RIGHT AND BOTTOM
+                tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
+                tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
+            } else if (tileX == maxTilesX) {
+                // CUT OFF RIGHT
+                tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
+            } else if (tileZ == maxTilesZ) {
+                // CUT OF BOTTOM
+                tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
+            }
+
+            // SAVE FILE TO HDD
+            ImageIO.write(tileImage, "png", f);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        long duration = System.currentTimeMillis() - startTime;
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Single tile finished in " + duration + "ms."), 1);
     }
 
     // ///////////////////////////////////////////
