@@ -13,6 +13,7 @@ import net.minecraft.server.Packet130UpdateSign;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
@@ -665,7 +666,18 @@ public class BCUserShop extends BCShop implements Serializable {
     //
     // /////////////////////////////////
     public void restoreInventory(Chest chest) {
+        // DROP OLD INVENTORY
+        for (ItemStack item : chest.getInventory().getContents()) {
+            if (item != null) {
+                if (item.getTypeId() > 0 && item.getAmount() > 0) {
+                    chest.getWorld().dropItem(chest.getBlock().getRelative(BlockFace.UP).getLocation(), item.clone());
+                }
+            }
+        }
+        // CLEAR INVENTORY
         chest.getInventory().clear();
+        
+        // RESTORE SHOPINVENTORY
         for (BCItemStack item : shopInventory) {
             if (item.getItem() != null) {
                 if (item.getId() > 0) {
