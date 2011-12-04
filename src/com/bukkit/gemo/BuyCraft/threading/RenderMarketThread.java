@@ -3,6 +3,7 @@ package com.bukkit.gemo.BuyCraft.threading;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -28,14 +29,15 @@ import com.bukkit.gemo.BuyCraft.MarketArea;
 
 public class RenderMarketThread implements Runnable {
 
-    private static int TEXTURE_BLOCK_SIZE = 32;
+    private static int[] ZOOM_TEXTURE_SIZE = {32, 24, 16, 8};
     private TreeMap<String, ChunkSnapshot> snapList;
     private HashMap<String, BCUserShop> userShopList;
-    private static HashMap<String, BufferedImage> imageList;
+    private static HashMap<Integer, HashMap<String, BufferedImage>> imageList;
     private MarketArea market;
     private String playerName;
     private boolean renderAll = true;
     private Location changedLocation = null;
+    private int[] realZoomLevels = {3, 2, 1, 0};
 
     private int maxTilesX, maxTilesZ, cutRight, cutBottom;
 
@@ -75,7 +77,7 @@ public class RenderMarketThread implements Runnable {
         long startTime = System.currentTimeMillis();
         try {
             // CREATE IMAGE
-            BufferedImage image = new BufferedImage(market.getAreaBlockWidth() * TEXTURE_BLOCK_SIZE, market.getAreaBlockLength() * TEXTURE_BLOCK_SIZE, BufferedImage.TYPE_INT_RGB);
+            BufferedImage image = new BufferedImage(market.getAreaBlockWidth() * ZOOM_TEXTURE_SIZE[0], market.getAreaBlockLength() * ZOOM_TEXTURE_SIZE[0], BufferedImage.TYPE_INT_RGB);
 
             File outputDir = new File("plugins/BuyCraft/markets/");
             outputDir.mkdir();
@@ -94,36 +96,44 @@ public class RenderMarketThread implements Runnable {
             cutRight = ((maxTilesX + 1) * TILE_SIZE) - image.getWidth();
             cutBottom = ((maxTilesZ + 1) * TILE_SIZE) - image.getHeight();
 
-            // ///////////////////////////////////////////
-            // BEGIN PAINTING
-            // Method 1 : Iterate through all blocks (blockwise drawing)
-            // Method 2 : Iterate through chunklist (chunkwise drawing)
-            // NOTE: Method 2 seems to be faster, so we use it
-            // ///////////////////////////////////////////
-            this.renderWithMethod2(image);
-            // ///////////////////////////////////////////
-            // END PAINTING
-            // ///////////////////////////////////////////
-
-            long endTime = System.currentTimeMillis();
-            long duration = endTime - startTime;
-            Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Terraingeneration of '" + market.getAreaName() + "' finished in " + duration + "ms"), 1);
-
             if (renderAll) {
                 // ////////////////////////////
                 // CREATE A FULLRENDER
                 // ////////////////////////////
 
+                // ///////////////////////////////////////////
+                // BEGIN PAINTING
+                // Method 1 : Iterate through all blocks (blockwise drawing)
+                // Method 2 : Iterate through chunklist (chunkwise drawing)
+                // NOTE: Method 2 seems to be faster, so we use it
+                // ///////////////////////////////////////////
+                this.renderWithMethod2(image, 0);
+                // ///////////////////////////////////////////
+                // END PAINTING
+                // ///////////////////////////////////////////
+
+                long endTime = System.currentTimeMillis();
+                long duration = endTime - startTime;
+                Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Terraingeneration of '" + market.getAreaName() + "' finished in " + duration + "ms"), 1);
+
                 // CREATE TILES
-                createAllTiles(image);
+                createAllTiles(image, 0);
+
+                // CREATE ZOOMED TILES
+                BufferedImage zoomLevel1 = RenderMarketThread.resize(image, ZOOM_TEXTURE_SIZE[1] * market.getAreaBlockWidth(), ZOOM_TEXTURE_SIZE[1] * market.getAreaBlockLength());
+                BufferedImage zoomLevel2 = RenderMarketThread.resize(image, ZOOM_TEXTURE_SIZE[2] * market.getAreaBlockWidth(), ZOOM_TEXTURE_SIZE[2] * market.getAreaBlockLength());
+                BufferedImage zoomLevel3 = RenderMarketThread.resize(image, ZOOM_TEXTURE_SIZE[3] * market.getAreaBlockWidth(), ZOOM_TEXTURE_SIZE[3] * market.getAreaBlockLength());
+                createAllTiles(zoomLevel1, 1);
+                createAllTiles(zoomLevel2, 2);
+                createAllTiles(zoomLevel3, 3);
 
                 // SAVE LARGE IMAGE
-                Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Saving large image..."), 1);
+                Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Saving large image..."), 1);
                 startTime = System.currentTimeMillis();
                 ImageIO.write(image, "png", output);
                 image.flush();
                 duration = System.currentTimeMillis() - startTime;
-                Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Large image saved to HDD in " + duration + "ms."), 1);
+                Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Large image saved to HDD in " + duration + "ms."), 1);
             } else {
                 // ////////////////////////////
                 // SPECIFIC TILE-RENDER
@@ -132,7 +142,6 @@ public class RenderMarketThread implements Runnable {
                 // WE NEED A LOCATION
                 if (changedLocation == null)
                     return;
-                
                 // SAME WORLD?
                 if (!changedLocation.getWorld().getName().equalsIgnoreCase(market.getCorner1().getWorld().getName()))
                     return;
@@ -141,23 +150,67 @@ public class RenderMarketThread implements Runnable {
                 int singleTileX = 0, singleTileZ = 0;
                 int distX = changedLocation.getBlockX() - market.getCorner1().getBlockX();
                 int distZ = changedLocation.getBlockZ() - market.getCorner1().getBlockZ();
-                singleTileX = (int) (distX * TEXTURE_BLOCK_SIZE / TILE_SIZE);
-                singleTileZ = (int) (distZ * TEXTURE_BLOCK_SIZE / TILE_SIZE);
+                singleTileX = (int) (distX * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
+                singleTileZ = (int) (distZ * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
 
-                if (singleTileX < 0 || singleTileZ < 0 || singleTileX > maxTilesX || singleTileZ > maxTilesZ)
-                {
-                    System.out.println("not in area");
-                    return;                
+                int nextSingleTileX = (int) ((distX + 1) * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
+                int nextSingleTileZ = (int) ((distZ + 1) * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
+
+                // 8 / 32 = 0.25
+                double SmallBigRatio = (double) ZOOM_TEXTURE_SIZE[3] / (double) ZOOM_TEXTURE_SIZE[0];
+                // 32 / 8 = 4
+                int BigSmallRatio = (int) ZOOM_TEXTURE_SIZE[0] / ZOOM_TEXTURE_SIZE[3];
+
+                double tempX = (double) singleTileX * SmallBigRatio;
+                double tempZ = (double) singleTileZ * SmallBigRatio;
+
+                int minChunkX = ((int) tempX) * BigSmallRatio;
+                int minChunkZ = ((int) tempZ) * BigSmallRatio;
+                int maxChunkX = minChunkX + BigSmallRatio;
+                int maxChunkZ = minChunkZ + BigSmallRatio;
+                minChunkX--;
+                minChunkZ--;
+
+                if (singleTileX < 0 || singleTileZ < 0 || singleTileX > maxTilesX || singleTileZ > maxTilesZ) {
+                    return;
                 }
+
+                this.renderWithMethod2(image, 0);
+                //this.renderSpecificRegionWithMethod2(image, new Point(minChunkX, minChunkZ), new Point(maxChunkX, maxChunkZ), 0);
                 
+                BufferedImage zoomLevel1 = RenderMarketThread.resize(image, ZOOM_TEXTURE_SIZE[1] * market.getAreaBlockWidth(), ZOOM_TEXTURE_SIZE[1] * market.getAreaBlockLength());
+                BufferedImage zoomLevel2 = RenderMarketThread.resize(image, ZOOM_TEXTURE_SIZE[2] * market.getAreaBlockWidth(), ZOOM_TEXTURE_SIZE[2] * market.getAreaBlockLength());
+                BufferedImage zoomLevel3 = RenderMarketThread.resize(image, ZOOM_TEXTURE_SIZE[3] * market.getAreaBlockWidth(), ZOOM_TEXTURE_SIZE[3] * market.getAreaBlockLength());
+
                 // EXPORT SINGLE TILE
-                createSingleTile(image, singleTileX, singleTileZ);
+                createSingleTile(image, singleTileX, singleTileZ, 0);
+                createSingleTile(zoomLevel1, singleTileX, singleTileZ, 1);
+                createSingleTile(zoomLevel2, singleTileX, singleTileZ, 2);
+                createSingleTile(zoomLevel3, singleTileX, singleTileZ, 3);
+
+                // BLOCK ON TILE-BORDER?
+                if (nextSingleTileX != singleTileX || nextSingleTileZ != singleTileZ) {
+                    if (nextSingleTileX <= maxTilesX || nextSingleTileZ <= maxTilesZ) {
+                        createSingleTile(image, nextSingleTileX, nextSingleTileZ, 0);
+                        createSingleTile(zoomLevel1, nextSingleTileX, nextSingleTileZ, 1);
+                        createSingleTile(zoomLevel2, nextSingleTileX, nextSingleTileZ, 2);
+                        createSingleTile(zoomLevel3, nextSingleTileX, nextSingleTileZ, 3);
+                    }
+                }
+
+                // SAVE LARGE IMAGE
+                Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Saving large image..."), 1);
+                startTime = System.currentTimeMillis();
+                ImageIO.write(image, "png", output);
+                image.flush();
+                long duration = System.currentTimeMillis() - startTime;
+                Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Large image saved to HDD in " + duration + "ms."), 1);
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        exportMarketHtmlPage(market);
+        exportMarketHtmlPage(market, 0);
 
         // COLLECT GARBAGE
         snapList.clear();
@@ -169,8 +222,14 @@ public class RenderMarketThread implements Runnable {
     // CREATE TILE-SET
     //
     // /////////////////////////////////
-    public void createAllTiles(BufferedImage image) {
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Creating tiles..."), 1);
+    public void createAllTiles(BufferedImage image, int zoomLevel) {
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating tiles... (zoomlevel " + zoomLevel + " )"), 1);
+
+        maxTilesX = (int) (image.getWidth() / TILE_SIZE);
+        maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
+
+        cutRight = ((maxTilesX + 1) * TILE_SIZE) - image.getWidth();
+        cutBottom = ((maxTilesZ + 1) * TILE_SIZE) - image.getHeight();
 
         BufferedImage tileImage = new BufferedImage(TILE_SIZE, TILE_SIZE, BufferedImage.TYPE_INT_RGB);
         Graphics tileGraphic = tileImage.getGraphics();
@@ -186,7 +245,7 @@ public class RenderMarketThread implements Runnable {
                     tileGraphic.drawImage(image, -(x * TILE_SIZE), -(z * TILE_SIZE), null);
 
                     // CREATE TILE-FILE
-                    f = new File("plugins/BuyCraft/markets/tiles/" + x + "_" + z + ".png");
+                    f = new File("plugins/BuyCraft/markets/tiles/" + realZoomLevels[zoomLevel] + "_" + x + "_" + z + ".png");
                     if (f.exists())
                         f.delete();
                     f.createNewFile();
@@ -214,7 +273,7 @@ public class RenderMarketThread implements Runnable {
         }
         long duration = System.currentTimeMillis() - startTime;
         float timePerTile = (float) duration / (float) tileCount;
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Tilecreation finished in " + duration + "ms. (Aprox. " + timePerTile + "ms per tile)"), 1);
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Tilecreation finished in " + duration + "ms. (Aprox. " + timePerTile + "ms per tile)"), 1);
     }
 
     // /////////////////////////////////
@@ -222,8 +281,23 @@ public class RenderMarketThread implements Runnable {
     // CREATE SINGLE TILE
     //
     // /////////////////////////////////
-    public void createSingleTile(BufferedImage image, final int tileX, final int tileZ) {
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Creating single tile : " + tileX + " / " + tileZ), 1);
+    public void createSingleTile(BufferedImage image, final int tileX, final int tileZ, final int zoomLevel) {
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating single tile : " + tileX + " / " + tileZ), 1);
+
+        maxTilesX = (int) (image.getWidth() / TILE_SIZE);
+        maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
+
+        cutRight = ((maxTilesX + 1) * TILE_SIZE) - image.getWidth();
+        cutBottom = ((maxTilesZ + 1) * TILE_SIZE) - image.getHeight();
+
+        // 8 / 32 = 0.25
+        double SmallBigRatio = (double) ZOOM_TEXTURE_SIZE[zoomLevel] / (double) ZOOM_TEXTURE_SIZE[0];
+        
+        int tempX = (int) ((double)tileX * (double)SmallBigRatio);
+        int tempZ = (int) ((double)tileZ * (double)SmallBigRatio);
+        
+        if(zoomLevel == 1)
+            tempX++;
 
         BufferedImage tileImage = new BufferedImage(TILE_SIZE, TILE_SIZE, BufferedImage.TYPE_INT_RGB);
         Graphics tileGraphic = tileImage.getGraphics();
@@ -234,10 +308,10 @@ public class RenderMarketThread implements Runnable {
 
         try {
             // DRAW IMAGE
-            tileGraphic.drawImage(image, -(tileX * TILE_SIZE), -(tileZ * TILE_SIZE), null);
+            tileGraphic.drawImage(image, -(int)(tempX * TILE_SIZE), -(int)(tempZ * TILE_SIZE), null);
 
             // CREATE TILE-FILE
-            f = new File("plugins/BuyCraft/markets/tiles/" + tileX + "_" + tileZ + ".png");
+            f = new File("plugins/BuyCraft/markets/tiles/" + realZoomLevels[zoomLevel] + "_" + tempX + "_" + tempZ + ".png");
             if (f.exists())
                 f.delete();
             f.createNewFile();
@@ -254,14 +328,13 @@ public class RenderMarketThread implements Runnable {
                 // CUT OF BOTTOM
                 tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
             }
-
             // SAVE FILE TO HDD
             ImageIO.write(tileImage, "png", f);
         } catch (Exception e) {
             e.printStackTrace();
         }
         long duration = System.currentTimeMillis() - startTime;
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketFinishedThread(playerName, ChatColor.GREEN + "Single tile finished in " + duration + "ms."), 1);
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Single tile finished in " + duration + "ms."), 1);
     }
 
     // ///////////////////////////////////////////
@@ -269,7 +342,7 @@ public class RenderMarketThread implements Runnable {
     // METHOD 1 - ITERATE THROUGH ALL BLOCKS
     //
     // ///////////////////////////////////////////
-    public void renderWithMethod1(BufferedImage image) {
+    public void renderWithMethod1(BufferedImage image, int zoomLevel) {
         Graphics2D graphic = (Graphics2D) image.getGraphics();
         int blockChunkX;
         int blockChunkZ;
@@ -305,15 +378,15 @@ public class RenderMarketThread implements Runnable {
                 }
 
                 SubID = snapList.get(chunkString).getBlockData(blockX, highestY, blockZ);
-                this.drawBlock(graphic, textureX, textureZ, image.getWidth(), image.getHeight(), TypeID, SubID);
+                this.drawBlock(graphic, textureX, textureZ, image.getWidth(), image.getHeight(), TypeID, SubID, 0);
                 // DRAW QUEUED BLOCKS
                 for (int i = queuedBlocks.size() - 1; i >= 0; i--) {
-                    this.drawBlock(graphic, textureX, textureZ, image.getWidth(), image.getHeight(), queuedBlocks.get(i).getID(), queuedBlocks.get(i).getSubID());
+                    this.drawBlock(graphic, textureX, textureZ, image.getWidth(), image.getHeight(), queuedBlocks.get(i).getID(), queuedBlocks.get(i).getSubID(), 0);
                 }
                 queuedBlocks.clear();
-                textureZ += TEXTURE_BLOCK_SIZE;
+                textureZ += ZOOM_TEXTURE_SIZE[zoomLevel];
             }
-            textureX += TEXTURE_BLOCK_SIZE;
+            textureX += ZOOM_TEXTURE_SIZE[zoomLevel];
         }
     }
 
@@ -322,7 +395,7 @@ public class RenderMarketThread implements Runnable {
     // METHOD 2 - ITERATE THROUGH CHUNKLIST
     //
     // ///////////////////////////////////////////
-    public void renderWithMethod2(BufferedImage image) {
+    public void renderWithMethod2(BufferedImage image, int zoomLevel) {
         Graphics2D graphic = (Graphics2D) image.getGraphics();
         int minChunkX = market.getCorner1().getBlock().getChunk().getX();
         int minChunkZ = market.getCorner1().getBlock().getChunk().getZ();
@@ -332,16 +405,46 @@ public class RenderMarketThread implements Runnable {
         int startPosX, startPosZ;
         int offsetBlockX = market.getCorner1().getBlockX() & 0xF;
         int offsetBlockZ = market.getCorner1().getBlockZ() & 0xF;
-        startPosX = 0 - (offsetBlockX * TEXTURE_BLOCK_SIZE);
-        startPosZ = 0 - (offsetBlockZ * TEXTURE_BLOCK_SIZE);
-        int chunkSize = 16 * TEXTURE_BLOCK_SIZE;
+        startPosX = 0 - (offsetBlockX * ZOOM_TEXTURE_SIZE[zoomLevel]);
+        startPosZ = 0 - (offsetBlockZ * ZOOM_TEXTURE_SIZE[zoomLevel]);
+        int chunkSize = 16 * ZOOM_TEXTURE_SIZE[zoomLevel];
         for (int x = minChunkX; x <= maxChunkX; x++) {
-            startPosZ = 0 - (offsetBlockZ * TEXTURE_BLOCK_SIZE);
+            startPosZ = 0 - (offsetBlockZ * ZOOM_TEXTURE_SIZE[zoomLevel]);
             for (int z = minChunkZ; z <= maxChunkZ; z++) {
-                this.drawCompleteChunk(graphic, snapList.get(x + "_" + z), startPosX, startPosZ, image.getWidth(), image.getHeight());
+                this.drawCompleteChunk(graphic, snapList.get(x + "_" + z), startPosX, startPosZ, image.getWidth(), image.getHeight(), zoomLevel);
                 startPosZ += chunkSize;
             }
             startPosX += chunkSize;
+        }
+    }
+
+    public void renderSpecificRegionWithMethod2(BufferedImage image, Point minChunk, Point maxChunk, int zoomLevel) {
+        Graphics2D graphic = (Graphics2D) image.getGraphics();
+        int minChunkX = market.getCorner1().getBlock().getChunk().getX();
+        int minChunkZ = market.getCorner1().getBlock().getChunk().getZ();
+        int maxChunkX = market.getCorner2().getBlock().getChunk().getX();
+        int maxChunkZ = market.getCorner2().getBlock().getChunk().getZ();
+
+        int startPosX, startPosZ;
+        int offsetBlockX = market.getCorner1().getBlockX() & 0xF;
+        int offsetBlockZ = market.getCorner1().getBlockZ() & 0xF;
+        startPosX = 0 - (offsetBlockX * ZOOM_TEXTURE_SIZE[zoomLevel]);
+        startPosZ = 0 - (offsetBlockZ * ZOOM_TEXTURE_SIZE[zoomLevel]);
+        int chunkSize = 16 * ZOOM_TEXTURE_SIZE[zoomLevel];
+        int iX = 0;
+        int iZ = 0;
+        for (int x = minChunkX; x <= maxChunkX; x++) {
+            startPosZ = 0 - (offsetBlockZ * ZOOM_TEXTURE_SIZE[zoomLevel]);
+            iZ = 0;
+            for (int z = minChunkZ; z <= maxChunkZ; z++) {
+                if (iX >= minChunk.x && iX <= maxChunk.x && iZ >= minChunk.y && iZ <= maxChunk.y) {
+                    this.drawCompleteChunk(graphic, snapList.get(x + "_" + z), startPosX, startPosZ, image.getWidth(), image.getHeight(), zoomLevel);
+                }
+                startPosZ += chunkSize;
+                iZ++;
+            }
+            startPosX += chunkSize;
+            iX++;
         }
     }
 
@@ -350,7 +453,7 @@ public class RenderMarketThread implements Runnable {
     // DRAW COMPLETE CHUNK
     //
     // /////////////////////////////////
-    private void drawCompleteChunk(Graphics2D graphic, ChunkSnapshot snapshot, int startPosX, int startPosZ, final int maxWidth, final int maxHeight) {
+    private void drawCompleteChunk(Graphics2D graphic, ChunkSnapshot snapshot, final int startPosX, final int startPosZ, final int maxWidth, final int maxHeight, final int zoomLevel) {
         int TypeID, SubID;
         int textureX = startPosX;
         int textureZ = startPosZ;
@@ -373,15 +476,15 @@ public class RenderMarketThread implements Runnable {
                 }
 
                 SubID = snapshot.getBlockData(blockX, highestY, blockZ);
-                this.drawBlock(graphic, textureX, textureZ, maxWidth, maxHeight, TypeID, SubID);
+                this.drawBlock(graphic, textureX, textureZ, maxWidth, maxHeight, TypeID, SubID, 0);
                 // DRAW QUEUED BLOCKS
                 for (int i = queuedBlocks.size() - 1; i >= 0; i--) {
-                    this.drawBlock(graphic, textureX, textureZ, maxWidth, maxHeight, queuedBlocks.get(i).getID(), queuedBlocks.get(i).getSubID());
+                    this.drawBlock(graphic, textureX, textureZ, maxWidth, maxHeight, queuedBlocks.get(i).getID(), queuedBlocks.get(i).getSubID(), 0);
                 }
                 queuedBlocks.clear();
-                textureZ += TEXTURE_BLOCK_SIZE;
+                textureZ += ZOOM_TEXTURE_SIZE[zoomLevel];
             }
-            textureX += TEXTURE_BLOCK_SIZE;
+            textureX += ZOOM_TEXTURE_SIZE[zoomLevel];
         }
     }
 
@@ -390,7 +493,7 @@ public class RenderMarketThread implements Runnable {
     // EXPORT HTML-PAGE
     //
     // /////////////////////////////////
-    private void exportMarketHtmlPage(MarketArea area) {
+    private void exportMarketHtmlPage(MarketArea area, int zoomLevel) {
         BufferedReader reader = null;
         ArrayList<String> lineList = new ArrayList<String>();
         try {
@@ -429,7 +532,7 @@ public class RenderMarketThread implements Runnable {
                     if (shopCount.containsKey(shop.getShopOwner()))
                         thisID = shopCount.get(shop.getShopOwner());
 
-                    areaBuilder.append(shop.getHTML_Area(thisID, relX, relZ, TEXTURE_BLOCK_SIZE));
+                    areaBuilder.append(shop.getHTML_Area(thisID, relX, relZ, ZOOM_TEXTURE_SIZE[zoomLevel]));
                     detailBuilder.append(shop.getHTML_ShopDetails(thisID));
 
                     thisID++;
@@ -448,7 +551,7 @@ public class RenderMarketThread implements Runnable {
     // DRAW BLOCK
     //
     // /////////////////////////////////
-    private void drawBlock(Graphics2D graphic, final int x, final int z, final int maxWidth, final int maxHeight, final int TypeID, final int SubID) {
+    private void drawBlock(Graphics2D graphic, final int x, final int z, final int maxWidth, final int maxHeight, final int TypeID, final int SubID, final int zoomLevel) {
         if (x < 0 || z < 0 || x > maxWidth || z > maxHeight)
             return;
 
@@ -457,7 +560,7 @@ public class RenderMarketThread implements Runnable {
             picture += "-" + SubID;
         }
 
-        BufferedImage blockTex = imageList.get(picture);
+        BufferedImage blockTex = imageList.get(zoomLevel).get(picture);
         if (blockTex != null) {
             graphic.drawImage(blockTex, x, z, null);
         }
@@ -601,8 +704,16 @@ public class RenderMarketThread implements Runnable {
     //
     // /////////////////////////////////
     public static void loadTextures(int texSize) {
-        TEXTURE_BLOCK_SIZE = texSize;
-        imageList = new HashMap<String, BufferedImage>();
+        imageList = new HashMap<Integer, HashMap<String, BufferedImage>>();
+        HashMap<String, BufferedImage> imageList_0 = new HashMap<String, BufferedImage>();
+        HashMap<String, BufferedImage> imageList_1 = new HashMap<String, BufferedImage>();
+        HashMap<String, BufferedImage> imageList_2 = new HashMap<String, BufferedImage>();
+        HashMap<String, BufferedImage> imageList_3 = new HashMap<String, BufferedImage>();
+
+        imageList.put(0, imageList_0);
+        imageList.put(1, imageList_1);
+        imageList.put(2, imageList_2);
+        imageList.put(3, imageList_3);
 
         File dir = new File("plugins/BuyCraft/textures/");
         if (!dir.exists())
@@ -619,8 +730,17 @@ public class RenderMarketThread implements Runnable {
             try {
                 BufferedImage image = ImageIO.read(file);
                 if (image != null) {
-                    image = resize(image, TEXTURE_BLOCK_SIZE, TEXTURE_BLOCK_SIZE);
-                    imageList.put(file.getCanonicalFile().getName().replace(".png", ""), image);
+                    image = resize(image, ZOOM_TEXTURE_SIZE[0], ZOOM_TEXTURE_SIZE[0]);
+                    imageList_0.put(file.getCanonicalFile().getName().replace(".png", ""), image);
+
+                    image = resize(image, ZOOM_TEXTURE_SIZE[1], ZOOM_TEXTURE_SIZE[1]);
+                    imageList_1.put(file.getCanonicalFile().getName().replace(".png", ""), image);
+
+                    image = resize(image, ZOOM_TEXTURE_SIZE[2], ZOOM_TEXTURE_SIZE[2]);
+                    imageList_2.put(file.getCanonicalFile().getName().replace(".png", ""), image);
+
+                    image = resize(image, ZOOM_TEXTURE_SIZE[3], ZOOM_TEXTURE_SIZE[3]);
+                    imageList_3.put(file.getCanonicalFile().getName().replace(".png", ""), image);
                 }
 
             } catch (IOException e) {
