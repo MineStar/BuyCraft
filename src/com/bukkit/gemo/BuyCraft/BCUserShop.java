@@ -48,7 +48,7 @@ public class BCUserShop extends BCShop implements Serializable {
         lastUsedTime = System.currentTimeMillis();
     }
 
-    public String getHTML_Area(int uniqueUserID, int posX, int posZ, int texSize) {
+    public String getHTML_Area(final int uniqueUserID, int posX, int posZ, int texSize) {
         StringBuilder builder = new StringBuilder();
         String uniqueName = this.getShopOwner() + "_" + uniqueUserID;
         builder.append("<area href=\"#\" onmouseover=\"toggleShops('.");
@@ -65,20 +65,87 @@ public class BCUserShop extends BCShop implements Serializable {
         return builder.toString();
     }
 
-    public String getHTML_ShopDetails(int uniqueUserID) {
+    public String getHTML_ShopDetails(final int uniqueUserID, final int javascriptID) {
         StringBuilder builder = new StringBuilder();
         String uniqueName = this.getShopOwner() + "_" + uniqueUserID;
-        builder.append("<div class=\"usershop " + BCCore.getItemName(this.getItemID()) + " " + this.getShopOwner() + " " + uniqueName + "\">");
-        builder.append("<div class=\"inner\">");
-
-        builder.append("<span class=\"material\">" + BCCore.getItemName(this.getItemID()) + "</span> (<span class=\"price\">" + this.getBuyRatio()[0] + ":" + this.getBuyRatio()[1] + "</span>)");
-        builder.append("<div class=\"user\">" + this.getShopOwner() + "</div>");
-        builder.append("<div class=\"available\">verfügbar: " + this.countItemInShopInventory(this.getItemID(), this.getSubID()) + "</div>");
-
-        builder.append("</div>");
-        builder.append("</div>");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t<!-- SHOPDETAILS ( ID : " + javascriptID + " ) -->"); 
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t<div onClick=\"javascript:toggleMarker(" + javascriptID + ");\" onMouseOver=\"javascript:showMarker(" + javascriptID + ");\" onMouseOut=\"javascript:hideMarker(" + javascriptID + ");\" class=\"usershop " + BCCore.getItemName(this.getItemID()) + " " + this.getShopOwner() + " " + uniqueName + "\">");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t\t<div class=\"inner\">");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t\t\t<span class=\"material\">" + BCCore.getItemName(this.getItemID()) + "</span> (<span class=\"price\">" + this.getBuyRatio()[0] + ":" + this.getBuyRatio()[1] + "</span>)");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t\t\t<div class=\"user\">" + this.getShopOwner() + "</div>");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t\t\t<div class=\"available\">verfügbar: " + this.countItemInShopInventory(this.getItemID(), this.getSubID()) + "</div>");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t\t</div>");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t</div>");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t<!-- END SHOPDETAILS ( ID : " + javascriptID + " ) -->");        
+        builder.append(System.getProperty("line.separator"));        
         return builder.toString();
     }
+
+    public String getHTML_Marker(int javascriptID, int mapX, int mapZ) {
+        StringBuilder builder = new StringBuilder();
+        
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t// PRINT MARKER ( ID : " + javascriptID + " ) & HIDE IT");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\tvar icon" + javascriptID + " = new OpenLayers.Icon('marker.png', size, offset);");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\tvar pos" + javascriptID + " = new OpenLayers.Pixel(pixBottomLeft.x + 32*" + mapX + ", pixBottomLeft.y - 32*" + mapZ + ");");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\tvar lonPos" + javascriptID + " = map.getLonLatFromPixel(pos" + javascriptID + ");");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\tvar marker" + javascriptID + " = new OpenLayers.Marker(lonPos" + javascriptID + ", icon" + javascriptID + ");");
+        builder.append(System.getProperty("line.separator"));        
+        builder.append("\t\t\t\tmarkers.addMarker(marker" + javascriptID + ");");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\tvisListForce.push(false);");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\thideMarker(" + javascriptID + ");");
+        builder.append(System.getProperty("line.separator"));       
+
+        return builder.toString();
+    }
+
+    public String getHTML_PopUp(int javascriptID) {
+        StringBuilder builder = new StringBuilder();
+       
+        String matName = BCCore.getItemName(this.getItemID());
+        byte SubID = this.getSubID();
+        if(SubID != 0)
+            matName += ":" + SubID;
+        String buyRatio = this.getBuyRatio()[0] + ":" + this.getBuyRatio()[1];
+        String sellRatio = this.getSellRatio()[0] + ":" + this.getSellRatio()[1];
+        int itemCount = this.countItemInShopInventory(this.getItemID(), this.getSubID());
+        
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t// ADD POPUP ( ID : " + javascriptID + " ) & HIDE IT");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\tvar popup" + javascriptID + " = new OpenLayers.Popup(\"popUp" + javascriptID + "\", lonPos" + javascriptID + ", new OpenLayers.Size(180,95),\"<center><b>Item:</b> " + matName + "<br><b>Verkaufskurs:</b> " + buyRatio + "<br><b>Ankaufkurs:</b> " + sellRatio + "<br><b>Verfügbar:</b> " + itemCount + "</center>\", false);");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\tmap.addPopup(popup" + javascriptID + ");");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\tpopup" + javascriptID + ".setOpacity(0.75);");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\tpopup" + javascriptID + ".hide();");
+        builder.append(System.getProperty("line.separator"));        
+        builder.append("\t\t\t\tpopUpList.push(popup" + javascriptID + ");");
+        builder.append(System.getProperty("line.separator"));        
+        
+        matName = null;
+        buyRatio = null;
+        sellRatio = null;
+
+        return builder.toString();
+    }
+    
     // /////////////////////////////////
     //
     // METHODS FOR GETTING SHOP-PROPERTIES
@@ -676,7 +743,7 @@ public class BCUserShop extends BCShop implements Serializable {
         }
         // CLEAR INVENTORY
         chest.getInventory().clear();
-        
+
         // RESTORE SHOPINVENTORY
         for (BCItemStack item : shopInventory) {
             if (item.getItem() != null) {
