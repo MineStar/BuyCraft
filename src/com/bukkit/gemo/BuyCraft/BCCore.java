@@ -475,19 +475,19 @@ public class BCCore extends JavaPlugin {
         return httpPath;
     }
 
-    public static void loadHTTPPath() {
+    private static void loadHTTPPath() {
         YamlConfiguration config = new YamlConfiguration();
         File file = new File("plugins/BuyCraft/httpconfig.yml");
 
         try {
             if (!file.exists()) {
                 file.createNewFile();
-                config.set("http.exportDir", "plugins/BuyCraft/");
+                config.set("http.exportDir", "plugins/BuyCraft/markets/");
                 config.save(file);
             }
 
             config.load(file);
-            httpPath = config.getString("http.exportDir", "plugins/BuyCraft/");
+            httpPath = config.getString("http.exportDir", "plugins/BuyCraft/markets/");
         } catch (Exception e) {
             e.printStackTrace();
         }
