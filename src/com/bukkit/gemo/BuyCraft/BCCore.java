@@ -81,7 +81,7 @@ public class BCCore extends JavaPlugin {
     @Override
     public void onEnable() {
         loadHTTPPath();
-        
+
         PluginInstance = this;
         server = getServer();
         RenderMarketThread.loadTextures(TEXTURE_BLOCK_SIZE);
@@ -470,6 +470,8 @@ public class BCCore extends JavaPlugin {
     }
 
     public static String getHttpPath() {
+        if (!httpPath.endsWith("/"))
+            httpPath = httpPath + "/";
         return httpPath;
     }
 
