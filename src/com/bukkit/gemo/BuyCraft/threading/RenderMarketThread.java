@@ -1,6 +1,5 @@
 package com.bukkit.gemo.BuyCraft.threading;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -65,10 +64,11 @@ public class RenderMarketThread implements Runnable {
 
         // this.marketDir = "/var/www/vhosts/minestar.de/httpdocs/usershops/" +
         // market.getAreaName() + "/";
-       //this.marketDir = "plugins/BuyCraft/markets/" + market.getAreaName() + "/";
+        // this.marketDir = "plugins/BuyCraft/markets/" + market.getAreaName() +
+        // "/";
 
         this.marketDir = BCCore.getHttpPath() + market.getAreaName() + "/";
-        
+
         this.marketTileDir = marketDir + "tiles/";
         // CREATE NEEDED DIRS
         new File(marketTileDir).mkdirs();
@@ -167,67 +167,26 @@ public class RenderMarketThread implements Runnable {
                     // SAME WORLD?
                     if (!changedLocation.getWorld().getName().equalsIgnoreCase(market.getCorner1().getWorld().getName()))
                         return;
-                  
-                    
+
                     // GET TILE POSITION
-                    int singleTileX = 0, singleTileZ = 0;
-                    int extraZ = image.getHeight() % TILE_SIZE;                  
+                    // int singleTileX = 0, singleTileZ = 0;
+                    // int maxTileZ = (int) (image.getHeight() / TILE_SIZE) + 1;
+                    // int extraZ = maxTileZ * TILE_SIZE - image.getHeight();
                     int distX = changedLocation.getBlockX() - market.getCorner1().getBlockX();
                     int distZ = changedLocation.getBlockZ() - market.getCorner1().getBlockZ();
-                    singleTileX = (int) (distX * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
-                    singleTileZ = (int) (distZ * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
 
-                    int nextSingleTileX = (int) ((distX + 1) * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
-                    int nextSingleTileZ = (int) ((distZ + 1) * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
-
-                    System.out.println("extraZ: " + extraZ);
-                    System.out.println("distZ: " + distZ);
-                    System.out.println("Tile: " + singleTileX + " / " + singleTileZ);
-                    
-                    /*
-                     * // 8 / 32 = 0.25 double SmallBigRatio = (double)
-                     * ZOOM_TEXTURE_SIZE[3] / (double) ZOOM_TEXTURE_SIZE[0]; //
-                     * 32 / 8 = 4 int BigSmallRatio = (int) ZOOM_TEXTURE_SIZE[0]
-                     * / ZOOM_TEXTURE_SIZE[3];
-                     * 
-                     * double tempX = (double) singleTileX * SmallBigRatio;
-                     * double tempZ = (double) singleTileZ * SmallBigRatio;
-                     * 
-                     * int minChunkX = ((int) tempX) * BigSmallRatio; int
-                     * minChunkZ = ((int) tempZ) * BigSmallRatio; int maxChunkX
-                     * = minChunkX + BigSmallRatio; int maxChunkZ = minChunkZ +
-                     * BigSmallRatio; minChunkX--; minChunkZ--;
-                     */
-
-                    if (singleTileX < 0 || singleTileZ < 0 || singleTileX > maxTilesX || singleTileZ > maxTilesZ) {
+                    if (distX < 0 || distZ < 0 || distX > market.getAreaBlockWidth() || distZ > market.getAreaBlockLength()) {
                         return;
                     }
 
                     this.renderWithMethod2(image, 0);
-                    // this.renderSpecificRegionWithMethod2(image, new
-                    // Point(minChunkX, minChunkZ), new Point(maxChunkX,
-                    // maxChunkZ),
-                    // 0);
 
                     // CREATE TILES
                     for (int i = 0; i < ZOOM_TEXTURE_SIZE.length; i++) {
                         BufferedImage img = RenderMarketThread.resize(image, ZOOM_TEXTURE_SIZE[i] * market.getAreaBlockWidth(), ZOOM_TEXTURE_SIZE[i] * market.getAreaBlockLength());
-                        createSingleTile_OSM(img, singleTileX, singleTileZ, i);
+                        createSingleTile_OSM(img, distX, distZ, i);
                         img.flush();
                         img = null;
-                    }
-
-                    // BLOCK ON TILE-BORDER = CREATE MORE TILES
-                    if (nextSingleTileX != singleTileX || nextSingleTileZ != singleTileZ) {
-                        if (nextSingleTileX <= maxTilesX || nextSingleTileZ <= maxTilesZ) {
-                            // CREATE TILES
-                            for (int i = 0; i < ZOOM_TEXTURE_SIZE.length; i++) {
-                                BufferedImage img = RenderMarketThread.resize(image, ZOOM_TEXTURE_SIZE[i] * market.getAreaBlockWidth(), ZOOM_TEXTURE_SIZE[i] * market.getAreaBlockLength());
-                                createSingleTile_OSM(img, nextSingleTileX, nextSingleTileZ, i);
-                                img.flush();
-                                img = null;
-                            }
-                        }
                     }
 
                     // SAVE LARGE IMAGE
@@ -367,8 +326,8 @@ public class RenderMarketThread implements Runnable {
     // CREATE SINGLE TILE
     //
     // /////////////////////////////////
-    private void createSingleTile_OSM(BufferedImage image, final int tileX, final int tileZ, final int zoomLevel) {
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating single tile : " + tileX + " / " + tileZ), 1);
+    private void createSingleTile_OSM(BufferedImage image, final int blockX, final int blockZ, final int zoomLevel) {
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating single tile for Block: " + blockX + " / " + blockZ), 1);
 
         maxTilesX = (int) (image.getWidth() / TILE_SIZE);
         maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
@@ -376,52 +335,75 @@ public class RenderMarketThread implements Runnable {
         cutRight = ((maxTilesX + 1) * TILE_SIZE) - image.getWidth();
         cutBottom = ((maxTilesZ + 1) * TILE_SIZE) - image.getHeight();
 
-        // 8 / 32 = 0.25
-        double SmallBigRatio = (double) ZOOM_TEXTURE_SIZE[zoomLevel] / (double) ZOOM_TEXTURE_SIZE[0];
+        // CALCULATE BLOCK-POSITION ON MAP
+        int relX = blockX;
+        int relZ = market.getAreaBlockLength() - blockZ - 1;
+        int singleTileX = 0, singleTileZ = 0;
+        singleTileX = (int) (relX * ZOOM_TEXTURE_SIZE[zoomLevel] / TILE_SIZE);
+        singleTileZ = (int) (relZ * ZOOM_TEXTURE_SIZE[zoomLevel] / TILE_SIZE);
 
-        int tempX = (int) ((double) tileX * (double) SmallBigRatio);
-        int tempZ = (int) ((double) tileZ * (double) SmallBigRatio);
+        int nextSingleTileX = 0, nextSingleTileZ = 0;
+        nextSingleTileX = (int) ((relX + 1) * ZOOM_TEXTURE_SIZE[zoomLevel] / TILE_SIZE);
+        nextSingleTileZ = (int) ((relZ + 1) * ZOOM_TEXTURE_SIZE[zoomLevel] / TILE_SIZE);
 
-        if (zoomLevel == 1) {
-            tempX++;
-        }
-
-        
-        
         BufferedImage tileImage = new BufferedImage(TILE_SIZE, TILE_SIZE, BufferedImage.TYPE_INT_RGB);
         Graphics tileGraphic = tileImage.getGraphics();
         File f;
 
-        tileGraphic.setColor(Color.BLACK);
         long startTime = System.currentTimeMillis();
 
         try {
             // DRAW IMAGE
-            tileGraphic.drawImage(image, -(tempX * TILE_SIZE), -image.getHeight() + TILE_SIZE + (tempZ * TILE_SIZE), null);
-
-            // tileGraphic.drawImage(image, -(int) (tempX * TILE_SIZE), -(int)
-            // (tempZ * TILE_SIZE), null);
+            tileGraphic.drawImage(image, -(singleTileX * TILE_SIZE), -image.getHeight() + TILE_SIZE + (singleTileZ * TILE_SIZE), null);
 
             // CREATE TILE-FILE
-            f = new File(marketTileDir + realZoomLevels[zoomLevel] + "_" + tempX + "_" + tempZ + ".png");
+            f = new File(marketTileDir + realZoomLevels[zoomLevel] + "_" + singleTileX + "_" + singleTileZ + ".png");
             if (f.exists())
                 f.delete();
             f.createNewFile();
 
             // REPAINT THE SIDES, IF NEEDED
-            if (tileX == maxTilesX && tileZ == maxTilesZ) {
+            if (singleTileX == maxTilesX && singleTileZ == maxTilesZ) {
                 // CUT OFF RIGHT AND TOP
                 tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
                 tileGraphic.fillRect(0, 0, TILE_SIZE, cutBottom);
-            } else if (tileX == maxTilesX) {
+            } else if (singleTileX == maxTilesX) {
                 // CUT OFF RIGHT
                 tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
-            } else if (tileZ == maxTilesZ) {
+            } else if (singleTileZ == maxTilesZ) {
                 // CUT OF TOP
                 tileGraphic.fillRect(0, 0, TILE_SIZE, cutBottom);
             }
             // SAVE FILE TO HDD
             ImageIO.write(tileImage, "png", f);
+
+            // BLOCK ON 2 TILES?
+            if (singleTileX != nextSingleTileX || singleTileZ != nextSingleTileZ) {
+                // DRAW IMAGE
+                tileGraphic.drawImage(image, -(nextSingleTileX * TILE_SIZE), -image.getHeight() + TILE_SIZE + (nextSingleTileZ * TILE_SIZE), null);
+
+                // CREATE TILE-FILE
+                f = new File(marketTileDir + realZoomLevels[zoomLevel] + "_" + nextSingleTileX + "_" + nextSingleTileZ + ".png");
+                if (f.exists())
+                    f.delete();
+                f.createNewFile();
+
+                // REPAINT THE SIDES, IF NEEDED
+                if (nextSingleTileX == maxTilesX && nextSingleTileZ == maxTilesZ) {
+                    // CUT OFF RIGHT AND TOP
+                    tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
+                    tileGraphic.fillRect(0, 0, TILE_SIZE, cutBottom);
+                } else if (nextSingleTileX == maxTilesX) {
+                    // CUT OFF RIGHT
+                    tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
+                } else if (nextSingleTileZ == maxTilesZ) {
+                    // CUT OF TOP
+                    tileGraphic.fillRect(0, 0, TILE_SIZE, cutBottom);
+                }
+                // SAVE FILE TO HDD
+                ImageIO.write(tileImage, "png", f);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -691,10 +673,10 @@ public class RenderMarketThread implements Runnable {
                 if (lineList.get(i).contains(wordList.get(j))) {
                     matchList.put(wordList.get(j), i);
                 }
-                if(found == wordList.size())
+                if (found == wordList.size())
                     break;
             }
-            if(found == wordList.size())
+            if (found == wordList.size())
                 break;
         }
 
