@@ -3,11 +3,11 @@ package com.bukkit.gemo.BuyCraft.threading;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-public class RenderMarkeMessageThread implements Runnable {    
+public class RenderMarketMessageThread implements Runnable {    
     private final String playerName;
     private final String text;
     
-    public RenderMarkeMessageThread(final String playerName, final String text) {
+    public RenderMarketMessageThread(final String playerName, final String text) {
         this.playerName = playerName;
         this.text = text;
     }

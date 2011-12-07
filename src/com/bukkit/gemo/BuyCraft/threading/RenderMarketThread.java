@@ -139,7 +139,7 @@ public class RenderMarketThread implements Runnable {
 
                     long endTime = System.currentTimeMillis();
                     long duration = endTime - startTime;
-                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Terraingeneration of '" + market.getAreaName() + "' finished in " + duration + "ms"), 1);
+                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Terraingeneration of '" + market.getAreaName() + "' finished in " + duration + "ms"), 1);
 
                     // CREATE TILES
                     for (int i = 0; i < ZOOM_TEXTURE_SIZE.length; i++) {
@@ -150,12 +150,12 @@ public class RenderMarketThread implements Runnable {
                     }
 
                     // SAVE LARGE IMAGE
-                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Saving large image..."), 1);
+                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Saving large image..."), 1);
                     startTime = System.currentTimeMillis();
                     ImageIO.write(image, "png", output);
                     image.flush();
                     duration = System.currentTimeMillis() - startTime;
-                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Large image saved to HDD in " + duration + "ms."), 1);
+                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Large image saved to HDD in " + duration + "ms."), 1);
                 } else {
                     // ////////////////////////////
                     // SPECIFIC TILE-RENDER
@@ -190,12 +190,12 @@ public class RenderMarketThread implements Runnable {
                     }
 
                     // SAVE LARGE IMAGE
-                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Saving large image..."), 1);
+                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Saving large image..."), 1);
                     startTime = System.currentTimeMillis();
                     ImageIO.write(image, "png", output);
                     image.flush();
                     long duration = System.currentTimeMillis() - startTime;
-                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Large image saved to HDD in " + duration + "ms."), 1);
+                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Large image saved to HDD in " + duration + "ms."), 1);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -215,7 +215,7 @@ public class RenderMarketThread implements Runnable {
     //
     // /////////////////////////////////
     private void createAllTiles_OSM(BufferedImage image, int zoomLevel) {
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating tiles... (zoomlevel " + zoomLevel + " )"), 1);
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Creating tiles... (zoomlevel " + zoomLevel + " )"), 1);
 
         maxTilesX = (int) (image.getWidth() / TILE_SIZE);
         maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
@@ -264,7 +264,7 @@ public class RenderMarketThread implements Runnable {
         }
         long duration = System.currentTimeMillis() - startTime;
         float timePerTile = (float) duration / (float) tileCount;
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Tilecreation finished in " + duration + "ms. (Aprox. " + timePerTile + "ms per tile)"), 1);
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Tilecreation finished in " + duration + "ms. (Aprox. " + timePerTile + "ms per tile)"), 1);
     }
 
 //    private void createAllTiles_GOOGLE(BufferedImage image, int zoomLevel) {
@@ -327,7 +327,7 @@ public class RenderMarketThread implements Runnable {
     //
     // /////////////////////////////////
     private void createSingleTile_OSM(BufferedImage image, final int blockX, final int blockZ, final int zoomLevel) {
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating single tile for Block: " + blockX + " / " + blockZ), 1);
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Creating single tile for Block: " + blockX + " / " + blockZ), 1);
 
         maxTilesX = (int) (image.getWidth() / TILE_SIZE);
         maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
@@ -408,7 +408,7 @@ public class RenderMarketThread implements Runnable {
             e.printStackTrace();
         }
         long duration = System.currentTimeMillis() - startTime;
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Single tile finished in " + duration + "ms."), 1);
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Single tile finished in " + duration + "ms."), 1);
     }
 
 //    private void createSingleTile_GOOGLE(BufferedImage image, final int tileX, final int tileZ, final int zoomLevel) {
@@ -624,7 +624,7 @@ public class RenderMarketThread implements Runnable {
     //
     // /////////////////////////////////
     private void exportMarketHtmlPage(MarketArea area) {
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating page..."), 1);
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Creating page..."), 1);
         long startTime = System.currentTimeMillis();
 
         BufferedReader reader = null;
@@ -740,7 +740,7 @@ public class RenderMarketThread implements Runnable {
 
         this.savePage(marketDir + "index.html", lineList);
         long duration = System.currentTimeMillis() - startTime;
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Writing " + duration + "ms."), 1);
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Writing " + duration + "ms."), 1);
     }
 
     // /////////////////////////////////
