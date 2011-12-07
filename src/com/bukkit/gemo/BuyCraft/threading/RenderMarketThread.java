@@ -169,9 +169,6 @@ public class RenderMarketThread implements Runnable {
                         return;
 
                     // GET TILE POSITION
-                    // int singleTileX = 0, singleTileZ = 0;
-                    // int maxTileZ = (int) (image.getHeight() / TILE_SIZE) + 1;
-                    // int extraZ = maxTileZ * TILE_SIZE - image.getHeight();
                     int distX = changedLocation.getBlockX() - market.getCorner1().getBlockX();
                     int distZ = changedLocation.getBlockZ() - market.getCorner1().getBlockZ();
 
@@ -267,60 +264,6 @@ public class RenderMarketThread implements Runnable {
         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Tilecreation finished in " + duration + "ms. (Aprox. " + timePerTile + "ms per tile)"), 1);
     }
 
-//    private void createAllTiles_GOOGLE(BufferedImage image, int zoomLevel) {
-//        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating tiles... (zoomlevel " + zoomLevel + " )"), 1);
-//
-//        maxTilesX = (int) (image.getWidth() / TILE_SIZE);
-//        maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
-//
-//        cutRight = ((maxTilesX + 1) * TILE_SIZE) - image.getWidth();
-//        cutBottom = ((maxTilesZ + 1) * TILE_SIZE) - image.getHeight();
-//
-//        BufferedImage tileImage = new BufferedImage(TILE_SIZE, TILE_SIZE, BufferedImage.TYPE_INT_RGB);
-//        Graphics tileGraphic = tileImage.getGraphics();
-//        File f;
-//
-//        tileGraphic.setColor(Color.BLACK);
-//        int tileCount = 0;
-//        long startTime = System.currentTimeMillis();
-//        for (int x = 0; x <= maxTilesX; x++) {
-//            for (int z = 0; z <= maxTilesZ; z++) {
-//                try {
-//                    // DRAW IMAGE
-//                    tileGraphic.drawImage(image, -(x * TILE_SIZE), -(z * TILE_SIZE), null);
-//
-//                    // CREATE TILE-FILE
-//                    f = new File(marketTileDir + realZoomLevels[zoomLevel] + "_" + x + "_" + z + ".png");
-//                    if (f.exists())
-//                        f.delete();
-//                    f.createNewFile();
-//
-//                    // REPAINT THE SIDES, IF NEEDED
-//                    if (x == maxTilesX && z == maxTilesZ) {
-//                        // CUT OFF RIGHT AND BOTTOM
-//                        tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
-//                        tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
-//                    } else if (x == maxTilesX) {
-//                        // CUT OFF RIGHT
-//                        tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
-//                    } else if (z == maxTilesZ) {
-//                        // CUT OF BOTTOM
-//                        tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
-//                    }
-//
-//                    // SAVE FILE TO HDD
-//                    ImageIO.write(tileImage, "png", f);
-//                    tileCount++;
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }
-//        long duration = System.currentTimeMillis() - startTime;
-//        float timePerTile = (float) duration / (float) tileCount;
-//        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Tilecreation finished in " + duration + "ms. (Aprox. " + timePerTile + "ms per tile)"), 1);
-//    }
-
     // /////////////////////////////////
     //
     // CREATE SINGLE TILE
@@ -410,62 +353,6 @@ public class RenderMarketThread implements Runnable {
         long duration = System.currentTimeMillis() - startTime;
         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Single tile finished in " + duration + "ms."), 1);
     }
-
-//    private void createSingleTile_GOOGLE(BufferedImage image, final int tileX, final int tileZ, final int zoomLevel) {
-//        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating single tile : " + tileX + " / " + tileZ), 1);
-//
-//        maxTilesX = (int) (image.getWidth() / TILE_SIZE);
-//        maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
-//
-//        cutRight = ((maxTilesX + 1) * TILE_SIZE) - image.getWidth();
-//        cutBottom = ((maxTilesZ + 1) * TILE_SIZE) - image.getHeight();
-//
-//        // 8 / 32 = 0.25
-//        double SmallBigRatio = (double) ZOOM_TEXTURE_SIZE[zoomLevel] / (double) ZOOM_TEXTURE_SIZE[0];
-//
-//        int tempX = (int) ((double) tileX * (double) SmallBigRatio);
-//        int tempZ = (int) ((double) tileZ * (double) SmallBigRatio);
-//
-//        if (zoomLevel == 1)
-//            tempX++;
-//
-//        BufferedImage tileImage = new BufferedImage(TILE_SIZE, TILE_SIZE, BufferedImage.TYPE_INT_RGB);
-//        Graphics tileGraphic = tileImage.getGraphics();
-//        File f;
-//
-//        tileGraphic.setColor(Color.BLACK);
-//        long startTime = System.currentTimeMillis();
-//
-//        try {
-//            // DRAW IMAGE
-//            tileGraphic.drawImage(image, -(int) (tempX * TILE_SIZE), -(int) (tempZ * TILE_SIZE), null);
-//
-//            // CREATE TILE-FILE
-//            f = new File(marketTileDir + realZoomLevels[zoomLevel] + "_" + tempX + "_" + tempZ + ".png");
-//            if (f.exists())
-//                f.delete();
-//            f.createNewFile();
-//
-//            // REPAINT THE SIDES, IF NEEDED
-//            if (tileX == maxTilesX && tileZ == maxTilesZ) {
-//                // CUT OFF RIGHT AND BOTTOM
-//                tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
-//                tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
-//            } else if (tileX == maxTilesX) {
-//                // CUT OFF RIGHT
-//                tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
-//            } else if (tileZ == maxTilesZ) {
-//                // CUT OF BOTTOM
-//                tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
-//            }
-//            // SAVE FILE TO HDD
-//            ImageIO.write(tileImage, "png", f);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        long duration = System.currentTimeMillis() - startTime;
-//        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Single tile finished in " + duration + "ms."), 1);
-//    }
 
     // ///////////////////////////////////////////
     //

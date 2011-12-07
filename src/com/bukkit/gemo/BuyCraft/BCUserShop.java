@@ -68,6 +68,15 @@ public class BCUserShop extends BCShop implements Serializable {
 
     public String getHTML_ShopDetails(final int uniqueUserID, final int javascriptID) {
         StringBuilder builder = new StringBuilder();
+        int itemID = this.getItemID();
+        String matName = BCCore.getItemName(itemID);  
+        if(itemID == Material.POTION.getId())
+            matName = Potions.getName(this.getSubID());
+        
+        short SubID = this.getSubID();
+        if (SubID != 0  && itemID != Material.POTION.getId())
+            matName += ":" + SubID;
+        
         String uniqueName = this.getShopOwner() + "_" + uniqueUserID;
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t<!-- SHOPDETAILS ( ID : " + javascriptID + " ) -->");
@@ -78,13 +87,13 @@ public class BCUserShop extends BCShop implements Serializable {
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t\t\t<div class=\"user\">" + this.getShopOwner() + "</div>");
         builder.append(System.getProperty("line.separator"));
-        builder.append("\t\t\t\t\t\t<div class=\"material\">" + BCCore.getItemName(this.getItemID()) + "</div>");
+        builder.append("\t\t\t\t\t\t<div class=\"material\">" + matName + "</div>");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t\t\t<div class=\"buyprice\">Verkaufskurs: " + this.getBuyRatio()[0] + ":" + this.getBuyRatio()[1] + "</div>");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t\t\t<div class=\"sellprice\">Ankaufkurs: " + this.getSellRatio()[0] + ":" + this.getSellRatio()[1] + "</div>");
         builder.append(System.getProperty("line.separator"));
-        builder.append("\t\t\t\t\t\t<div class=\"available\">verf&uuml;gbar: " + this.countItemInShopInventory(this.getItemID(), this.getSubID()) + "</div>");
+        builder.append("\t\t\t\t\t\t<div class=\"available\">Verf&uuml;gbar: " + this.countItemInShopInventory(this.getItemID(), this.getSubID()) + "</div>");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t\t</div>");
         builder.append(System.getProperty("line.separator"));
@@ -122,14 +131,21 @@ public class BCUserShop extends BCShop implements Serializable {
     public String getHTML_PopUp(int javascriptID) {
         StringBuilder builder = new StringBuilder();
 
-        String matName = BCCore.getItemName(this.getItemID());
+        int itemID = this.getItemID();
+        String matName = BCCore.getItemName(itemID);  
+        if(itemID == Material.POTION.getId())
+            matName = Potions.getName(this.getSubID());
+        
         short SubID = this.getSubID();
-        if (SubID != 0)
+        if (SubID != 0  && itemID != Material.POTION.getId())
             matName += ":" + SubID;
+        
         String buyRatio = this.getBuyRatio()[0] + ":" + this.getBuyRatio()[1];
         String sellRatio = this.getSellRatio()[0] + ":" + this.getSellRatio()[1];
         int itemCount = this.countItemInShopInventory(this.getItemID(), this.getSubID());
 
+
+        
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t// ADD POPUP ( ID : " + javascriptID + " ) & HIDE IT");
         builder.append(System.getProperty("line.separator"));
