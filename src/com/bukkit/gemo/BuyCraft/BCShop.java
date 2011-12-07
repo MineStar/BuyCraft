@@ -36,7 +36,7 @@ public class BCShop implements Serializable {
     //
     // /////////////////////////////////
 
-    public static int countItemInInventory(Inventory inv, int ItemID, byte SubData) {
+    public static int countItemInInventory(Inventory inv, int ItemID, short SubData) {
         int count = 0;
 
         for (ItemStack item : inv.getContents()) {
@@ -51,7 +51,7 @@ public class BCShop implements Serializable {
     }
 
     public static int countItemInInventory(Inventory inv, int ItemID) {
-        return countItemInInventory(inv, ItemID, (byte) 0);
+        return countItemInInventory(inv, ItemID, (short) 0);
     }
 
     public static boolean checkCreation(String[] lines) {
@@ -130,16 +130,16 @@ public class BCShop implements Serializable {
             return "";
     }
 
-    public static byte getItemData(String str) {
+    public static short getItemData(String str) {
         try {
             String tmp = getSpecialTextOnLine(str, "{", "}");
             String[] split = tmp.split(":");
             if (split.length > 1)
-                return Byte.valueOf(split[1]);
+                return Short.valueOf(split[1]);
             else
-                return (byte) 0;
+                return (short) 0;
         } catch (Exception e) {
-            return (byte) 0;
+            return (short) 0;
         }
     }
 

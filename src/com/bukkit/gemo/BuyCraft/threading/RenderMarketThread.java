@@ -3,7 +3,6 @@ package com.bukkit.gemo.BuyCraft.threading;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -14,6 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.TreeMap;
 
 import javax.imageio.ImageIO;
@@ -21,6 +21,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.ChunkSnapshot;
 import org.bukkit.Location;
+import org.bukkit.Material;
 
 import com.bukkit.gemo.BuyCraft.BCCore;
 import com.bukkit.gemo.BuyCraft.BCMinimalItem;
@@ -61,7 +62,11 @@ public class RenderMarketThread implements Runnable {
         for (int i = 0; i < realZoomLevels.length; i++) {
             realZoomLevels[i] = realZoomLevels.length - (i + 1);
         }
+
+        // this.marketDir = "/var/www/vhosts/minestar.de/httpdocs/usershops/" +
+        // market.getAreaName() + "/";
         this.marketDir = "plugins/BuyCraft/markets/" + market.getAreaName() + "/";
+
         this.marketTileDir = marketDir + "tiles/";
         // CREATE NEEDED DIRS
         new File(marketTileDir).mkdirs();
@@ -78,7 +83,7 @@ public class RenderMarketThread implements Runnable {
         this.changedLocation = changedLocation.clone();
         this.renderAll = false;
     }
-    
+
     // ////////////////////////////////////////////
     //
     // CONSTRUCTOR FOR PAGE-CREATION ONLY
@@ -87,7 +92,7 @@ public class RenderMarketThread implements Runnable {
     public RenderMarketThread(final String playerName, final TreeMap<String, ChunkSnapshot> chunkList, final HashMap<String, BCUserShop> userShopList, MarketArea market, boolean exportPageOnly) {
         this(playerName, chunkList, userShopList, market);
         this.exportPageOnly = exportPageOnly;
-    }    
+    }
 
     // /////////////////////////////////
     //
@@ -160,9 +165,11 @@ public class RenderMarketThread implements Runnable {
                     // SAME WORLD?
                     if (!changedLocation.getWorld().getName().equalsIgnoreCase(market.getCorner1().getWorld().getName()))
                         return;
-
+                  
+                    
                     // GET TILE POSITION
                     int singleTileX = 0, singleTileZ = 0;
+                    int extraZ = image.getHeight() % TILE_SIZE;                  
                     int distX = changedLocation.getBlockX() - market.getCorner1().getBlockX();
                     int distZ = changedLocation.getBlockZ() - market.getCorner1().getBlockZ();
                     singleTileX = (int) (distX * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
@@ -171,6 +178,10 @@ public class RenderMarketThread implements Runnable {
                     int nextSingleTileX = (int) ((distX + 1) * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
                     int nextSingleTileZ = (int) ((distZ + 1) * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
 
+                    System.out.println("extraZ: " + extraZ);
+                    System.out.println("distZ: " + distZ);
+                    System.out.println("Tile: " + singleTileX + " / " + singleTileZ);
+                    
                     /*
                      * // 8 / 32 = 0.25 double SmallBigRatio = (double)
                      * ZOOM_TEXTURE_SIZE[3] / (double) ZOOM_TEXTURE_SIZE[0]; //
@@ -295,59 +306,59 @@ public class RenderMarketThread implements Runnable {
         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Tilecreation finished in " + duration + "ms. (Aprox. " + timePerTile + "ms per tile)"), 1);
     }
 
-    private void createAllTiles_GOOGLE(BufferedImage image, int zoomLevel) {
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating tiles... (zoomlevel " + zoomLevel + " )"), 1);
-
-        maxTilesX = (int) (image.getWidth() / TILE_SIZE);
-        maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
-
-        cutRight = ((maxTilesX + 1) * TILE_SIZE) - image.getWidth();
-        cutBottom = ((maxTilesZ + 1) * TILE_SIZE) - image.getHeight();
-
-        BufferedImage tileImage = new BufferedImage(TILE_SIZE, TILE_SIZE, BufferedImage.TYPE_INT_RGB);
-        Graphics tileGraphic = tileImage.getGraphics();
-        File f;
-
-        tileGraphic.setColor(Color.BLACK);
-        int tileCount = 0;
-        long startTime = System.currentTimeMillis();
-        for (int x = 0; x <= maxTilesX; x++) {
-            for (int z = 0; z <= maxTilesZ; z++) {
-                try {
-                    // DRAW IMAGE
-                    tileGraphic.drawImage(image, -(x * TILE_SIZE), -(z * TILE_SIZE), null);
-
-                    // CREATE TILE-FILE
-                    f = new File(marketTileDir + realZoomLevels[zoomLevel] + "_" + x + "_" + z + ".png");
-                    if (f.exists())
-                        f.delete();
-                    f.createNewFile();
-
-                    // REPAINT THE SIDES, IF NEEDED
-                    if (x == maxTilesX && z == maxTilesZ) {
-                        // CUT OFF RIGHT AND BOTTOM
-                        tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
-                        tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
-                    } else if (x == maxTilesX) {
-                        // CUT OFF RIGHT
-                        tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
-                    } else if (z == maxTilesZ) {
-                        // CUT OF BOTTOM
-                        tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
-                    }
-
-                    // SAVE FILE TO HDD
-                    ImageIO.write(tileImage, "png", f);
-                    tileCount++;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        long duration = System.currentTimeMillis() - startTime;
-        float timePerTile = (float) duration / (float) tileCount;
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Tilecreation finished in " + duration + "ms. (Aprox. " + timePerTile + "ms per tile)"), 1);
-    }
+//    private void createAllTiles_GOOGLE(BufferedImage image, int zoomLevel) {
+//        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating tiles... (zoomlevel " + zoomLevel + " )"), 1);
+//
+//        maxTilesX = (int) (image.getWidth() / TILE_SIZE);
+//        maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
+//
+//        cutRight = ((maxTilesX + 1) * TILE_SIZE) - image.getWidth();
+//        cutBottom = ((maxTilesZ + 1) * TILE_SIZE) - image.getHeight();
+//
+//        BufferedImage tileImage = new BufferedImage(TILE_SIZE, TILE_SIZE, BufferedImage.TYPE_INT_RGB);
+//        Graphics tileGraphic = tileImage.getGraphics();
+//        File f;
+//
+//        tileGraphic.setColor(Color.BLACK);
+//        int tileCount = 0;
+//        long startTime = System.currentTimeMillis();
+//        for (int x = 0; x <= maxTilesX; x++) {
+//            for (int z = 0; z <= maxTilesZ; z++) {
+//                try {
+//                    // DRAW IMAGE
+//                    tileGraphic.drawImage(image, -(x * TILE_SIZE), -(z * TILE_SIZE), null);
+//
+//                    // CREATE TILE-FILE
+//                    f = new File(marketTileDir + realZoomLevels[zoomLevel] + "_" + x + "_" + z + ".png");
+//                    if (f.exists())
+//                        f.delete();
+//                    f.createNewFile();
+//
+//                    // REPAINT THE SIDES, IF NEEDED
+//                    if (x == maxTilesX && z == maxTilesZ) {
+//                        // CUT OFF RIGHT AND BOTTOM
+//                        tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
+//                        tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
+//                    } else if (x == maxTilesX) {
+//                        // CUT OFF RIGHT
+//                        tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
+//                    } else if (z == maxTilesZ) {
+//                        // CUT OF BOTTOM
+//                        tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
+//                    }
+//
+//                    // SAVE FILE TO HDD
+//                    ImageIO.write(tileImage, "png", f);
+//                    tileCount++;
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
+//        long duration = System.currentTimeMillis() - startTime;
+//        float timePerTile = (float) duration / (float) tileCount;
+//        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Tilecreation finished in " + duration + "ms. (Aprox. " + timePerTile + "ms per tile)"), 1);
+//    }
 
     // /////////////////////////////////
     //
@@ -369,9 +380,12 @@ public class RenderMarketThread implements Runnable {
         int tempX = (int) ((double) tileX * (double) SmallBigRatio);
         int tempZ = (int) ((double) tileZ * (double) SmallBigRatio);
 
-        if (zoomLevel == 1)
+        if (zoomLevel == 1) {
             tempX++;
+        }
 
+        
+        
         BufferedImage tileImage = new BufferedImage(TILE_SIZE, TILE_SIZE, BufferedImage.TYPE_INT_RGB);
         Graphics tileGraphic = tileImage.getGraphics();
         File f;
@@ -413,114 +427,114 @@ public class RenderMarketThread implements Runnable {
         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Single tile finished in " + duration + "ms."), 1);
     }
 
-    private void createSingleTile_GOOGLE(BufferedImage image, final int tileX, final int tileZ, final int zoomLevel) {
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating single tile : " + tileX + " / " + tileZ), 1);
-
-        maxTilesX = (int) (image.getWidth() / TILE_SIZE);
-        maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
-
-        cutRight = ((maxTilesX + 1) * TILE_SIZE) - image.getWidth();
-        cutBottom = ((maxTilesZ + 1) * TILE_SIZE) - image.getHeight();
-
-        // 8 / 32 = 0.25
-        double SmallBigRatio = (double) ZOOM_TEXTURE_SIZE[zoomLevel] / (double) ZOOM_TEXTURE_SIZE[0];
-
-        int tempX = (int) ((double) tileX * (double) SmallBigRatio);
-        int tempZ = (int) ((double) tileZ * (double) SmallBigRatio);
-
-        if (zoomLevel == 1)
-            tempX++;
-
-        BufferedImage tileImage = new BufferedImage(TILE_SIZE, TILE_SIZE, BufferedImage.TYPE_INT_RGB);
-        Graphics tileGraphic = tileImage.getGraphics();
-        File f;
-
-        tileGraphic.setColor(Color.BLACK);
-        long startTime = System.currentTimeMillis();
-
-        try {
-            // DRAW IMAGE
-            tileGraphic.drawImage(image, -(int) (tempX * TILE_SIZE), -(int) (tempZ * TILE_SIZE), null);
-
-            // CREATE TILE-FILE
-            f = new File(marketTileDir + realZoomLevels[zoomLevel] + "_" + tempX + "_" + tempZ + ".png");
-            if (f.exists())
-                f.delete();
-            f.createNewFile();
-
-            // REPAINT THE SIDES, IF NEEDED
-            if (tileX == maxTilesX && tileZ == maxTilesZ) {
-                // CUT OFF RIGHT AND BOTTOM
-                tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
-                tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
-            } else if (tileX == maxTilesX) {
-                // CUT OFF RIGHT
-                tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
-            } else if (tileZ == maxTilesZ) {
-                // CUT OF BOTTOM
-                tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
-            }
-            // SAVE FILE TO HDD
-            ImageIO.write(tileImage, "png", f);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        long duration = System.currentTimeMillis() - startTime;
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Single tile finished in " + duration + "ms."), 1);
-    }
+//    private void createSingleTile_GOOGLE(BufferedImage image, final int tileX, final int tileZ, final int zoomLevel) {
+//        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating single tile : " + tileX + " / " + tileZ), 1);
+//
+//        maxTilesX = (int) (image.getWidth() / TILE_SIZE);
+//        maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
+//
+//        cutRight = ((maxTilesX + 1) * TILE_SIZE) - image.getWidth();
+//        cutBottom = ((maxTilesZ + 1) * TILE_SIZE) - image.getHeight();
+//
+//        // 8 / 32 = 0.25
+//        double SmallBigRatio = (double) ZOOM_TEXTURE_SIZE[zoomLevel] / (double) ZOOM_TEXTURE_SIZE[0];
+//
+//        int tempX = (int) ((double) tileX * (double) SmallBigRatio);
+//        int tempZ = (int) ((double) tileZ * (double) SmallBigRatio);
+//
+//        if (zoomLevel == 1)
+//            tempX++;
+//
+//        BufferedImage tileImage = new BufferedImage(TILE_SIZE, TILE_SIZE, BufferedImage.TYPE_INT_RGB);
+//        Graphics tileGraphic = tileImage.getGraphics();
+//        File f;
+//
+//        tileGraphic.setColor(Color.BLACK);
+//        long startTime = System.currentTimeMillis();
+//
+//        try {
+//            // DRAW IMAGE
+//            tileGraphic.drawImage(image, -(int) (tempX * TILE_SIZE), -(int) (tempZ * TILE_SIZE), null);
+//
+//            // CREATE TILE-FILE
+//            f = new File(marketTileDir + realZoomLevels[zoomLevel] + "_" + tempX + "_" + tempZ + ".png");
+//            if (f.exists())
+//                f.delete();
+//            f.createNewFile();
+//
+//            // REPAINT THE SIDES, IF NEEDED
+//            if (tileX == maxTilesX && tileZ == maxTilesZ) {
+//                // CUT OFF RIGHT AND BOTTOM
+//                tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
+//                tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
+//            } else if (tileX == maxTilesX) {
+//                // CUT OFF RIGHT
+//                tileGraphic.fillRect(TILE_SIZE - cutRight, 0, cutRight, TILE_SIZE);
+//            } else if (tileZ == maxTilesZ) {
+//                // CUT OF BOTTOM
+//                tileGraphic.fillRect(0, TILE_SIZE - cutBottom, TILE_SIZE, cutBottom);
+//            }
+//            // SAVE FILE TO HDD
+//            ImageIO.write(tileImage, "png", f);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//        long duration = System.currentTimeMillis() - startTime;
+//        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Single tile finished in " + duration + "ms."), 1);
+//    }
 
     // ///////////////////////////////////////////
     //
     // METHOD 1 - ITERATE THROUGH ALL BLOCKS
     //
     // ///////////////////////////////////////////
-    private void renderWithMethod1(BufferedImage image, int zoomLevel) {
-        Graphics2D graphic = (Graphics2D) image.getGraphics();
-        int blockChunkX;
-        int blockChunkZ;
-        int blockX, blockZ;
-        int highestY;
-
-        ArrayList<BCMinimalItem> queuedBlocks = new ArrayList<BCMinimalItem>();
-
-        int TypeID, SubID;
-        String chunkString = "";
-        int textureX = 0;
-        int textureZ = 0;
-        for (int x = 0; x < market.getAreaBlockWidth(); x++) {
-            blockX = (x + market.getCorner1().getBlockX()) & 0xF;
-            blockChunkX = (x + market.getCorner1().getBlockX()) >> 4;
-            textureZ = 0;
-            for (int z = 0; z < market.getAreaBlockLength(); z++) {
-                blockZ = (z + market.getCorner1().getBlockZ()) & 0xF;
-                blockChunkZ = (z + market.getCorner1().getBlockZ()) >> 4;
-                chunkString = blockChunkX + "_" + blockChunkZ;
-
-                highestY = snapList.get(chunkString).getHighestBlockYAt(blockX, blockZ);
-                if (highestY > market.getCorner2().getBlockY())
-                    highestY = market.getCorner2().getBlockY();
-
-                TypeID = snapList.get(chunkString).getBlockTypeId(blockX, highestY, blockZ);
-
-                while (isTextureTransparent(TypeID) && highestY > 0) {
-                    SubID = snapList.get(chunkString).getBlockData(blockX, highestY, blockZ);
-                    queuedBlocks.add(new BCMinimalItem(TypeID, SubID));
-                    highestY--;
-                    TypeID = snapList.get(chunkString).getBlockTypeId(blockX, highestY, blockZ);
-                }
-
-                SubID = snapList.get(chunkString).getBlockData(blockX, highestY, blockZ);
-                this.drawBlock(graphic, textureX, textureZ, image.getWidth(), image.getHeight(), TypeID, SubID, 0);
-                // DRAW QUEUED BLOCKS
-                for (int i = queuedBlocks.size() - 1; i >= 0; i--) {
-                    this.drawBlock(graphic, textureX, textureZ, image.getWidth(), image.getHeight(), queuedBlocks.get(i).getID(), queuedBlocks.get(i).getSubID(), 0);
-                }
-                queuedBlocks.clear();
-                textureZ += ZOOM_TEXTURE_SIZE[zoomLevel];
-            }
-            textureX += ZOOM_TEXTURE_SIZE[zoomLevel];
-        }
-    }
+//    private void renderWithMethod1(BufferedImage image, int zoomLevel) {
+//        Graphics2D graphic = (Graphics2D) image.getGraphics();
+//        int blockChunkX;
+//        int blockChunkZ;
+//        int blockX, blockZ;
+//        int highestY;
+//
+//        ArrayList<BCMinimalItem> queuedBlocks = new ArrayList<BCMinimalItem>();
+//
+//        int TypeID, SubID;
+//        String chunkString = "";
+//        int textureX = 0;
+//        int textureZ = 0;
+//        for (int x = 0; x < market.getAreaBlockWidth(); x++) {
+//            blockX = (x + market.getCorner1().getBlockX()) & 0xF;
+//            blockChunkX = (x + market.getCorner1().getBlockX()) >> 4;
+//            textureZ = 0;
+//            for (int z = 0; z < market.getAreaBlockLength(); z++) {
+//                blockZ = (z + market.getCorner1().getBlockZ()) & 0xF;
+//                blockChunkZ = (z + market.getCorner1().getBlockZ()) >> 4;
+//                chunkString = blockChunkX + "_" + blockChunkZ;
+//
+//                highestY = snapList.get(chunkString).getHighestBlockYAt(blockX, blockZ);
+//                if (highestY > market.getCorner2().getBlockY())
+//                    highestY = market.getCorner2().getBlockY();
+//
+//                TypeID = snapList.get(chunkString).getBlockTypeId(blockX, highestY, blockZ);
+//
+//                while (isTextureTransparent(TypeID) && highestY > 0) {
+//                    SubID = snapList.get(chunkString).getBlockData(blockX, highestY, blockZ);
+//                    queuedBlocks.add(new BCMinimalItem(TypeID, SubID));
+//                    highestY--;
+//                    TypeID = snapList.get(chunkString).getBlockTypeId(blockX, highestY, blockZ);
+//                }
+//
+//                SubID = snapList.get(chunkString).getBlockData(blockX, highestY, blockZ);
+//                this.drawBlock(graphic, textureX, textureZ, image.getWidth(), image.getHeight(), TypeID, SubID, 0);
+//                // DRAW QUEUED BLOCKS
+//                for (int i = queuedBlocks.size() - 1; i >= 0; i--) {
+//                    this.drawBlock(graphic, textureX, textureZ, image.getWidth(), image.getHeight(), queuedBlocks.get(i).getID(), queuedBlocks.get(i).getSubID(), 0);
+//                }
+//                queuedBlocks.clear();
+//                textureZ += ZOOM_TEXTURE_SIZE[zoomLevel];
+//            }
+//            textureX += ZOOM_TEXTURE_SIZE[zoomLevel];
+//        }
+//    }
 
     // ///////////////////////////////////////////
     //
@@ -550,35 +564,35 @@ public class RenderMarketThread implements Runnable {
         }
     }
 
-    private void renderSpecificRegionWithMethod2(BufferedImage image, Point minChunk, Point maxChunk, int zoomLevel) {
-        Graphics2D graphic = (Graphics2D) image.getGraphics();
-        int minChunkX = market.getCorner1().getBlock().getChunk().getX();
-        int minChunkZ = market.getCorner1().getBlock().getChunk().getZ();
-        int maxChunkX = market.getCorner2().getBlock().getChunk().getX();
-        int maxChunkZ = market.getCorner2().getBlock().getChunk().getZ();
-
-        int startPosX, startPosZ;
-        int offsetBlockX = market.getCorner1().getBlockX() & 0xF;
-        int offsetBlockZ = market.getCorner1().getBlockZ() & 0xF;
-        startPosX = 0 - (offsetBlockX * ZOOM_TEXTURE_SIZE[zoomLevel]);
-        startPosZ = 0 - (offsetBlockZ * ZOOM_TEXTURE_SIZE[zoomLevel]);
-        int chunkSize = 16 * ZOOM_TEXTURE_SIZE[zoomLevel];
-        int iX = 0;
-        int iZ = 0;
-        for (int x = minChunkX; x <= maxChunkX; x++) {
-            startPosZ = 0 - (offsetBlockZ * ZOOM_TEXTURE_SIZE[zoomLevel]);
-            iZ = 0;
-            for (int z = minChunkZ; z <= maxChunkZ; z++) {
-                if (iX >= minChunk.x && iX <= maxChunk.x && iZ >= minChunk.y && iZ <= maxChunk.y) {
-                    this.drawCompleteChunk(graphic, snapList.get(x + "_" + z), startPosX, startPosZ, image.getWidth(), image.getHeight(), zoomLevel);
-                }
-                startPosZ += chunkSize;
-                iZ++;
-            }
-            startPosX += chunkSize;
-            iX++;
-        }
-    }
+//    private void renderSpecificRegionWithMethod2(BufferedImage image, Point minChunk, Point maxChunk, int zoomLevel) {
+//        Graphics2D graphic = (Graphics2D) image.getGraphics();
+//        int minChunkX = market.getCorner1().getBlock().getChunk().getX();
+//        int minChunkZ = market.getCorner1().getBlock().getChunk().getZ();
+//        int maxChunkX = market.getCorner2().getBlock().getChunk().getX();
+//        int maxChunkZ = market.getCorner2().getBlock().getChunk().getZ();
+//
+//        int startPosX, startPosZ;
+//        int offsetBlockX = market.getCorner1().getBlockX() & 0xF;
+//        int offsetBlockZ = market.getCorner1().getBlockZ() & 0xF;
+//        startPosX = 0 - (offsetBlockX * ZOOM_TEXTURE_SIZE[zoomLevel]);
+//        startPosZ = 0 - (offsetBlockZ * ZOOM_TEXTURE_SIZE[zoomLevel]);
+//        int chunkSize = 16 * ZOOM_TEXTURE_SIZE[zoomLevel];
+//        int iX = 0;
+//        int iZ = 0;
+//        for (int x = minChunkX; x <= maxChunkX; x++) {
+//            startPosZ = 0 - (offsetBlockZ * ZOOM_TEXTURE_SIZE[zoomLevel]);
+//            iZ = 0;
+//            for (int z = minChunkZ; z <= maxChunkZ; z++) {
+//                if (iX >= minChunk.x && iX <= maxChunk.x && iZ >= minChunk.y && iZ <= maxChunk.y) {
+//                    this.drawCompleteChunk(graphic, snapList.get(x + "_" + z), startPosX, startPosZ, image.getWidth(), image.getHeight(), zoomLevel);
+//                }
+//                startPosZ += chunkSize;
+//                iZ++;
+//            }
+//            startPosX += chunkSize;
+//            iX++;
+//        }
+//    }
 
     // /////////////////////////////////
     //
@@ -625,10 +639,10 @@ public class RenderMarketThread implements Runnable {
     // EXPORT HTML-PAGE
     //
     // /////////////////////////////////
-    private void exportMarketHtmlPage(MarketArea area) {        
+    private void exportMarketHtmlPage(MarketArea area) {
         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Creating page..."), 1);
         long startTime = System.currentTimeMillis();
-        
+
         BufferedReader reader = null;
         ArrayList<String> lineList = new ArrayList<String>();
         try {
@@ -657,11 +671,38 @@ public class RenderMarketThread implements Runnable {
             }
         }
 
+        // FIND REPLACEABLE TEXTS
+        ArrayList<String> wordList = new ArrayList<String>();
+        wordList.add("%MARKETNAME%");
+        wordList.add("%SHOPDETAILS%");
+        wordList.add("%CREATEMARKER%");
+        wordList.add("%CREATEPOPUP%");
+        wordList.add("%MIDDLE_X%");
+        wordList.add("%MIDDLE_Z%");
+        wordList.add("%MATERIALS%");
+
+        int found = 0;
+        TreeMap<String, Integer> matchList = new TreeMap<String, Integer>();
+
+        for (int i = 0; i < lineList.size(); i++) {
+            for (int j = 0; j < wordList.size(); j++) {
+                if (lineList.get(i).contains(wordList.get(j))) {
+                    matchList.put(wordList.get(j), i);
+                }
+                if(found == wordList.size())
+                    break;
+            }
+            if(found == wordList.size())
+                break;
+        }
+
         StringBuilder detailBuilder = new StringBuilder();
         StringBuilder markerBuilder = new StringBuilder();
         StringBuilder popupBuilder = new StringBuilder();
         HashMap<String, Integer> shopCount = new HashMap<String, Integer>();
         int nowID = 0;
+        TreeMap<Integer, String> itemsOnMarket = new TreeMap<Integer, String>();
+
         for (BCUserShop shop : userShopList.values()) {
             if (shop.isActive() && shop.getSign() != null) {
                 if (area.isBlockInArea(shop.getSign().getBlock().getLocation())) {
@@ -671,10 +712,14 @@ public class RenderMarketThread implements Runnable {
                     if (shopCount.containsKey(shop.getShopOwner()))
                         thisID = shopCount.get(shop.getShopOwner());
 
+                    // ADD ITEM TO LIST OF AVAILABLE MARKETS
+                    itemsOnMarket.put(shop.getItemID(), BCCore.getItemName(shop.getItemID()));
+
+                    // CALCULATE POSITION ON MAP
                     int mapX = relX;
                     int mapZ = area.getAreaBlockLength() - relZ - 1;
 
-                    //areaBuilder.append(shop.getHTML_Area(thisID, relX, relZ, ZOOM_TEXTURE_SIZE[zoomLevel]));
+                    // CREATE SHOP-DETAILS
                     detailBuilder.append(shop.getHTML_ShopDetails(thisID, nowID));
                     markerBuilder.append(shop.getHTML_Marker(nowID, mapX, mapZ));
                     popupBuilder.append(shop.getHTML_PopUp(nowID));
@@ -685,22 +730,33 @@ public class RenderMarketThread implements Runnable {
                 }
             }
         }
-        lineList = this.replaceText(lineList, "%MARKETNAME%", area.getAreaName());
-        
-        lineList = this.replaceText(lineList, "%SHOPDETAILS%", detailBuilder.toString());
-        lineList = this.replaceText(lineList, "%CREATEMARKER%", markerBuilder.toString());
-        lineList = this.replaceText(lineList, "%CREATEPOPUP%", popupBuilder.toString());
-        lineList = this.replaceText(lineList, "%MIDDLE_X%", String.valueOf((area.getAreaBlockWidth() / 2)));
-        lineList = this.replaceText(lineList, "%MIDDLE_Z%", String.valueOf((area.getAreaBlockLength() / 2)));
-        
+
+        // ITERATE THROUGH ITEMS ON MARKET
+        StringBuilder itemBuilder = new StringBuilder();
+        for (Map.Entry<Integer, String> entry : itemsOnMarket.entrySet()) {
+            itemBuilder.append("\t\t\t\t\t\t<li><a href=\"#\" onClick=\"toggleShops('." + entry.getValue() + "');\">" + Material.getMaterial(entry.getKey()).name().replace("_", " ") + "</a></li>");
+            itemBuilder.append(System.getProperty("line.separator"));
+        }
+
+        // REPLACE TEXTS
+        lineList = this.replaceText(lineList, matchList, "%MARKETNAME%", area.getAreaName());
+        lineList = this.replaceText(lineList, matchList, "%SHOPDETAILS%", detailBuilder.toString());
+        lineList = this.replaceText(lineList, matchList, "%CREATEMARKER%", markerBuilder.toString());
+        lineList = this.replaceText(lineList, matchList, "%CREATEPOPUP%", popupBuilder.toString());
+        lineList = this.replaceText(lineList, matchList, "%MIDDLE_X%", String.valueOf((area.getAreaBlockWidth() / 2)));
+        lineList = this.replaceText(lineList, matchList, "%MIDDLE_Z%", String.valueOf((area.getAreaBlockLength() / 2)));
+        lineList = this.replaceText(lineList, matchList, "%MATERIALS%", itemBuilder.toString());
+
         // COLLECT GARBAGE
         detailBuilder.setLength(0);
         markerBuilder.setLength(0);
         popupBuilder.setLength(0);
-        
+        itemBuilder.setLength(0);
+        itemsOnMarket.clear();
+
         this.savePage(marketDir + "index.html", lineList);
         long duration = System.currentTimeMillis() - startTime;
-        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Page created in " + duration + "ms."), 1);
+        Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarkeMessageThread(playerName, ChatColor.GREEN + "Writing " + duration + "ms."), 1);
     }
 
     // /////////////////////////////////
@@ -939,14 +995,10 @@ public class RenderMarketThread implements Runnable {
     // REPLACE TEXT
     //
     // /////////////////////////////////
-    private ArrayList<String> replaceText(ArrayList<String> lines, String placeHolder, String newText) {
-        String line = "";
-        for (int i = 0; i < lines.size(); i++) {
-            line = lines.get(i);
-            if (line.contains(placeHolder)) {
-                lines.set(i, line.replace(placeHolder, newText));
-            }
-        }
+    private ArrayList<String> replaceText(ArrayList<String> lines, TreeMap<String, Integer> matchList, String placeHolder, String newText) {
+        String thisLine = lines.get(matchList.get(placeHolder));
+        thisLine = thisLine.replace(placeHolder, newText);
+        lines.set(matchList.get(placeHolder), thisLine);
         return lines;
     }
 }

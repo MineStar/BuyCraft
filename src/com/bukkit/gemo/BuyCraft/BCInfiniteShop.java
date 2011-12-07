@@ -54,7 +54,7 @@ public class BCInfiniteShop extends BCShop implements Serializable {
 
         if (!BCCore.isAllowedItem(itemSplit[0]))
             return;
-
+        
         if (buyRatios[0] > 0 && buyRatios[1] > 0)
             BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + Material.getMaterial(sellItemId) + "' für " + buyRatios[1] + " Goldbarren.");
         else
@@ -78,11 +78,11 @@ public class BCInfiniteShop extends BCShop implements Serializable {
             sellRatios = BCShop.getRatios(sign.getLine(3));
 
         int sellItemId = 0;
-        byte sellItemData = 0;
+        short sellItemData = 0;
 
         try {
             sellItemId = BCCore.getItemId(itemSplit[0]);
-            sellItemData = Byte.valueOf(itemSplit[1]);
+            sellItemData = Short.valueOf(itemSplit[1]);
         } catch (Exception e) {
             System.out.println("LOCATION: " + sign.getBlock().getLocation().toString());
             e.printStackTrace();

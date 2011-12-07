@@ -20,6 +20,7 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
+import com.bukkit.gemo.BuyCraft.statics.Potions;
 import com.bukkit.gemo.utils.UtilPermissions;
 
 public class BCUserShop extends BCShop implements Serializable {
@@ -69,30 +70,34 @@ public class BCUserShop extends BCShop implements Serializable {
         StringBuilder builder = new StringBuilder();
         String uniqueName = this.getShopOwner() + "_" + uniqueUserID;
         builder.append(System.getProperty("line.separator"));
-        builder.append("\t\t\t\t<!-- SHOPDETAILS ( ID : " + javascriptID + " ) -->"); 
+        builder.append("\t\t\t\t<!-- SHOPDETAILS ( ID : " + javascriptID + " ) -->");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t<div onClick=\"javascript:toggleMarker(" + javascriptID + ");\" onMouseOver=\"javascript:showMarker(" + javascriptID + ");\" onMouseOut=\"javascript:hideMarker(" + javascriptID + ");\" class=\"usershop " + BCCore.getItemName(this.getItemID()) + " " + this.getShopOwner() + " " + uniqueName + "\">");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t\t<div class=\"inner\">");
         builder.append(System.getProperty("line.separator"));
-        builder.append("\t\t\t\t\t\t<span class=\"material\">" + BCCore.getItemName(this.getItemID()) + "</span> (<span class=\"price\">" + this.getBuyRatio()[0] + ":" + this.getBuyRatio()[1] + "</span>)");
-        builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t\t\t<div class=\"user\">" + this.getShopOwner() + "</div>");
         builder.append(System.getProperty("line.separator"));
-        builder.append("\t\t\t\t\t\t<div class=\"available\">verfügbar: " + this.countItemInShopInventory(this.getItemID(), this.getSubID()) + "</div>");
+        builder.append("\t\t\t\t\t\t<div class=\"material\">" + BCCore.getItemName(this.getItemID()) + "</div>");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t\t\t<div class=\"buyprice\">Verkaufskurs: " + this.getBuyRatio()[0] + ":" + this.getBuyRatio()[1] + "</div>");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t\t\t<div class=\"sellprice\">Ankaufkurs: " + this.getSellRatio()[0] + ":" + this.getSellRatio()[1] + "</div>");
+        builder.append(System.getProperty("line.separator"));
+        builder.append("\t\t\t\t\t\t<div class=\"available\">verf&uuml;gbar: " + this.countItemInShopInventory(this.getItemID(), this.getSubID()) + "</div>");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t\t</div>");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t</div>");
         builder.append(System.getProperty("line.separator"));
-        builder.append("\t\t\t\t<!-- END SHOPDETAILS ( ID : " + javascriptID + " ) -->");        
-        builder.append(System.getProperty("line.separator"));        
+        builder.append("\t\t\t\t<!-- END SHOPDETAILS ( ID : " + javascriptID + " ) -->");
+        builder.append(System.getProperty("line.separator"));
         return builder.toString();
     }
 
     public String getHTML_Marker(int javascriptID, int mapX, int mapZ) {
         StringBuilder builder = new StringBuilder();
-        
+
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t// PRINT MARKER ( ID : " + javascriptID + " ) & HIDE IT");
         builder.append(System.getProperty("line.separator"));
@@ -103,49 +108,49 @@ public class BCUserShop extends BCShop implements Serializable {
         builder.append("\t\t\t\tvar lonPos" + javascriptID + " = map.getLonLatFromPixel(pos" + javascriptID + ");");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\tvar marker" + javascriptID + " = new OpenLayers.Marker(lonPos" + javascriptID + ", icon" + javascriptID + ");");
-        builder.append(System.getProperty("line.separator"));        
+        builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\tmarkers.addMarker(marker" + javascriptID + ");");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\tvisListForce.push(false);");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\thideMarker(" + javascriptID + ");");
-        builder.append(System.getProperty("line.separator"));       
+        builder.append(System.getProperty("line.separator"));
 
         return builder.toString();
     }
 
     public String getHTML_PopUp(int javascriptID) {
         StringBuilder builder = new StringBuilder();
-       
+
         String matName = BCCore.getItemName(this.getItemID());
-        byte SubID = this.getSubID();
-        if(SubID != 0)
+        short SubID = this.getSubID();
+        if (SubID != 0)
             matName += ":" + SubID;
         String buyRatio = this.getBuyRatio()[0] + ":" + this.getBuyRatio()[1];
         String sellRatio = this.getSellRatio()[0] + ":" + this.getSellRatio()[1];
         int itemCount = this.countItemInShopInventory(this.getItemID(), this.getSubID());
-        
+
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t// ADD POPUP ( ID : " + javascriptID + " ) & HIDE IT");
         builder.append(System.getProperty("line.separator"));
-        builder.append("\t\t\t\tvar popup" + javascriptID + " = new OpenLayers.Popup(\"popUp" + javascriptID + "\", lonPos" + javascriptID + ", new OpenLayers.Size(180,95),\"<center><b>Item:</b> " + matName + "<br><b>Verkaufskurs:</b> " + buyRatio + "<br><b>Ankaufkurs:</b> " + sellRatio + "<br><b>Verfügbar:</b> " + itemCount + "</center>\", false);");
+        builder.append("\t\t\t\tvar popup" + javascriptID + " = new OpenLayers.Popup(\"popUp" + javascriptID + "\", lonPos" + javascriptID + ", new OpenLayers.Size(180,95),\"<center><b>Item:</b> " + matName + "<br><b>Verkaufskurs:</b> " + buyRatio + "<br><b>Ankaufkurs:</b> " + sellRatio + "<br><b>Verf&uuml;gbar:</b> " + itemCount + "</center>\", false);");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\tmap.addPopup(popup" + javascriptID + ");");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\tpopup" + javascriptID + ".setOpacity(0.75);");
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\tpopup" + javascriptID + ".hide();");
-        builder.append(System.getProperty("line.separator"));        
+        builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\tpopUpList.push(popup" + javascriptID + ");");
-        builder.append(System.getProperty("line.separator"));        
-        
+        builder.append(System.getProperty("line.separator"));
+
         matName = null;
         buyRatio = null;
         sellRatio = null;
 
         return builder.toString();
     }
-    
+
     // /////////////////////////////////
     //
     // METHODS FOR GETTING SHOP-PROPERTIES
@@ -220,7 +225,7 @@ public class BCUserShop extends BCShop implements Serializable {
         }
     }
 
-    public byte getSubID() {
+    public short getSubID() {
         String line = getLine(1);
         if (line == null)
             return 0;
@@ -228,7 +233,7 @@ public class BCUserShop extends BCShop implements Serializable {
         line = getSpecialTextOnLine(line, "{", "}");
         String[] split = line.split(":");
         try {
-            return Byte.valueOf(split[1]);
+            return Short.valueOf(split[1]);
         } catch (Exception e) {
             return 0;
         }
@@ -321,11 +326,11 @@ public class BCUserShop extends BCShop implements Serializable {
             sellRatios = BCShop.getRatios(sign.getLine(3));
 
         int sellItemId = 0;
-        byte sellItemData = 0;
+        short sellItemData = 0;
 
         try {
             sellItemId = BCCore.getItemId(itemSplit[0]);
-            sellItemData = Byte.valueOf(itemSplit[1]);
+            sellItemData = Short.valueOf(itemSplit[1]);
         } catch (Exception e) {
             System.out.println("LOCATION: " + sign.getBlock().getLocation().toString());
             e.printStackTrace();
@@ -334,7 +339,7 @@ public class BCUserShop extends BCShop implements Serializable {
 
         if (!BCCore.isAllowedItem(itemSplit[0]))
             return;
-
+        
         if (!isActive()) {
             String playerName = BCShop.getSpecialTextOnLine(sign.getLine(0), "$", "$");
             BCChatUtils.printError(player, "Dieser Shop ist momentan nicht aktiviert!");
@@ -345,12 +350,16 @@ public class BCUserShop extends BCShop implements Serializable {
             return;
         }
 
+        String itemName = Material.getMaterial(sellItemId).name();        
+        if(sellItemId == Material.POTION.getId())
+            itemName = Potions.getName(sellItemData);
+        
         if (buyRatios[0] > 0 && buyRatios[1] > 0)
-            BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + Material.getMaterial(sellItemId) + "' für " + buyRatios[1] + " Goldbarren. (Auf Lager: " + this.countItemInShopInventory(sellItemId, sellItemData) + ")");
+            BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + itemName + "' für " + buyRatios[1] + " Goldbarren. (Auf Lager: " + this.countItemInShopInventory(sellItemId, sellItemData) + ")");
         else
             BCChatUtils.printInfo(player, ChatColor.GOLD, "Dieser Shop verkauft nichts.");
         if (sellRatios[0] > 0 && sellRatios[1] > 0)
-            BCChatUtils.printInfo(player, ChatColor.GOLD, "VERKAUFEN: " + sellRatios[0] + " '" + Material.getMaterial(sellItemId) + "' für " + sellRatios[1] + " Goldbarren.");
+            BCChatUtils.printInfo(player, ChatColor.GOLD, "VERKAUFEN: " + sellRatios[0] + " '" + itemName + "' für " + sellRatios[1] + " Goldbarren.");
         else
             BCChatUtils.printInfo(player, ChatColor.GOLD, "Dieser Shop kauft nichts an.");
     }
@@ -401,11 +410,11 @@ public class BCUserShop extends BCShop implements Serializable {
                     sellRatios = BCShop.getRatios(sign.getLine(3));
 
                 int sellItemId = 0;
-                byte sellItemData = 0;
+                short sellItemData = 0;
 
                 try {
                     sellItemId = BCCore.getItemId(itemSplit[0]);
-                    sellItemData = Byte.valueOf(itemSplit[1]);
+                    sellItemData = Short.valueOf(itemSplit[1]);
                 } catch (Exception e) {
                     System.out.println("LOCATION: " + sign.getBlock().getLocation().toString());
                     e.printStackTrace();
@@ -431,11 +440,15 @@ public class BCUserShop extends BCShop implements Serializable {
                     if (item.getTypeId() < 1)
                         continue;
 
+                    String itemName = Material.getMaterial(sellItemId).name();        
+                    if(sellItemId == Material.POTION.getId())
+                        itemName = Potions.getName(sellItemData);
+                    
                     if ((item.getTypeId() != sellItemId || item.getDurability() != sellItemData) && item.getTypeId() != Material.GOLD_INGOT.getId() && item.getTypeId() != Material.GOLD_NUGGET.getId() && item.getTypeId() != Material.GOLD_BLOCK.getId()) {
                         if (buyRatios[0] > 0 && buyRatios[1] > 0)
-                            BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + Material.getMaterial(sellItemId) + "' für " + buyRatios[1] + " Goldbarren. (Auf Lager: " + this.countItemInShopInventory(sellItemId, sellItemData) + ")");
+                            BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + itemName + "' für " + buyRatios[1] + " Goldbarren. (Auf Lager: " + this.countItemInShopInventory(sellItemId, sellItemData) + ")");
                         if (sellRatios[0] > 0 && sellRatios[1] > 0)
-                            BCChatUtils.printInfo(player, ChatColor.GOLD, "VERKAUFEN: " + sellRatios[0] + " '" + Material.getMaterial(sellItemId) + "' für " + sellRatios[1] + " Goldbarren.");
+                            BCChatUtils.printInfo(player, ChatColor.GOLD, "VERKAUFEN: " + sellRatios[0] + " '" + itemName + "' für " + sellRatios[1] + " Goldbarren.");
                         return;
                     }
                 }
@@ -475,7 +488,7 @@ public class BCUserShop extends BCShop implements Serializable {
 
                         // AT LEAST ONE BLOCK MUST BE BOUGHT
                         if (boughtBlocks < 1) {
-                            BCChatUtils.printError(player, "Du bekommst keine Blöcke für " + nuggetItemCountInChest + " Goldnuggets.");
+                            BCChatUtils.printError(player, "Du bekommst keine Items für " + nuggetItemCountInChest + " Goldnuggets.");
                             BCChatUtils.printInfo(player, ChatColor.GRAY, "Bitte mehr Gold in die Kiste legen.");
                             return;
                         }
@@ -789,8 +802,8 @@ public class BCUserShop extends BCShop implements Serializable {
     }
 
     // COUNT ITEM IN SHOPINVENTORY
-    public int countItemInShopInventory(int itemID, short SubID) {
-        int count = 0;
+    public int countItemInShopInventory(int itemID, int SubID) {
+        int count = 0;        
         for (BCItemStack item : shopInventory) {
             if (item.getItem() != null) {
                 if (item.getId() == itemID && item.getSubId() == SubID) {

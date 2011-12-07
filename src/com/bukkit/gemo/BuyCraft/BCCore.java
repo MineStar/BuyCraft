@@ -29,6 +29,7 @@ import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
 
+import com.bukkit.gemo.BuyCraft.statics.Potions;
 import com.bukkit.gemo.BuyCraft.threading.RenderMarketThread;
 import com.bukkit.gemo.utils.FlatFile;
 import com.bukkit.gemo.utils.UtilPermissions;
@@ -84,6 +85,8 @@ public class BCCore extends JavaPlugin {
         loadItems();
         PluginManager pm = getServer().getPluginManager();
 
+        new Potions();
+        
         // LISTENER REGISTRIEREN
         blockListener = new BCBlockListener(this);
         entityListener = new BCEntityListener(this);
