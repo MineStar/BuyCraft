@@ -23,6 +23,7 @@ import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.Event;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -44,6 +45,8 @@ public class BCCore extends JavaPlugin {
     private static TreeMap<String, MarketArea> marketList;
 
     private static BCCore PluginInstance = null;
+
+    private static String httpPath = "plugins/BuyCraft/markets/";
 
     // private final int TEXTURE_SIZE = 32;
     private final int TEXTURE_BLOCK_SIZE = 24;
@@ -77,6 +80,8 @@ public class BCCore extends JavaPlugin {
     // ON ENABLE
     @Override
     public void onEnable() {
+        loadHTTPPath();
+        
         PluginInstance = this;
         server = getServer();
         RenderMarketThread.loadTextures(TEXTURE_BLOCK_SIZE);
@@ -86,7 +91,7 @@ public class BCCore extends JavaPlugin {
         PluginManager pm = getServer().getPluginManager();
 
         new Potions();
-        
+
         // LISTENER REGISTRIEREN
         blockListener = new BCBlockListener(this);
         entityListener = new BCEntityListener(this);
@@ -247,7 +252,7 @@ public class BCCore extends JavaPlugin {
                                 BCChatUtils.printError(player, "Market '" + args[1] + "' not found!");
                             } else {
                                 MarketArea area = marketList.get(args[1]);
-                                
+
                                 // CREATE SNAPSHOT-LIST
                                 Location loc1 = area.getCorner1();
                                 Location loc2 = area.getCorner2();
@@ -258,16 +263,16 @@ public class BCCore extends JavaPlugin {
                                 int maxChunkZ = loc2.getBlock().getChunk().getZ();
                                 World world = loc1.getWorld();
                                 ChunkSnapshot snap = null;
-                                for(int x = minChunkX; x <= maxChunkX; x++) {
-                                    for(int z = minChunkZ; z <= maxChunkZ; z++) {
+                                for (int x = minChunkX; x <= maxChunkX; x++) {
+                                    for (int z = minChunkZ; z <= maxChunkZ; z++) {
                                         snap = world.getChunkAt(x, z).getChunkSnapshot(true, true, true);
-                                        if(snap != null) {
+                                        if (snap != null) {
                                             chunkList.put(x + "_" + z, snap);
                                         }
                                     }
                                 }
                                 RenderMarketThread market = new RenderMarketThread(player.getName(), chunkList, BCBlockListener.userShopList, area, true);
-                                Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(this, market, 1);                                
+                                Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(this, market, 1);
                                 BCChatUtils.printSuccess(player, "Pagecreation of '" + args[1] + "' started!");
                             }
                             return true;
@@ -277,7 +282,7 @@ public class BCCore extends JavaPlugin {
                                 BCChatUtils.printError(player, "Market '" + args[1] + "' not found!");
                             } else {
                                 MarketArea area = marketList.get(args[1]);
-                                
+
                                 // CREATE SNAPSHOT-LIST
                                 Location loc1 = area.getCorner1();
                                 Location loc2 = area.getCorner2();
@@ -288,16 +293,16 @@ public class BCCore extends JavaPlugin {
                                 int maxChunkZ = loc2.getBlock().getChunk().getZ();
                                 World world = loc1.getWorld();
                                 ChunkSnapshot snap = null;
-                                for(int x = minChunkX; x <= maxChunkX; x++) {
-                                    for(int z = minChunkZ; z <= maxChunkZ; z++) {
+                                for (int x = minChunkX; x <= maxChunkX; x++) {
+                                    for (int z = minChunkZ; z <= maxChunkZ; z++) {
                                         snap = world.getChunkAt(x, z).getChunkSnapshot(true, true, true);
-                                        if(snap != null) {
+                                        if (snap != null) {
                                             chunkList.put(x + "_" + z, snap);
                                         }
                                     }
                                 }
                                 RenderMarketThread market = new RenderMarketThread(player.getName(), chunkList, BCBlockListener.userShopList, area);
-                                Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(this, market, 1);                                
+                                Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(this, market, 1);
                                 BCChatUtils.printSuccess(player, "Rendering of '" + args[1] + "' started!");
                             }
                             return true;
@@ -307,7 +312,7 @@ public class BCCore extends JavaPlugin {
                                 BCChatUtils.printError(player, "Market '" + args[1] + "' not found!");
                             } else {
                                 MarketArea area = marketList.get(args[1]);
-                                
+
                                 // CREATE SNAPSHOT-LIST
                                 Location loc1 = area.getCorner1();
                                 Location loc2 = area.getCorner2();
@@ -318,16 +323,16 @@ public class BCCore extends JavaPlugin {
                                 int maxChunkZ = loc2.getBlock().getChunk().getZ();
                                 World world = loc1.getWorld();
                                 ChunkSnapshot snap = null;
-                                for(int x = minChunkX; x <= maxChunkX; x++) {
-                                    for(int z = minChunkZ; z <= maxChunkZ; z++) {
+                                for (int x = minChunkX; x <= maxChunkX; x++) {
+                                    for (int z = minChunkZ; z <= maxChunkZ; z++) {
                                         snap = world.getChunkAt(x, z).getChunkSnapshot(true, true, true);
-                                        if(snap != null) {
+                                        if (snap != null) {
                                             chunkList.put(x + "_" + z, snap);
                                         }
                                     }
                                 }
                                 RenderMarketThread market = new RenderMarketThread(player.getName(), player.getLocation(), chunkList, BCBlockListener.userShopList, area);
-                                Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(this, market, 1);                                
+                                Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(this, market, 1);
                                 BCChatUtils.printSuccess(player, "Rendering of '" + args[1] + "' started! (Single tile)");
                             }
                             return true;
@@ -463,4 +468,27 @@ public class BCCore extends JavaPlugin {
     public static BCCore getPlugin() {
         return PluginInstance;
     }
+
+    public static String getHttpPath() {
+        return httpPath;
+    }
+
+    public static void loadHTTPPath() {
+        YamlConfiguration config = new YamlConfiguration();
+        File file = new File("plugins/BuyCraft/httpconfig.yml");
+
+        try {
+            if (!file.exists()) {
+                file.createNewFile();
+                config.set("http.exportDir", "plugins/BuyCraft/");
+                config.save(file);
+            }
+
+            config.load(file);
+            httpPath = config.getString("http.exportDir", "plugins/BuyCraft/");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }

@@ -65,8 +65,10 @@ public class RenderMarketThread implements Runnable {
 
         // this.marketDir = "/var/www/vhosts/minestar.de/httpdocs/usershops/" +
         // market.getAreaName() + "/";
-        this.marketDir = "plugins/BuyCraft/markets/" + market.getAreaName() + "/";
+       //this.marketDir = "plugins/BuyCraft/markets/" + market.getAreaName() + "/";
 
+        this.marketDir = BCCore.getHttpPath() + market.getAreaName() + "/";
+        
         this.marketTileDir = marketDir + "tiles/";
         // CREATE NEEDED DIRS
         new File(marketTileDir).mkdirs();
