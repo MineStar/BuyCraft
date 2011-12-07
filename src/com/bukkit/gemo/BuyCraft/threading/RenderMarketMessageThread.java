@@ -14,6 +14,9 @@ public class RenderMarketMessageThread implements Runnable {
     
     @Override
     public void run() {
+        if(playerName == null)
+            return;
+        
         Player player = Bukkit.getServer().getPlayer(playerName);
         if(player != null)
             player.sendMessage(text);

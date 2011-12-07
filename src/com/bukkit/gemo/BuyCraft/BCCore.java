@@ -31,6 +31,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
 
 import com.bukkit.gemo.BuyCraft.statics.Potions;
+import com.bukkit.gemo.BuyCraft.threading.QueuedMarketRendererUpdateTileThread;
 import com.bukkit.gemo.BuyCraft.threading.RenderMarketThread;
 import com.bukkit.gemo.utils.FlatFile;
 import com.bukkit.gemo.utils.UtilPermissions;
@@ -48,7 +49,8 @@ public class BCCore extends JavaPlugin {
 
     private static String httpPath = "plugins/BuyCraft/markets/";
 
-    // private final int TEXTURE_SIZE = 32;
+    private static QueuedMarketRendererUpdateTileThread singleTileUpdater;
+  
     private final int TEXTURE_BLOCK_SIZE = 24;
 
     // VARIABLEN
@@ -97,12 +99,16 @@ public class BCCore extends JavaPlugin {
         entityListener = new BCEntityListener(this);
         playerListener = new BCPlayerListener(this);
         pm.registerEvent(Event.Type.BLOCK_BREAK, this.blockListener, Event.Priority.Monitor, this);
+        pm.registerEvent(Event.Type.BLOCK_PLACE, this.blockListener, Event.Priority.Monitor, this);
         pm.registerEvent(Event.Type.BLOCK_PISTON_EXTEND, this.blockListener, Event.Priority.Monitor, this);
         pm.registerEvent(Event.Type.BLOCK_PISTON_RETRACT, this.blockListener, Event.Priority.Monitor, this);
         pm.registerEvent(Event.Type.SIGN_CHANGE, this.blockListener, Event.Priority.Normal, this);
         pm.registerEvent(Event.Type.ENTITY_EXPLODE, this.entityListener, Event.Priority.Normal, this);
         pm.registerEvent(Event.Type.PLAYER_INTERACT, this.playerListener, Event.Priority.Normal, this);
 
+        singleTileUpdater = new QueuedMarketRendererUpdateTileThread();
+        Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, singleTileUpdater, 200, 200);
+        
         // PluginDescriptionFile LESEN
         PluginDescriptionFile pdfFile = this.getDescription();
         System.out.println(pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!");
@@ -311,29 +317,9 @@ public class BCCore extends JavaPlugin {
                             if (!marketList.containsKey(args[1])) {
                                 BCChatUtils.printError(player, "Market '" + args[1] + "' not found!");
                             } else {
-                                MarketArea area = marketList.get(args[1]);
-
-                                // CREATE SNAPSHOT-LIST
-                                Location loc1 = area.getCorner1();
-                                Location loc2 = area.getCorner2();
-                                TreeMap<String, ChunkSnapshot> chunkList = new TreeMap<String, ChunkSnapshot>();
-                                int minChunkX = loc1.getBlock().getChunk().getX();
-                                int maxChunkX = loc2.getBlock().getChunk().getX();
-                                int minChunkZ = loc1.getBlock().getChunk().getZ();
-                                int maxChunkZ = loc2.getBlock().getChunk().getZ();
-                                World world = loc1.getWorld();
-                                ChunkSnapshot snap = null;
-                                for (int x = minChunkX; x <= maxChunkX; x++) {
-                                    for (int z = minChunkZ; z <= maxChunkZ; z++) {
-                                        snap = world.getChunkAt(x, z).getChunkSnapshot(true, true, true);
-                                        if (snap != null) {
-                                            chunkList.put(x + "_" + z, snap);
-                                        }
-                                    }
-                                }
-                                RenderMarketThread market = new RenderMarketThread(player.getName(), player.getLocation(), chunkList, BCBlockListener.userShopList, area);
-                                Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(this, market, 1);
-                                BCChatUtils.printSuccess(player, "Rendering of '" + args[1] + "' started! (Single tile)");
+                                MarketArea area = marketList.get(args[1]);           
+                                BCCore.getSingleTileUpdater().addMarket(area.getAreaName(), player.getLocation());
+                                BCChatUtils.printSuccess(player, "Rendering of '" + args[1] + "' queued!");
                             }
                             return true;
                         }
@@ -493,4 +479,11 @@ public class BCCore extends JavaPlugin {
         }
     }
 
+    public static TreeMap<String, MarketArea> getMarketList() {
+        return marketList;
+    }
+
+    public static QueuedMarketRendererUpdateTileThread getSingleTileUpdater() {
+        return singleTileUpdater;
+    }       
 }

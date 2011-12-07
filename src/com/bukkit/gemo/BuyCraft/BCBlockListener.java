@@ -7,8 +7,9 @@ import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
+import java.util.Map;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -18,7 +19,9 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
+
 import com.bukkit.gemo.utils.BlockUtils;
 import com.bukkit.gemo.utils.SignUtils;
 import com.bukkit.gemo.utils.UtilPermissions;
@@ -234,7 +237,7 @@ public class BCBlockListener extends BlockListener {
                 ObjectInputStream objIn = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file.getAbsolutePath())));
                 BCUserShop shop = (BCUserShop) objIn.readObject();
                 objIn.close();
-                
+
                 userShopList.put(shop.toString(), shop);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -381,11 +384,35 @@ public class BCBlockListener extends BlockListener {
 
     // /////////////////////////////
     //
+    // ON BLOCK PLACE
+    //
+    // /////////////////////////////
+    @Override
+    public void onBlockPlace(BlockPlaceEvent event) {
+        if (event.isCancelled())
+            return;
+
+        // UPDATE TILES, IF INSIDE OF A MARKET
+        Location loc = event.getBlock().getLocation();
+        for (Map.Entry<String, MarketArea> entry : BCCore.getMarketList().entrySet()) {
+            if (entry.getValue().isBlockInArea(loc)) {
+                BCCore.getSingleTileUpdater().addMarket(entry.getKey(), loc);
+                break;
+            }
+        }
+        loc = null;
+    }
+
+    // /////////////////////////////
+    //
     // ON BLOCK BREAK
     //
     // /////////////////////////////
     @Override
     public void onBlockBreak(BlockBreakEvent event) {
+        if (event.isCancelled())
+            return;
+
         Block block = event.getBlock();
 
         if (isSignAnchor(block)) {
@@ -478,6 +505,16 @@ public class BCBlockListener extends BlockListener {
                 }
             }
         }
+
+        // UPDATE TILES, IF INSIDE OF A MARKET
+        Location loc = event.getBlock().getLocation();
+        for (Map.Entry<String, MarketArea> entry : BCCore.getMarketList().entrySet()) {
+            if (entry.getValue().isBlockInArea(loc)) {
+                BCCore.getSingleTileUpdater().addMarket(entry.getKey(), loc);
+                break;
+            }
+        }
+        loc = null;
     }
 
     // /////////////////////////////

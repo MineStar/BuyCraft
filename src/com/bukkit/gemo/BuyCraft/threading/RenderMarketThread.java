@@ -2,6 +2,7 @@ package com.bukkit.gemo.BuyCraft.threading;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
@@ -41,6 +42,7 @@ public class RenderMarketThread implements Runnable {
     private final String marketDir;
     private final String marketTileDir;
     private boolean exportPageOnly;
+    private boolean exportPage = true;
 
     private int maxTilesX, maxTilesZ, cutRight, cutBottom;
 
@@ -63,9 +65,6 @@ public class RenderMarketThread implements Runnable {
         }
 
         // this.marketDir = "/var/www/vhosts/minestar.de/httpdocs/usershops/" +
-        // market.getAreaName() + "/";
-        // this.marketDir = "plugins/BuyCraft/markets/" + market.getAreaName() +
-        // "/";
 
         this.marketDir = BCCore.getHttpPath() + market.getAreaName() + "/";
 
@@ -80,10 +79,11 @@ public class RenderMarketThread implements Runnable {
     // CONSTRUCTOR FOR SINGLE-TILE-RENDERING
     //
     // ////////////////////////////////////////////
-    public RenderMarketThread(final String playerName, final Location changedLocation, final TreeMap<String, ChunkSnapshot> chunkList, final HashMap<String, BCUserShop> userShopList, MarketArea market) {
+    public RenderMarketThread(final String playerName, final Location changedLocation, final TreeMap<String, ChunkSnapshot> chunkList, final HashMap<String, BCUserShop> userShopList, MarketArea market, boolean exportPage) {
         this(playerName, chunkList, userShopList, market);
         this.changedLocation = changedLocation.clone();
         this.renderAll = false;
+        this.exportPage = exportPage;
     }
 
     // ////////////////////////////////////////////
@@ -109,12 +109,6 @@ public class RenderMarketThread implements Runnable {
                 // CREATE IMAGE
                 BufferedImage image = new BufferedImage(market.getAreaBlockWidth() * ZOOM_TEXTURE_SIZE[0], market.getAreaBlockLength() * ZOOM_TEXTURE_SIZE[0], BufferedImage.TYPE_INT_RGB);
 
-                File output = new File(marketDir + "bigImage.png");
-                if (output.exists())
-                    output.delete();
-
-                output.createNewFile();
-
                 maxTilesX = (int) (image.getWidth() / TILE_SIZE);
                 maxTilesZ = (int) (image.getHeight() / TILE_SIZE);
 
@@ -125,6 +119,11 @@ public class RenderMarketThread implements Runnable {
                     // ////////////////////////////
                     // CREATE A FULLRENDER
                     // ////////////////////////////
+                    File output = new File(marketDir + "bigImage.png");
+                    if (output.exists())
+                        output.delete();
+
+                    output.createNewFile();
 
                     // ///////////////////////////////////////////
                     // BEGIN PAINTING
@@ -188,18 +187,15 @@ public class RenderMarketThread implements Runnable {
 
                     // SAVE LARGE IMAGE
                     Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Saving large image..."), 1);
-                    startTime = System.currentTimeMillis();
-                    ImageIO.write(image, "png", output);
-                    image.flush();
-                    long duration = System.currentTimeMillis() - startTime;
-                    Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Large image saved to HDD in " + duration + "ms."), 1);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        exportMarketHtmlPage(market);
+        if (exportPage) {
+            exportMarketHtmlPage(market);
+        }
 
         // COLLECT GARBAGE
         snapList.clear();
@@ -871,5 +867,20 @@ public class RenderMarketThread implements Runnable {
         thisLine = thisLine.replace(placeHolder, newText);
         lines.set(matchList.get(placeHolder), thisLine);
         return lines;
+    }
+
+    public MarketArea getMarket() {
+        return market;
+    }
+
+    public static Point getTilePosition(Location loc, MarketArea market) {
+        int distX = loc.getBlockX() - market.getCorner1().getBlockX();
+        int distZ = loc.getBlockZ() - market.getCorner1().getBlockZ();
+        int relX = distX;
+        int relZ = market.getAreaBlockLength() - distZ - 1;
+        int singleTileX = 0, singleTileZ = 0;
+        singleTileX = (int) (relX * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
+        singleTileZ = (int) (relZ * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
+        return new Point(singleTileX, singleTileZ);
     }
 }
