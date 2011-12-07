@@ -11,7 +11,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -198,7 +200,8 @@ public class RenderMarketThread implements Runnable {
         }
 
         // COLLECT GARBAGE
-        snapList.clear();
+        if (snapList != null)
+            snapList.clear();
         market = null;
     }
 
@@ -600,13 +603,19 @@ public class RenderMarketThread implements Runnable {
 
         // ITERATE THROUGH ITEMS ON MARKET
         StringBuilder itemBuilder = new StringBuilder();
+        Material mat;
         for (Map.Entry<Integer, String> entry : itemsOnMarket.entrySet()) {
-            itemBuilder.append("\t\t\t\t\t\t<li><a href=\"#\" onClick=\"toggleShops('." + entry.getValue() + "');\">" + Material.getMaterial(entry.getKey()).name().replace("_", " ") + "</a></li>");
-            itemBuilder.append(System.getProperty("line.separator"));
+            mat = Material.getMaterial(entry.getKey());
+            if (mat != null) {
+                itemBuilder.append("\t\t\t\t\t\t<li><a href=\"#\" onClick=\"toggleShops('." + entry.getValue() + "');\">" + mat.name().replace("_", " ") + "</a></li>");
+                itemBuilder.append(System.getProperty("line.separator"));
+            }
         }
 
         // REPLACE TEXTS
-        lineList = this.replaceText(lineList, matchList, "%MARKETNAME%", area.getAreaName());
+        Date date = new Date();
+        SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss" );
+        lineList = this.replaceText(lineList, matchList, "%MARKETNAME%", area.getAreaName() + " - Last Update: "+ df.format(date));
         lineList = this.replaceText(lineList, matchList, "%SHOPDETAILS%", detailBuilder.toString());
         lineList = this.replaceText(lineList, matchList, "%CREATEMARKER%", markerBuilder.toString());
         lineList = this.replaceText(lineList, matchList, "%CREATEPOPUP%", popupBuilder.toString());
@@ -622,7 +631,8 @@ public class RenderMarketThread implements Runnable {
         itemsOnMarket.clear();
 
         this.savePage(marketDir + "index.html", lineList);
-        long duration = System.currentTimeMillis() - startTime;
+        long duration = System.currentTimeMillis() - startTime;        
+           
         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Writing " + duration + "ms."), 1);
     }
 

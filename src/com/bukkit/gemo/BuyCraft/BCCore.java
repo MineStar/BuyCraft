@@ -31,6 +31,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
 
 import com.bukkit.gemo.BuyCraft.statics.Potions;
+import com.bukkit.gemo.BuyCraft.threading.QueuedMarketRendererUpdatePageThread;
 import com.bukkit.gemo.BuyCraft.threading.QueuedMarketRendererUpdateTileThread;
 import com.bukkit.gemo.BuyCraft.threading.RenderMarketThread;
 import com.bukkit.gemo.utils.FlatFile;
@@ -44,13 +45,16 @@ public class BCCore extends JavaPlugin {
     private static HashMap<String, Integer> itemListByName = new HashMap<String, Integer>();
 
     private static TreeMap<String, MarketArea> marketList;
-
     private static BCCore PluginInstance = null;
-
-    private static String httpPath = "plugins/BuyCraft/markets/";
-
+    
+    // THREADS
     private static QueuedMarketRendererUpdateTileThread singleTileUpdater;
-  
+    private static QueuedMarketRendererUpdatePageThread pageUpdater;
+   
+    // STUFF FOR RENDERING
+    private static String httpPath = "plugins/BuyCraft/markets/";
+    private static int pageTicks = 20 * 10;
+    private static int tileTicks = 20 * 30;
     private final int TEXTURE_BLOCK_SIZE = 24;
 
     // VARIABLEN
@@ -69,7 +73,6 @@ public class BCCore extends JavaPlugin {
 
     // AUSGABE IN DER CONSOLE
     public static void printInConsole(String str) {
-        // TODO Auto-generated method stub
         System.out.println("[ BuyCraft ]: " + str);
     }
 
@@ -82,7 +85,7 @@ public class BCCore extends JavaPlugin {
     // ON ENABLE
     @Override
     public void onEnable() {
-        loadHTTPPath();
+        loadSettings();
 
         PluginInstance = this;
         server = getServer();
@@ -106,10 +109,14 @@ public class BCCore extends JavaPlugin {
         pm.registerEvent(Event.Type.ENTITY_EXPLODE, this.entityListener, Event.Priority.Normal, this);
         pm.registerEvent(Event.Type.PLAYER_INTERACT, this.playerListener, Event.Priority.Normal, this);
 
+        // CREATE THREADS
         singleTileUpdater = new QueuedMarketRendererUpdateTileThread();
         Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, singleTileUpdater, 200, 200);
-        
-        // PluginDescriptionFile LESEN
+
+        pageUpdater = new QueuedMarketRendererUpdatePageThread();
+        Bukkit.getServer().getScheduler().scheduleSyncRepeatingTask(this, pageUpdater, 200, 5);
+
+        // READ PluginDescriptionFile
         PluginDescriptionFile pdfFile = this.getDescription();
         System.out.println(pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!");
     }
@@ -277,6 +284,7 @@ public class BCCore extends JavaPlugin {
                                         }
                                     }
                                 }
+
                                 RenderMarketThread market = new RenderMarketThread(player.getName(), chunkList, BCBlockListener.userShopList, area, true);
                                 Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(this, market, 1);
                                 BCChatUtils.printSuccess(player, "Pagecreation of '" + args[1] + "' started!");
@@ -317,7 +325,7 @@ public class BCCore extends JavaPlugin {
                             if (!marketList.containsKey(args[1])) {
                                 BCChatUtils.printError(player, "Market '" + args[1] + "' not found!");
                             } else {
-                                MarketArea area = marketList.get(args[1]);           
+                                MarketArea area = marketList.get(args[1]);
                                 BCCore.getSingleTileUpdater().addMarket(area.getAreaName(), player.getLocation());
                                 BCChatUtils.printSuccess(player, "Rendering of '" + args[1] + "' queued!");
                             }
@@ -461,19 +469,25 @@ public class BCCore extends JavaPlugin {
         return httpPath;
     }
 
-    private static void loadHTTPPath() {
+    private static void loadSettings() {
         YamlConfiguration config = new YamlConfiguration();
         File file = new File("plugins/BuyCraft/httpconfig.yml");
 
         try {
             if (!file.exists()) {
                 file.createNewFile();
-                config.set("http.exportDir", "plugins/BuyCraft/markets/");
+                //config.set("http.exportDir", "plugins/BuyCraft/markets/");
+                config.set("http.exportDir", "/var/www/vhosts/minestar.de/httpdocs/usershops/");
+                config.set("ticks.updatePage", pageTicks);
+                config.set("ticks.updateTiles", tileTicks);
                 config.save(file);
             }
 
             config.load(file);
             httpPath = config.getString("http.exportDir", "plugins/BuyCraft/markets/");
+            pageTicks = config.getInt("ticks.updatePage", pageTicks);
+            tileTicks = config.getInt("ticks.updateTiles", tileTicks);
+            config.save(file);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -485,5 +499,9 @@ public class BCCore extends JavaPlugin {
 
     public static QueuedMarketRendererUpdateTileThread getSingleTileUpdater() {
         return singleTileUpdater;
-    }       
+    }
+
+    public static QueuedMarketRendererUpdatePageThread getPageUpdater() {
+        return pageUpdater;
+    }
 }

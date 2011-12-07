@@ -22,17 +22,17 @@ public class QueuedMarketRendererUpdateTileThread implements Runnable {
     }
 
     public void addMarket(String marketName, Location loc) {
-        synchronized (tilesToUpdate) {
+        synchronized (tilesToUpdate) {               
             Point newTile = RenderMarketThread.getTilePosition(loc, BCCore.getMarketList().get(marketName));
             Point oldTile;
             for (QueuedMarketTile entry : tilesToUpdate) {
-               oldTile = RenderMarketThread.getTilePosition(entry.getChangedLocation(), BCCore.getMarketList().get(entry.getMarketName()));
-               if(!marketName.equalsIgnoreCase(entry.getMarketName())) {
-                   continue;
-               }
-               if(oldTile.x == newTile.x && oldTile.y == newTile.y) {
-                   return;            
-               }
+                oldTile = RenderMarketThread.getTilePosition(entry.getChangedLocation(), BCCore.getMarketList().get(entry.getMarketName()));
+                if (!marketName.equalsIgnoreCase(entry.getMarketName())) {
+                    continue;
+                }
+                if (oldTile.x == newTile.x && oldTile.y == newTile.y) {
+                    return;
+                }
             }
             tilesToUpdate.add(new QueuedMarketTile(marketName, loc.clone()));
         }
@@ -40,8 +40,10 @@ public class QueuedMarketRendererUpdateTileThread implements Runnable {
 
     @Override
     public void run() {
-        synchronized (tilesToUpdate) {            
-            Bukkit.getServer().broadcastMessage("rendering markettiles... " + tilesToUpdate.size());
+        synchronized (tilesToUpdate) {
+            //if(tilesToUpdate.size() > 0)
+            //    Bukkit.getServer().broadcastMessage("rendering tiles... " + tilesToUpdate.size());
+         
             for (QueuedMarketTile entry : tilesToUpdate) {
                 // CREATE SNAPSHOT-LIST
                 MarketArea thisArea = BCCore.getMarketList().get(entry.getMarketName());

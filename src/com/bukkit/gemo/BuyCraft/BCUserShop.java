@@ -47,6 +47,7 @@ public class BCUserShop extends BCShop implements Serializable {
         shopInventory = new ArrayList<BCItemStack>();
         creationTime = System.currentTimeMillis();
         lastUsedTime = System.currentTimeMillis();
+        BCCore.getPageUpdater().addMarket(this);
     }
 
     public String getHTML_Area(final int uniqueUserID, int posX, int posZ, int texSize) {
@@ -143,9 +144,7 @@ public class BCUserShop extends BCShop implements Serializable {
         String buyRatio = this.getBuyRatio()[0] + ":" + this.getBuyRatio()[1];
         String sellRatio = this.getSellRatio()[0] + ":" + this.getSellRatio()[1];
         int itemCount = this.countItemInShopInventory(this.getItemID(), this.getSubID());
-
-
-        
+       
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t// ADD POPUP ( ID : " + javascriptID + " ) & HIDE IT");
         builder.append(System.getProperty("line.separator"));
@@ -416,6 +415,7 @@ public class BCUserShop extends BCShop implements Serializable {
                 player.sendMessage(ChatColor.DARK_AQUA + "Der Shop ist jetzt " + ChatColor.RED + "deaktiviert" + ChatColor.DARK_AQUA + ".");
             }
             saveShop();
+            BCCore.getPageUpdater().addMarket(this);
         } else {
             /** IF PLAYER IS NOT THE SHOPOWNER = BUY / SELL */
             if (isActive()) {
@@ -618,6 +618,7 @@ public class BCUserShop extends BCShop implements Serializable {
                         }
 
                         BCChatUtils.printInfo(player, ChatColor.GOLD, "Du hast " + boughtBlocks + " x '" + Material.getMaterial(sellItemId) + "' für " + text + " gekauft.");
+                        BCCore.getPageUpdater().addMarket(this);
                         return;
                     } else {
                         BCChatUtils.printInfo(player, ChatColor.RED, "Dieser Shop verkauft nichts.");
@@ -743,6 +744,7 @@ public class BCUserShop extends BCShop implements Serializable {
                         setLastUsedTime(System.currentTimeMillis());
                         saveShop();
                         BCChatUtils.printInfo(player, ChatColor.GOLD, "Du hast " + sellItemCountInChest + " x '" + Material.getMaterial(sellItemId) + "' für " + text + " verkauft.");
+                        BCCore.getPageUpdater().addMarket(this);
                         return;
                     } else {
                         BCChatUtils.printInfo(player, ChatColor.RED, "Dieser Shop kauft nichts an.");
