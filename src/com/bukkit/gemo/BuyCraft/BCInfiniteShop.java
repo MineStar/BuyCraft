@@ -56,13 +56,13 @@ public class BCInfiniteShop extends BCShop implements Serializable {
 
         if (!BCCore.isAllowedItem(itemSplit[0]))
             return;
-        
-        String itemName = Material.getMaterial(sellItemId).name();        
-        if(sellItemId == Material.POTION.getId())
+
+        String itemName = Material.getMaterial(sellItemId).name();
+        if (sellItemId == Material.POTION.getId())
             itemName = Potions.getName(sellItemData);
-        
+
         if (buyRatios[0] > 0 && buyRatios[1] > 0)
-            BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + itemName+ "' für " + buyRatios[1] + " Goldbarren.");
+            BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + itemName + "' für " + buyRatios[1] + " Goldbarren.");
         else
             BCChatUtils.printInfo(player, ChatColor.GOLD, "Dieser Shop verkauft nichts.");
         if (sellRatios[0] > 0 && sellRatios[1] > 0)
@@ -127,10 +127,10 @@ public class BCInfiniteShop extends BCShop implements Serializable {
         // ////////////////////////////
         // CATCH SELL & BUY
         // ////////////////////////////
-        String itemName = Material.getMaterial(sellItemId).name();        
-        if(sellItemId == Material.POTION.getId())
+        String itemName = Material.getMaterial(sellItemId).name();
+        if (sellItemId == Material.POTION.getId())
             itemName = Potions.getName(sellItemData);
-        
+
         if (sellItemCountInChest == 0 && nuggetItemCountInChest == 0) {
             if (buyRatios[0] > 0 && buyRatios[1] > 0)
                 BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN " + buyRatios[0] + " '" + itemName + "' für " + buyRatios[1] + " Goldbarren.");

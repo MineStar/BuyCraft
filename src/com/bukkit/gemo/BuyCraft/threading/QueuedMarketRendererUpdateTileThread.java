@@ -22,7 +22,7 @@ public class QueuedMarketRendererUpdateTileThread implements Runnable {
     }
 
     public void addMarket(String marketName, Location loc) {
-        synchronized (tilesToUpdate) {               
+        synchronized (tilesToUpdate) {
             Point newTile = RenderMarketThread.getTilePosition(loc, BCCore.getMarketList().get(marketName));
             Point oldTile;
             for (QueuedMarketTile entry : tilesToUpdate) {
@@ -41,9 +41,10 @@ public class QueuedMarketRendererUpdateTileThread implements Runnable {
     @Override
     public void run() {
         synchronized (tilesToUpdate) {
-            //if(tilesToUpdate.size() > 0)
-            //    Bukkit.getServer().broadcastMessage("rendering tiles... " + tilesToUpdate.size());
-         
+            // if(tilesToUpdate.size() > 0)
+            // Bukkit.getServer().broadcastMessage("rendering tiles... " +
+            // tilesToUpdate.size());
+
             for (QueuedMarketTile entry : tilesToUpdate) {
                 // CREATE SNAPSHOT-LIST
                 MarketArea thisArea = BCCore.getMarketList().get(entry.getMarketName());

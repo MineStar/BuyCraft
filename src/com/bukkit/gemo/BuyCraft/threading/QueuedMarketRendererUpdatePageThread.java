@@ -45,9 +45,10 @@ public class QueuedMarketRendererUpdatePageThread implements Runnable {
     @Override
     public void run() {
         synchronized (filesToUpdate) {
-            //if(filesToUpdate.size() > 0)
-            //    Bukkit.getServer().broadcastMessage("rendering pages... " + filesToUpdate.size());
-           
+            // if(filesToUpdate.size() > 0)
+            // Bukkit.getServer().broadcastMessage("rendering pages... " +
+            // filesToUpdate.size());
+
             for (String entry : filesToUpdate) {
                 // CREATE SNAPSHOT-LIST
                 MarketArea thisArea = BCCore.getMarketList().get(entry);
@@ -71,7 +72,7 @@ public class QueuedMarketRendererUpdatePageThread implements Runnable {
                         }
                     }
                 }
-                
+
                 RenderMarketThread updateThread = new RenderMarketThread(null, chunkList, BCBlockListener.userShopList, thisArea, true);
                 Bukkit.getServer().getScheduler().scheduleAsyncDelayedTask(BCCore.getPlugin(), updateThread, 1);
             }

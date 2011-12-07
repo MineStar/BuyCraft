@@ -46,11 +46,11 @@ public class BCCore extends JavaPlugin {
 
     private static TreeMap<String, MarketArea> marketList;
     private static BCCore PluginInstance = null;
-    
+
     // THREADS
     private static QueuedMarketRendererUpdateTileThread singleTileUpdater;
     private static QueuedMarketRendererUpdatePageThread pageUpdater;
-   
+
     // STUFF FOR RENDERING
     private static String httpPath = "plugins/BuyCraft/markets/";
     private static int pageTicks = 20 * 10;
@@ -476,7 +476,7 @@ public class BCCore extends JavaPlugin {
         try {
             if (!file.exists()) {
                 file.createNewFile();
-                //config.set("http.exportDir", "plugins/BuyCraft/markets/");
+                // config.set("http.exportDir", "plugins/BuyCraft/markets/");
                 config.set("http.exportDir", "/var/www/vhosts/minestar.de/httpdocs/usershops/");
                 config.set("ticks.updatePage", pageTicks);
                 config.set("ticks.updateTiles", tileTicks);

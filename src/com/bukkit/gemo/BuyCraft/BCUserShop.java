@@ -70,14 +70,14 @@ public class BCUserShop extends BCShop implements Serializable {
     public String getHTML_ShopDetails(final int uniqueUserID, final int javascriptID) {
         StringBuilder builder = new StringBuilder();
         int itemID = this.getItemID();
-        String matName = BCCore.getItemName(itemID);  
-        if(itemID == Material.POTION.getId())
+        String matName = BCCore.getItemName(itemID);
+        if (itemID == Material.POTION.getId())
             matName = Potions.getName(this.getSubID());
-        
+
         short SubID = this.getSubID();
-        if (SubID != 0  && itemID != Material.POTION.getId())
+        if (SubID != 0 && itemID != Material.POTION.getId())
             matName += ":" + SubID;
-        
+
         String uniqueName = this.getShopOwner() + "_" + uniqueUserID;
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t<!-- SHOPDETAILS ( ID : " + javascriptID + " ) -->");
@@ -133,18 +133,18 @@ public class BCUserShop extends BCShop implements Serializable {
         StringBuilder builder = new StringBuilder();
 
         int itemID = this.getItemID();
-        String matName = BCCore.getItemName(itemID);  
-        if(itemID == Material.POTION.getId())
+        String matName = BCCore.getItemName(itemID);
+        if (itemID == Material.POTION.getId())
             matName = Potions.getName(this.getSubID());
-        
+
         short SubID = this.getSubID();
-        if (SubID != 0  && itemID != Material.POTION.getId())
+        if (SubID != 0 && itemID != Material.POTION.getId())
             matName += ":" + SubID;
-        
+
         String buyRatio = this.getBuyRatio()[0] + ":" + this.getBuyRatio()[1];
         String sellRatio = this.getSellRatio()[0] + ":" + this.getSellRatio()[1];
         int itemCount = this.countItemInShopInventory(this.getItemID(), this.getSubID());
-       
+
         builder.append(System.getProperty("line.separator"));
         builder.append("\t\t\t\t// ADD POPUP ( ID : " + javascriptID + " ) & HIDE IT");
         builder.append(System.getProperty("line.separator"));
@@ -354,7 +354,7 @@ public class BCUserShop extends BCShop implements Serializable {
 
         if (!BCCore.isAllowedItem(itemSplit[0]))
             return;
-        
+
         if (!isActive()) {
             String playerName = BCShop.getSpecialTextOnLine(sign.getLine(0), "$", "$");
             BCChatUtils.printError(player, "Dieser Shop ist momentan nicht aktiviert!");
@@ -365,10 +365,10 @@ public class BCUserShop extends BCShop implements Serializable {
             return;
         }
 
-        String itemName = Material.getMaterial(sellItemId).name();        
-        if(sellItemId == Material.POTION.getId())
+        String itemName = Material.getMaterial(sellItemId).name();
+        if (sellItemId == Material.POTION.getId())
             itemName = Potions.getName(sellItemData);
-        
+
         if (buyRatios[0] > 0 && buyRatios[1] > 0)
             BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + itemName + "' für " + buyRatios[1] + " Goldbarren. (Auf Lager: " + this.countItemInShopInventory(sellItemId, sellItemData) + ")");
         else
@@ -456,10 +456,10 @@ public class BCUserShop extends BCShop implements Serializable {
                     if (item.getTypeId() < 1)
                         continue;
 
-                    String itemName = Material.getMaterial(sellItemId).name();        
-                    if(sellItemId == Material.POTION.getId())
+                    String itemName = Material.getMaterial(sellItemId).name();
+                    if (sellItemId == Material.POTION.getId())
                         itemName = Potions.getName(sellItemData);
-                    
+
                     if ((item.getTypeId() != sellItemId || item.getDurability() != sellItemData) && item.getTypeId() != Material.GOLD_INGOT.getId() && item.getTypeId() != Material.GOLD_NUGGET.getId() && item.getTypeId() != Material.GOLD_BLOCK.getId()) {
                         if (buyRatios[0] > 0 && buyRatios[1] > 0)
                             BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + itemName + "' für " + buyRatios[1] + " Goldbarren. (Auf Lager: " + this.countItemInShopInventory(sellItemId, sellItemData) + ")");
@@ -821,7 +821,7 @@ public class BCUserShop extends BCShop implements Serializable {
 
     // COUNT ITEM IN SHOPINVENTORY
     public int countItemInShopInventory(int itemID, int SubID) {
-        int count = 0;        
+        int count = 0;
         for (BCItemStack item : shopInventory) {
             if (item.getItem() != null) {
                 if (item.getId() == itemID && item.getSubId() == SubID) {

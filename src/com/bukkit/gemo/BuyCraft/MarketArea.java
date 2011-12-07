@@ -98,23 +98,22 @@ public class MarketArea {
     public int getAreaBlockHeight() {
         return Math.abs(corner2.getBlockY() - corner1.getBlockY()) + 1;
     }
-    
+
     public boolean isBlockInArea(Location other) {
-        if(other.getBlockX() < corner1.getBlockX() || other.getBlockX() > corner2.getBlockX())
+        if (other.getBlockX() < corner1.getBlockX() || other.getBlockX() > corner2.getBlockX())
             return false;
-        
-        if(other.getBlockZ() < corner1.getBlockZ() || other.getBlockZ() > corner2.getBlockZ())
+
+        if (other.getBlockZ() < corner1.getBlockZ() || other.getBlockZ() > corner2.getBlockZ())
             return false;
-        
-        if(other.getBlockY() < corner1.getBlockY() || other.getBlockY() > corner2.getBlockY())
+
+        if (other.getBlockY() < corner1.getBlockY() || other.getBlockY() > corner2.getBlockY())
             return false;
-        
+
         return true;
     }
 
     public MarketArea clone() {
         return new MarketArea(getAreaName(), corner1, corner2);
     }
-    
-    
+
 }

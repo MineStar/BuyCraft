@@ -614,8 +614,8 @@ public class RenderMarketThread implements Runnable {
 
         // REPLACE TEXTS
         Date date = new Date();
-        SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss" );
-        lineList = this.replaceText(lineList, matchList, "%MARKETNAME%", area.getAreaName() + " - Last Update: "+ df.format(date));
+        SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        lineList = this.replaceText(lineList, matchList, "%MARKETNAME%", area.getAreaName() + " - Last Update: " + df.format(date));
         lineList = this.replaceText(lineList, matchList, "%SHOPDETAILS%", detailBuilder.toString());
         lineList = this.replaceText(lineList, matchList, "%CREATEMARKER%", markerBuilder.toString());
         lineList = this.replaceText(lineList, matchList, "%CREATEPOPUP%", popupBuilder.toString());
@@ -631,8 +631,8 @@ public class RenderMarketThread implements Runnable {
         itemsOnMarket.clear();
 
         this.savePage(marketDir + "index.html", lineList);
-        long duration = System.currentTimeMillis() - startTime;        
-           
+        long duration = System.currentTimeMillis() - startTime;
+
         Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(BCCore.getPlugin(), new RenderMarketMessageThread(playerName, ChatColor.GREEN + "Writing " + duration + "ms."), 1);
     }
 
