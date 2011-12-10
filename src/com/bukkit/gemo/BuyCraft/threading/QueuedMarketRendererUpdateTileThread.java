@@ -72,5 +72,4 @@ public class QueuedMarketRendererUpdateTileThread implements Runnable {
             tilesToUpdate.clear();
         }
     }
-
 }

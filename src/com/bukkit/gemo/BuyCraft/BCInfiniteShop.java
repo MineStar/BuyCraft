@@ -1,8 +1,6 @@
 package com.bukkit.gemo.BuyCraft;
 
 import java.io.Serializable;
-import java.text.DecimalFormat;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Chest;
@@ -15,7 +13,6 @@ import com.bukkit.gemo.utils.UtilPermissions;
 
 public class BCInfiniteShop extends BCShop implements Serializable {
     private static final long serialVersionUID = 3456581809245152700L;
-    private DecimalFormat decimalFormat = null;
 
     // /////////////////////////////////
     //
@@ -24,7 +21,6 @@ public class BCInfiniteShop extends BCShop implements Serializable {
     // /////////////////////////////////
     public BCInfiniteShop() {
         super();
-        decimalFormat = new DecimalFormat("#.##");
     }
 
     public BCInfiniteShop(String worldName, int x, int y, int z) {
@@ -103,7 +99,7 @@ public class BCInfiniteShop extends BCShop implements Serializable {
         int goldIngotItemCountInChest = BCShop.countItemInInventory(chest.getInventory(), Material.GOLD_INGOT.getId());
         int goldBlockItemCountInChest = BCShop.countItemInInventory(chest.getInventory(), Material.GOLD_BLOCK.getId());
         nuggetItemCountInChest = nuggetItemCountInChest + (9 * goldIngotItemCountInChest) + (9 * 9 * goldBlockItemCountInChest);
-
+         
         // ////////////////////////////
         // CATCH OTHER/WRONG ITEMS
         // ////////////////////////////
@@ -158,7 +154,8 @@ public class BCInfiniteShop extends BCShop implements Serializable {
                 float blockPerNugget = (float) ((float) buyRatios[0] / (float) buyRatios[1] / 9.0f);
                 double bBlocks = Math.floor(blockPerNugget * nuggetItemCountInChest);
                 int boughtBlocks = (int) bBlocks;
-                double restBlocks = (double) ((double) (blockPerNugget * nuggetItemCountInChest) - (double) boughtBlocks);
+                double ratio = ((double) buyRatios[0] / (double) buyRatios[1]);
+                int restGoldNuggets = (int) (nuggetItemCountInChest - (boughtBlocks / ratio * 9));
 
                 // AT LEAST ONE BLOCK MUST BE BOUGHT
                 if (boughtBlocks < 1) {
@@ -183,11 +180,29 @@ public class BCInfiniteShop extends BCShop implements Serializable {
                     newItem.setDurability(sellItemData);
                 chest.getInventory().addItem(newItem);
 
+                // ADD RESTGOLD
+                if (restGoldNuggets > 0) {
+                    int restIngotCount = (int) Math.floor(restGoldNuggets / 9);
+                    restGoldNuggets = restGoldNuggets - restIngotCount * 9;
+                    int restBlockCount = (int) Math.floor(restIngotCount / 9);
+                    restIngotCount = restIngotCount - restBlockCount * 9;
+
+                    if (restGoldNuggets > 0) {
+                        ItemStack restNuggets = new ItemStack(Material.GOLD_NUGGET.getId(), restGoldNuggets);
+                        chest.getInventory().addItem(restNuggets);
+                    }
+                    if (restIngotCount > 0) {
+                        ItemStack restIngots = new ItemStack(Material.GOLD_INGOT.getId(), restIngotCount);
+                        chest.getInventory().addItem(restIngots);
+                    }
+                    if (restBlockCount > 0) {
+                        ItemStack restGBlocks = new ItemStack(Material.GOLD_BLOCK.getId(), restBlockCount);
+                        chest.getInventory().addItem(restGBlocks);
+                    }
+                }               
+                
                 // PRINT SUCCESS
                 BCChatUtils.printInfo(player, ChatColor.GOLD, "Du hast " + boughtBlocks + " x '" + itemName + "' für " + nuggetItemCountInChest + " Goldnuggets gekauft.");
-                if (restBlocks > 0f) {
-                    BCChatUtils.printInfo(player, ChatColor.GRAY, "Bei dieser Transaktion hast du " + decimalFormat.format(restBlocks) + " '" + Material.getMaterial(sellItemId) + "' verloren.");
-                }
                 return;
             } else {
                 BCChatUtils.printInfo(player, ChatColor.RED, "Dieser Shop verkauft nichts.");
