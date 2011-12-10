@@ -45,6 +45,7 @@ public class RenderMarketThread implements Runnable {
     private final String marketTileDir;
     private boolean exportPageOnly;
     private boolean exportPage = true;
+    private int renderZoomLevel = -1;
 
     private int maxTilesX, maxTilesZ, cutRight, cutBottom;
 
@@ -74,6 +75,7 @@ public class RenderMarketThread implements Runnable {
         // CREATE NEEDED DIRS
         new File(marketTileDir).mkdirs();
         this.exportPageOnly = false;
+        this.renderZoomLevel = -1;
     }
 
     // ////////////////////////////////////////////
@@ -86,6 +88,21 @@ public class RenderMarketThread implements Runnable {
         this.changedLocation = changedLocation.clone();
         this.renderAll = false;
         this.exportPage = exportPage;
+    }
+
+    // ////////////////////////////////////////////
+    //
+    // CONSTRUCTOR FOR SINGLE-TILE-RENDERING
+    //
+    // ////////////////////////////////////////////
+    public RenderMarketThread(final String playerName, final Location changedLocation, final TreeMap<String, ChunkSnapshot> chunkList, final HashMap<String, BCUserShop> userShopList, MarketArea market, int zoomLevel) {
+        this(playerName, chunkList, userShopList, market);
+        this.changedLocation = changedLocation.clone();
+        this.renderAll = false;
+        this.exportPage = false;
+        if (zoomLevel > ZOOM_TEXTURE_SIZE.length)
+            zoomLevel = ZOOM_TEXTURE_SIZE.length;
+        this.renderZoomLevel = zoomLevel;
     }
 
     // ////////////////////////////////////////////
@@ -180,9 +197,18 @@ public class RenderMarketThread implements Runnable {
                     this.renderWithMethod2(image, 0);
 
                     // CREATE TILES
-                    for (int i = 0; i < ZOOM_TEXTURE_SIZE.length; i++) {
-                        BufferedImage img = RenderMarketThread.resize(image, ZOOM_TEXTURE_SIZE[i] * market.getAreaBlockWidth(), ZOOM_TEXTURE_SIZE[i] * market.getAreaBlockLength());
-                        createSingleTile_OSM(img, distX, distZ, i);
+                    if (renderZoomLevel == -1) {
+                        for (int i = 0; i < ZOOM_TEXTURE_SIZE.length; i++) {
+                            BufferedImage img = RenderMarketThread.resize(image, ZOOM_TEXTURE_SIZE[i] * market.getAreaBlockWidth(), ZOOM_TEXTURE_SIZE[i] * market.getAreaBlockLength());
+                            createSingleTile_OSM(img, distX, distZ, i);
+                            img.flush();
+                            img = null;
+                        }
+                    }
+                    else {
+                        // ZOOM ONLY SPECIFIC TILE
+                        BufferedImage img = RenderMarketThread.resize(image, ZOOM_TEXTURE_SIZE[renderZoomLevel] * market.getAreaBlockWidth(), ZOOM_TEXTURE_SIZE[renderZoomLevel] * market.getAreaBlockLength());
+                        createSingleTile_OSM(img, distX, distZ, renderZoomLevel);
                         img.flush();
                         img = null;
                     }
@@ -883,14 +909,21 @@ public class RenderMarketThread implements Runnable {
         return market;
     }
 
-    public static Point getTilePosition(Location loc, MarketArea market) {
+    public static Point getTilePosition(Location loc, MarketArea market, int zoomLevel) {
+        if (zoomLevel > ZOOM_TEXTURE_SIZE.length)
+            zoomLevel = ZOOM_TEXTURE_SIZE.length;
+
         int distX = loc.getBlockX() - market.getCorner1().getBlockX();
         int distZ = loc.getBlockZ() - market.getCorner1().getBlockZ();
         int relX = distX;
         int relZ = market.getAreaBlockLength() - distZ - 1;
         int singleTileX = 0, singleTileZ = 0;
-        singleTileX = (int) (relX * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
-        singleTileZ = (int) (relZ * ZOOM_TEXTURE_SIZE[0] / TILE_SIZE);
+        singleTileX = (int) (relX * ZOOM_TEXTURE_SIZE[zoomLevel] / TILE_SIZE);
+        singleTileZ = (int) (relZ * ZOOM_TEXTURE_SIZE[zoomLevel] / TILE_SIZE);
         return new Point(singleTileX, singleTileZ);
+    }
+
+    public static int[] getZOOM_TEXTURE_SIZE() {
+        return ZOOM_TEXTURE_SIZE;
     }
 }

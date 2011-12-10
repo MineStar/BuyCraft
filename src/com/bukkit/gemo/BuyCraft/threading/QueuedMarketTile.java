@@ -5,10 +5,12 @@ import org.bukkit.Location;
 public class QueuedMarketTile {
     private final String marketName;
     private final Location changedLocation;
+    private final int zoomLevel;
 
-    public QueuedMarketTile(String marketName, Location changedLocation) {
+    public QueuedMarketTile(String marketName, Location changedLocation, int zoomLevel) {
         this.marketName = marketName;
         this.changedLocation = changedLocation;
+        this.zoomLevel = zoomLevel;
     }
 
     public String getMarketName() {
@@ -18,4 +20,9 @@ public class QueuedMarketTile {
     public Location getChangedLocation() {
         return changedLocation;
     }
+    
+    public int getZoomLevel() {
+        return zoomLevel;
+    }
+    
 }
