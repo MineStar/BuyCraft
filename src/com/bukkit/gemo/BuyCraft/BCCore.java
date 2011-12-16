@@ -24,13 +24,12 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.event.Event;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPlugin;
 
-import com.bukkit.gemo.BuyCraft.statics.Potions;
 import com.bukkit.gemo.BuyCraft.threading.QueuedMarketRendererUpdatePageThread;
 import com.bukkit.gemo.BuyCraft.threading.QueuedMarketRendererUpdateTileThread;
 import com.bukkit.gemo.BuyCraft.threading.RenderMarketThread;
@@ -94,8 +93,6 @@ public class BCCore extends JavaPlugin {
         loadAliases();
         loadItems();
         PluginManager pm = getServer().getPluginManager();
-
-        new Potions();
 
         // LISTENER REGISTRIEREN
         blockListener = new BCBlockListener(this);

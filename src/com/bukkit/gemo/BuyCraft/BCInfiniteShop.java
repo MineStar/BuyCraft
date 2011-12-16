@@ -1,6 +1,7 @@
 package com.bukkit.gemo.BuyCraft;
 
 import java.io.Serializable;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Chest;
@@ -8,7 +9,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import com.bukkit.gemo.BuyCraft.statics.Potions;
+import com.bukkit.gemo.BuyCraft.statics.Potion;
 import com.bukkit.gemo.utils.UtilPermissions;
 
 public class BCInfiniteShop extends BCShop implements Serializable {
@@ -55,7 +56,7 @@ public class BCInfiniteShop extends BCShop implements Serializable {
 
         String itemName = Material.getMaterial(sellItemId).name();
         if (sellItemId == Material.POTION.getId())
-            itemName = Potions.getName(sellItemData);
+            itemName = Potion.getName(sellItemData);
 
         if (buyRatios[0] > 0 && buyRatios[1] > 0)
             BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + itemName + "' für " + buyRatios[1] + " Goldbarren.");
@@ -125,7 +126,7 @@ public class BCInfiniteShop extends BCShop implements Serializable {
         // ////////////////////////////
         String itemName = Material.getMaterial(sellItemId).name();
         if (sellItemId == Material.POTION.getId())
-            itemName = Potions.getName(sellItemData);
+            itemName = Potion.getName(sellItemData);
 
         if (sellItemCountInChest == 0 && nuggetItemCountInChest == 0) {
             if (buyRatios[0] > 0 && buyRatios[1] > 0)

@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 import net.minecraft.server.Packet130UpdateSign;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -19,7 +20,7 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import com.bukkit.gemo.BuyCraft.statics.Potions;
+import com.bukkit.gemo.BuyCraft.statics.Potion;
 import com.bukkit.gemo.utils.UtilPermissions;
 
 public class BCUserShop extends BCShop implements Serializable {
@@ -71,7 +72,7 @@ public class BCUserShop extends BCShop implements Serializable {
         int itemID = this.getItemID();
         String matName = BCCore.getItemName(itemID);
         if (itemID == Material.POTION.getId())
-            matName = Potions.getName(this.getSubID());
+            matName = Potion.getName(this.getSubID());
 
         short SubID = this.getSubID();
         if (SubID != 0 && itemID != Material.POTION.getId())
@@ -134,7 +135,7 @@ public class BCUserShop extends BCShop implements Serializable {
         int itemID = this.getItemID();
         String matName = BCCore.getItemName(itemID);
         if (itemID == Material.POTION.getId())
-            matName = Potions.getName(this.getSubID());
+            matName = Potion.getName(this.getSubID());
 
         short SubID = this.getSubID();
         if (SubID != 0 && itemID != Material.POTION.getId())
@@ -366,7 +367,7 @@ public class BCUserShop extends BCShop implements Serializable {
 
         String itemName = Material.getMaterial(sellItemId).name();
         if (sellItemId == Material.POTION.getId())
-            itemName = Potions.getName(sellItemData);
+            itemName = Potion.getName(sellItemData);
 
         if (buyRatios[0] > 0 && buyRatios[1] > 0)
             BCChatUtils.printInfo(player, ChatColor.GOLD, "KAUFEN: " + buyRatios[0] + " '" + itemName + "' für " + buyRatios[1] + " Goldbarren. (Auf Lager: " + this.countItemInShopInventory(sellItemId, sellItemData) + ")");
@@ -457,7 +458,7 @@ public class BCUserShop extends BCShop implements Serializable {
 
                     String itemName = Material.getMaterial(sellItemId).name();
                     if (sellItemId == Material.POTION.getId())
-                        itemName = Potions.getName(sellItemData);
+                        itemName = Potion.getName(sellItemData);
 
                     if ((item.getTypeId() != sellItemId || item.getDurability() != sellItemData) && item.getTypeId() != Material.GOLD_INGOT.getId() && item.getTypeId() != Material.GOLD_NUGGET.getId() && item.getTypeId() != Material.GOLD_BLOCK.getId()) {
                         if (buyRatios[0] > 0 && buyRatios[1] > 0)
