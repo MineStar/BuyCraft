@@ -9,7 +9,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 
 import net.minecraft.server.Packet130UpdateSign;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -312,6 +311,26 @@ public class BCUserShop extends BCShop implements Serializable {
                 }
                 worldSign.setLine(1, "{" + name + "}");
                 worldSign.update();
+                
+                /*
+                // GET VARS
+                Location warpTo = sign.getBlock().getLocation();
+                
+                CraftPlayer cPlayer = (CraftPlayer) player;
+                int firstX = warpTo.getWorld().getChunkAt(warpTo).getX() * 16;
+                int firstZ = warpTo.getWorld().getChunkAt(warpTo).getZ() * 16;
+                int lastX = firstX + 15;
+                int lastZ = firstZ + 15;
+                int firstY = 0;
+                int lastY = 127;
+                CraftWorld cWorld = (CraftWorld)warpTo.getWorld();
+                
+                // SEND PACKET!
+                Packet51MapChunk chunkPacket = null;
+                chunkPacket = new Packet51MapChunk(firstX, firstY, firstZ, lastX, lastY, lastZ, cWorld.getHandle());
+                cPlayer.getHandle().netServerHandler.sendPacket(chunkPacket);
+                */
+                
 
                 // SEND UPDATE => NEED HELP OF ORIGINAL MC-SERVERSOFTWARE
                 CraftPlayer cPlayer = (CraftPlayer) player;
