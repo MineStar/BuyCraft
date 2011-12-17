@@ -3,6 +3,8 @@ package com.bukkit.gemo.BuyCraft.database;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -13,7 +15,14 @@ public class DatabaseHandler {
     private DatabaseConnection dbConnection;
 
     // PREPARED STATEMENTS
-
+    private PreparedStatement addUserShop;
+    private PreparedStatement addItemsToShop;
+    private PreparedStatement loadInventory;
+    private PreparedStatement updateAccess;
+    private PreparedStatement connectShopsToItem;
+    private PreparedStatement getShop;
+    private PreparedStatement updateInventory;
+    private PreparedStatement deleteItems;
     // /PREPARED STATEMENTS
 
     public DatabaseHandler() {
@@ -65,7 +74,6 @@ public class DatabaseHandler {
                 "`finished` TINYINT(1) NOT NULL ," +
                 "`created` DATETIME NOT NULL ," +
                 "`lastUsed` DATETIME NOT NULL ," +
-                "`inventory` INT NOT NULL ," +
                 "PRIMARY KEY (`id`) )" +
                 "ENGINE = InnoDB;");
 
@@ -105,5 +113,18 @@ public class DatabaseHandler {
 
     private void initStatements() throws Exception {
         Connection con = dbConnection.getConnection();
+
+        addUserShop = con.prepareStatement("INSERT INTO shop ( world, x, y, z, active, finished, created, lastUsed) VALUES ( ?, ?, ?, ?, ?, ?, NOW(), NOW()");
+        // We need generated keys for the n:m connection
+        addItemsToShop = con.prepareStatement("INSERT INTO items (itemId, subId, amount) VALUES (?,?,?)", Statement.RETURN_GENERATED_KEYS);
+        connectShopsToItem = con.prepareStatement("INSERT INTO inventory VALUES (?,?)");
+
+        loadInventory = con.prepareStatement("SELECT itemId, subId, amount FROM items, shop, inventory WHERE shop.id = ? AND shop.id = inventory.Shop_id AND inventory.Item_id = items.id");
+        getShop = con.prepareStatement("SELECT active, finished, DATE_FORMAT(created, '%d.%m.%Y'), DATE_FORMAT(lastUsed, '%d.%m.%Y') FROM shop WHERE world = ? AND x = ? AND y = ? and z = ?");
+
+        updateInventory = con.prepareStatement("UPDATE items SET amount = ? WHERE itemId = ? AND subId = ? AND shop.x = ? and shop.y = ? and shop.z = ? AND shop.world = ? AND items.id = inventory.Item_id AND shop.id = inventory.Shop_id");
+        updateAccess = con.prepareStatement("UPDATE shop SET lastUsed = NOW() WHERE id = ?");
+
+        deleteItems = con.prepareStatement("DELETE FROM items WHERE itemId = ? AND subId = ? AND shop.x = ? and shop.y = ? and shop.z = ? AND shop.world = ? AND items.id = inventory.Item_id AND shop.id = inventory.Shop_id", Statement.RETURN_GENERATED_KEYS);
     }
 }
