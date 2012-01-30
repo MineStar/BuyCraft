@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -15,8 +16,10 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockListener;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -26,7 +29,7 @@ import com.bukkit.gemo.utils.BlockUtils;
 import com.bukkit.gemo.utils.SignUtils;
 import com.bukkit.gemo.utils.UtilPermissions;
 
-public class BCBlockListener extends BlockListener {
+public class BCBlockListener implements Listener {
     public static HashMap<String, BCUserShop> userShopList;
 
     // /////////////////////////////
@@ -252,7 +255,7 @@ public class BCBlockListener extends BlockListener {
     // ON SIGN CHANGE
     //
     // /////////////////////////////
-    @Override
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onSignChange(SignChangeEvent event) {
         Block block = event.getBlock();
         if (block.getTypeId() != Material.WALL_SIGN.getId())
@@ -387,7 +390,7 @@ public class BCBlockListener extends BlockListener {
     // ON BLOCK PLACE
     //
     // /////////////////////////////
-    @Override
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPlace(BlockPlaceEvent event) {
         if (event.isCancelled())
             return;
@@ -408,7 +411,7 @@ public class BCBlockListener extends BlockListener {
     // ON BLOCK BREAK
     //
     // /////////////////////////////
-    @Override
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockBreak(BlockBreakEvent event) {
         if (event.isCancelled())
             return;
@@ -522,7 +525,7 @@ public class BCBlockListener extends BlockListener {
     // ON PISTON EXTEND
     //
     // /////////////////////////////
-    @Override
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPistonExtend(BlockPistonExtendEvent event) {
         if (event.isCancelled())
             return;
@@ -541,7 +544,7 @@ public class BCBlockListener extends BlockListener {
     //
     // /////////////////////////////
 
-    @Override
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onBlockPistonRetract(BlockPistonRetractEvent event) {
         if (event.isCancelled())
             return;

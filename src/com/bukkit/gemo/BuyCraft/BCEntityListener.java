@@ -3,10 +3,12 @@ package com.bukkit.gemo.BuyCraft;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntityListener;
 
-public class BCEntityListener extends EntityListener {
+public class BCEntityListener implements Listener {
     BCCore plugin = null;
 
     // /////////////////////////////
@@ -23,7 +25,7 @@ public class BCEntityListener extends EntityListener {
     // ON EXPLODE
     //
     // /////////////////////////////
-    @Override
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityExplode(EntityExplodeEvent event) {
         for (Block block : event.blockList()) {
             if (BCBlockListener.isSignAnchor(block)) {

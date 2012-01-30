@@ -311,7 +311,7 @@ public class BCUserShop extends BCShop implements Serializable {
                     return;
                 }
                 worldSign.setLine(1, "{" + name + "}");
-                worldSign.update();                             
+                worldSign.update();
 
                 // SEND UPDATE => NEED HELP OF ORIGINAL MC-SERVERSOFTWARE
                 CraftPlayer cPlayer = (CraftPlayer) player;

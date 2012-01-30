@@ -9,12 +9,15 @@ import org.bukkit.block.Chest;
 import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerListener;
+
 import com.bukkit.gemo.utils.UtilPermissions;
 
-public class BCPlayerListener extends PlayerListener {
+public class BCPlayerListener implements Listener {
 
     private TreeMap<String, MarketSelection> selections;
 
@@ -32,7 +35,7 @@ public class BCPlayerListener extends PlayerListener {
     // ON INTERACT
     //
     // /////////////////////////////
-    @Override
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.LEFT_CLICK_BLOCK)
             return;

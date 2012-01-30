@@ -25,7 +25,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -98,13 +97,9 @@ public class BCCore extends JavaPlugin {
         blockListener = new BCBlockListener(this);
         entityListener = new BCEntityListener(this);
         playerListener = new BCPlayerListener(this);
-        pm.registerEvent(Event.Type.BLOCK_BREAK, this.blockListener, Event.Priority.Monitor, this);
-        pm.registerEvent(Event.Type.BLOCK_PLACE, this.blockListener, Event.Priority.Monitor, this);
-        pm.registerEvent(Event.Type.BLOCK_PISTON_EXTEND, this.blockListener, Event.Priority.Monitor, this);
-        pm.registerEvent(Event.Type.BLOCK_PISTON_RETRACT, this.blockListener, Event.Priority.Monitor, this);
-        pm.registerEvent(Event.Type.SIGN_CHANGE, this.blockListener, Event.Priority.Normal, this);
-        pm.registerEvent(Event.Type.ENTITY_EXPLODE, this.entityListener, Event.Priority.Normal, this);
-        pm.registerEvent(Event.Type.PLAYER_INTERACT, this.playerListener, Event.Priority.Normal, this);
+        pm.registerEvents(blockListener, this);
+        pm.registerEvents(entityListener, this);
+        pm.registerEvents(playerListener, this);
 
         // CREATE THREADS
         singleTileUpdater = new QueuedMarketRendererUpdateTileThread();

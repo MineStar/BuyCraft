@@ -100,7 +100,7 @@ public class BCInfiniteShop extends BCShop implements Serializable {
         int goldIngotItemCountInChest = BCShop.countItemInInventory(chest.getInventory(), Material.GOLD_INGOT.getId());
         int goldBlockItemCountInChest = BCShop.countItemInInventory(chest.getInventory(), Material.GOLD_BLOCK.getId());
         nuggetItemCountInChest = nuggetItemCountInChest + (9 * goldIngotItemCountInChest) + (9 * 9 * goldBlockItemCountInChest);
-         
+
         // ////////////////////////////
         // CATCH OTHER/WRONG ITEMS
         // ////////////////////////////
@@ -200,8 +200,8 @@ public class BCInfiniteShop extends BCShop implements Serializable {
                         ItemStack restGBlocks = new ItemStack(Material.GOLD_BLOCK.getId(), restBlockCount);
                         chest.getInventory().addItem(restGBlocks);
                     }
-                }               
-                
+                }
+
                 // PRINT SUCCESS
                 BCChatUtils.printInfo(player, ChatColor.GOLD, "Du hast " + boughtBlocks + " x '" + itemName + "' für " + nuggetItemCountInChest + " Goldnuggets gekauft.");
                 return;

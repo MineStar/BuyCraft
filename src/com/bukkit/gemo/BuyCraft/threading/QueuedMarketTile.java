@@ -20,9 +20,9 @@ public class QueuedMarketTile {
     public Location getChangedLocation() {
         return changedLocation;
     }
-    
+
     public int getZoomLevel() {
         return zoomLevel;
     }
-    
+
 }

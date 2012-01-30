@@ -204,8 +204,7 @@ public class RenderMarketThread implements Runnable {
                             img.flush();
                             img = null;
                         }
-                    }
-                    else {
+                    } else {
                         // ZOOM ONLY SPECIFIC TILE
                         BufferedImage img = RenderMarketThread.resize(image, ZOOM_TEXTURE_SIZE[renderZoomLevel] * market.getAreaBlockWidth(), ZOOM_TEXTURE_SIZE[renderZoomLevel] * market.getAreaBlockLength());
                         createSingleTile_OSM(img, distX, distZ, renderZoomLevel);

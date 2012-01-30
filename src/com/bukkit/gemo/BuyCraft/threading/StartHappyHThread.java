@@ -1,12 +1,10 @@
 package com.bukkit.gemo.BuyCraft.threading;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Random;
 import java.util.TimerTask;
 
 import org.bukkit.Server;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -54,18 +52,18 @@ public class StartHappyHThread extends TimerTask {
         return false;
     }
 
-    @SuppressWarnings({"unchecked"})
     private void loadItems() {
-        YamlConfiguration config = new YamlConfiguration();
-        try {
-            config.load("plugins/BuyCraft/announcedItems.yml");
-            List<Integer> list = config.getList("items");
-            itemIDs = new int[list.size()];
-            for (int i = 0; i < list.size(); ++i)
-                itemIDs[i] = list.get(i);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        itemIDs = new int[0];
+//        YamlConfiguration config = new YamlConfiguration();
+//        try {
+//            config.load("plugins/BuyCraft/announcedItems.yml");
+//            List<Integer> list = config.getList("items");
+//            itemIDs = new int[list.size()];
+//            for (int i = 0; i < list.size(); ++i)
+//                itemIDs[i] = list.get(i);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
     }
 
 }
