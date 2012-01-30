@@ -257,6 +257,9 @@ public class BCBlockListener implements Listener {
     // /////////////////////////////
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onSignChange(SignChangeEvent event) {
+        if (event.isCancelled())
+            return;
+
         Block block = event.getBlock();
         if (block.getTypeId() != Material.WALL_SIGN.getId())
             return;

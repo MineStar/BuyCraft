@@ -37,6 +37,9 @@ public class BCPlayerListener implements Listener {
     // /////////////////////////////
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.isCancelled())
+            return;
+
         if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.LEFT_CLICK_BLOCK)
             return;
 

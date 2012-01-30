@@ -27,6 +27,9 @@ public class BCEntityListener implements Listener {
     // /////////////////////////////
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onEntityExplode(EntityExplodeEvent event) {
+        if (event.isCancelled())
+            return;
+
         for (Block block : event.blockList()) {
             if (BCBlockListener.isSignAnchor(block)) {
                 event.setYield(0f);
