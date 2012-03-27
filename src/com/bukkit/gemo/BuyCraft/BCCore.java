@@ -407,7 +407,7 @@ public class BCCore extends JavaPlugin {
 
     private void loadMarkets() {
         marketList = new TreeMap<String, MarketArea>();
-        String FileName = "BuyCraft/Markets.db";
+        String FileName = "plugins/BuyCraft/Markets.db";
         try {
             FlatFile config = new FlatFile(FileName, false);
             if (config.readFile()) {
@@ -427,7 +427,7 @@ public class BCCore extends JavaPlugin {
     }
 
     private boolean saveMarkets() {
-        String FileName = "BuyCraft/Markets.db";
+        String FileName = "plugins/BuyCraft/Markets.db";
         File folder = new File("plugins/BuyCraft");
         folder.mkdirs();
 
@@ -445,7 +445,7 @@ public class BCCore extends JavaPlugin {
             config.writeFile();
             return true;
         } catch (IOException e) {
-            printInConsole("Error while saving file: plugins/" + FileName);
+            printInConsole("Error while saving file: " + FileName);
             e.printStackTrace();
             return false;
         }
