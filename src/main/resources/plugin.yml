@@ -1,0 +1,8 @@
+name: BuyCraft
+main: de.minestar.buycraft.core.Core
+version: ${pom.version}
+depend: [MineStarLibrary, FalseBookCore, MinestarCore]
+commands:
+  buycraft:
+    description: Buycraft-related commands
+    usage: /<command>
