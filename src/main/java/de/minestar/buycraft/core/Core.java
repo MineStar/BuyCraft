@@ -3,6 +3,7 @@ package de.minestar.buycraft.core;
 import org.bukkit.plugin.PluginManager;
 
 import de.minestar.buycraft.listener.ActionListener;
+import de.minestar.buycraft.manager.DatabaseManager;
 import de.minestar.buycraft.manager.ItemManager;
 import de.minestar.buycraft.manager.ShopManager;
 import de.minestar.minestarlibrary.AbstractCore;
@@ -13,6 +14,15 @@ public class Core extends AbstractCore {
     /**
      * Manager
      */
+    private DatabaseManager databaseManager;
+
+    @Override
+    protected boolean commonDisable() {
+        if (this.databaseManager.hasConnection())
+            this.databaseManager.closeConnection();
+        return true;
+    }
+
     private ShopManager shopManager;
     private ItemManager itemManager;
 
@@ -31,14 +41,19 @@ public class Core extends AbstractCore {
 
     @Override
     protected boolean createManager() {
-        this.shopManager = new ShopManager();
+        this.databaseManager = new DatabaseManager(Core.NAME, getDataFolder());
+        if (!this.databaseManager.hasConnection())
+            return false;
+
+        this.shopManager = new ShopManager(this.databaseManager);
         this.itemManager = new ItemManager();
+
         return true;
     }
 
     @Override
     protected boolean createListener() {
-        this.guardListener = new ActionListener(this.shopManager, this.itemManager);
+        this.guardListener = new ActionListener(this.shopManager, this.itemManager, this.databaseManager);
         return true;
     }
 

@@ -214,6 +214,11 @@ public class InfiniteShop {
      * @param player
      */
     public static void handleChestInteract(ShopType shop, Player player) {
+        if (shop.getSign().getLine(1).length() < 1) {
+            PlayerUtils.sendError(player, Core.NAME, Messages.SHOP_NOT_FINISHED);
+            return;
+        }
+
         // get ItemID & ItemData
         String[] split = ItemManager.extractItemLine(shop.getSign().getLine(1)).split(":");
         int itemID = ItemManager.getInstance().getItemId(split[0]);
@@ -251,14 +256,14 @@ public class InfiniteShop {
 
         // print infos
         if (buyRatio[0] > 0 && buyRatio[1] > 0) {
-            PlayerUtils.sendMessage(player, ChatColor.GOLD, Core.NAME, "Ankauf: " + buyRatio[0] + "*'" + itemName + "' für " + buyRatio[1] + "*'" + Material.GOLD_INGOT.name() + "'.");
+            PlayerUtils.sendMessage(player, ChatColor.GOLD, Core.NAME, "Verkauf: " + buyRatio[0] + "*'" + itemName + "' für " + buyRatio[1] + "*'" + Material.GOLD_INGOT.name() + "'.");
         }
         if (sellRatio[0] > 0 && sellRatio[1] > 0) {
-            PlayerUtils.sendMessage(player, ChatColor.GOLD, Core.NAME, "Verkauf: " + sellRatio[0] + "*'" + itemName + "' für " + sellRatio[1] + "*'" + Material.GOLD_INGOT.name() + "'.");
+            PlayerUtils.sendMessage(player, ChatColor.GOLD, Core.NAME, "Ankauf: " + sellRatio[0] + "*'" + itemName + "' für " + sellRatio[1] + "*'" + Material.GOLD_INGOT.name() + "'.");
         }
     }
 
-    public static void activate(PlayerInteractEvent event, ShopType shop) {
+    public static void activateItem(PlayerInteractEvent event, ShopType shop) {
         Player player = event.getPlayer();
 
         // check permissions

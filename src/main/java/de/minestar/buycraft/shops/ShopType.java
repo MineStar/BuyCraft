@@ -25,7 +25,7 @@ public class ShopType {
                 this.sign = (Sign) block.getState();
                 this.chest = (Chest) block.getRelative(BlockFace.DOWN).getState();
             }
-            this.userShop = shopManager.isUserShop(this.sign.getLines());
+            this.userShop = !this.sign.getLine(0).equalsIgnoreCase("$SHOP$");
             this.shop = true;
         } else {
             this.sign = null;
