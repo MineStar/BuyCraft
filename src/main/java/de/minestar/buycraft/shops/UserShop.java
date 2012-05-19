@@ -38,19 +38,9 @@ public class UserShop {
     private boolean active = false;
     private boolean shopFinished = true;
 
-    public UserShop(int ShopID, int x, int y, int z, String worldName, boolean active, boolean shopFinished, int creationTime, int lastUsedTime) {
+    private UserShop(int ShopID, int x, int y, int z, String worldName, boolean active, boolean shopFinished, int creationTime, int lastUsedTime) {
         this.ShopID = ShopID;
         this.position = new BlockVector(x, y, z, worldName);
-        this.inventory = new BuyCraftInventory();
-        this.active = active;
-        this.shopFinished = shopFinished;
-        this.creationTime = creationTime;
-        this.lastUsedTime = lastUsedTime;
-    }
-
-    public UserShop(int ShopID, BlockVector position, boolean active, boolean shopFinished, int creationTime, int lastUsedTime) {
-        this.ShopID = ShopID;
-        this.position = position;
         this.inventory = new BuyCraftInventory();
         this.active = active;
         this.shopFinished = shopFinished;
@@ -63,7 +53,7 @@ public class UserShop {
     }
 
     public UserShop(ResultSet result) throws SQLException {
-        this(result.getInt(1), result.getInt(6), result.getInt(7), result.getInt(8), result.getString(9), result.getBoolean(2), result.getBoolean(3), result.getInt(4), result.getInt(5));
+        this(result.getInt("ID"), result.getInt("xPos"), result.getInt("yPos"), result.getInt("zPos"), result.getString("worldName"), result.getBoolean("isActive"), result.getBoolean("shopFinished"), result.getInt("creationTime"), result.getInt("lastUsedTime"));
     }
 
     public BuyCraftInventory getInventory() {
@@ -334,6 +324,6 @@ public class UserShop {
 
     @Override
     public String toString() {
-        return "UserShop={ POS=" + this.position.toString() + " }";
+        return "UserShop={ " + this.position.toString() + " ; " + this.inventory.toString() + " }";
     }
 }

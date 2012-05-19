@@ -7,6 +7,7 @@ import org.bukkit.inventory.ItemStack;
 
 public class BuyCraftStack {
     private final int StackID;
+    private final int ShopID;
     private final int TypeID;
     private final short SubID;
     private int Amount = 1;
@@ -18,11 +19,12 @@ public class BuyCraftStack {
      */
 
     public BuyCraftStack(ResultSet result) throws SQLException {
-        this(result.getInt(2), result.getInt(3), result.getShort(4), result.getInt(5));
+        this(result.getInt("ID"), result.getInt("ShopID"), result.getInt("TypeID"), result.getShort("SubID"), result.getInt("Amount"));
     }
 
-    public BuyCraftStack(int StackID, int TypeID, short SubID, int Amount) {
+    private BuyCraftStack(int StackID, int ShopID, int TypeID, short SubID, int Amount) {
         this.StackID = StackID;
+        this.ShopID = ShopID;
         this.TypeID = TypeID;
         this.SubID = SubID;
         this.Amount = Amount;
@@ -74,6 +76,13 @@ public class BuyCraftStack {
      */
     public int getStackID() {
         return this.StackID;
+    }
+
+    /**
+     * @return the shopID
+     */
+    public int getShopID() {
+        return ShopID;
     }
 
     @Override

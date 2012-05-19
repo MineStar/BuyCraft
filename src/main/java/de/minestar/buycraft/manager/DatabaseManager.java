@@ -59,6 +59,8 @@ public class DatabaseManager extends AbstractDatabaseHandler {
 
         this.addItemStack = con.prepareStatement("INSERT INTO tbl_usershops_inventories (ShopID, TypeID, SubID, Amount) VALUES (?, ?, ?, ?)");
         this.getLastItemStack = con.prepareStatement("SELECT * FROM tbl_usershops_inventories ORDER BY ID DESC LIMIT 1");
+        this.getUsershopInventory = con.prepareStatement("SELECT * FROM tbl_usershops_inventories WHERE ShopID = ?");
+
         this.updateItemStack = con.prepareStatement("UPDATE tbl_usershops_inventories SET Amount = ? WHERE ID = ?");
         this.removeItemStack = con.prepareStatement("DELETE FROM tbl_usershops_inventories WHERE ID = ?");
 
@@ -66,7 +68,6 @@ public class DatabaseManager extends AbstractDatabaseHandler {
         this.removeUsershopInventory = con.prepareStatement("DELETE FROM tbl_usershops_inventories WHERE ShopID = ?");
 
         this.loadUsershops = con.prepareStatement("SELECT * FROM tbl_usershops ORDER BY id ASC");
-        this.getUsershopInventory = con.prepareStatement("SELECT * FROM tbl_usershops_inventories WHERE ShopID = ?");
 
         this.setShopFinished = con.prepareStatement("UPDATE tbl_usershops SET shopFinished = ? WHERE ID = ?");
         this.setShopActive = con.prepareStatement("UPDATE tbl_usershops SET isActive = ? WHERE ID = ?");
@@ -205,7 +206,7 @@ public class DatabaseManager extends AbstractDatabaseHandler {
             this.getUsershopInventory.setInt(1, ID);
             ResultSet results = this.getUsershopInventory.executeQuery();
             while (results.next()) {
-                BuyCraftStack stack = new BuyCraftStack(results.getInt(1), results.getInt(3), results.getShort(4), results.getInt(5));
+                BuyCraftStack stack = new BuyCraftStack(results);
                 inventory.addItem(stack);
             }
             return inventory;

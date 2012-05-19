@@ -45,4 +45,14 @@ public class BuyCraftInventory {
         this.items.add(item);
         return this.getItems();
     }
+
+    @Override
+    public String toString() {
+        String txt = "BuyCraftInventory={ ";
+        for (BuyCraftStack stack : this.items) {
+            txt += "\r\n" + stack.toString() + " ; ";
+        }
+        txt += "}";
+        return txt;
+    }
 }

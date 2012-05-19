@@ -99,6 +99,6 @@ public class BlockVector {
 
     @Override
     public String toString() {
-        return "{ " + this.worldName + " ; " + this.x + " ; " + this.y + " ; " + this.z + " }";
+        return "BlockVector={ " + this.worldName + " ; " + this.x + " ; " + this.y + " ; " + this.z + " }";
     }
 }
