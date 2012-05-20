@@ -223,8 +223,13 @@ public class DatabaseManager extends AbstractDatabaseHandler {
         try {
             // GET SHOPS FROM DB
             ResultSet results = this.loadUsershops.executeQuery();
+            ArrayList<UserShop> notValidList = new ArrayList<UserShop>();
             while (results.next()) {
-                list.add(new UserShop(results));
+                UserShop shop = new UserShop(results);
+                if (shop.isValid())
+                    list.add(shop);
+                else
+                    notValidList.add(shop);
             }
 
             // GET INVENTORIES FROM DB
@@ -234,7 +239,14 @@ public class DatabaseManager extends AbstractDatabaseHandler {
                     shop.setInventory(inventory);
                 }
             }
+
             ConsoleUtils.printInfo(Core.NAME, "Usershops loaded: " + list.size());
+            if (notValidList.size() > 0) {
+                ConsoleUtils.printError(Core.NAME, "Usershops NOT loaded: " + notValidList.size());
+                for (UserShop shop : notValidList) {
+                    ConsoleUtils.printInfo(Core.NAME, shop.getPosition().toString());
+                }
+            }
             return list;
         } catch (Exception e) {
             ConsoleUtils.printException(e, Core.NAME, "Can't load usershops from database!");

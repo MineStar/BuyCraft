@@ -6,9 +6,11 @@ import java.util.ArrayList;
 
 import net.minecraft.server.Packet130UpdateSign;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
 import org.bukkit.craftbukkit.entity.CraftPlayer;
@@ -49,6 +51,14 @@ public class UserShop {
         this.shopFinished = shopFinished;
         this.creationTime = creationTime;
         this.lastUsedTime = lastUsedTime;
+    }
+
+    public boolean isValid() {
+        World world = Bukkit.getWorld(this.position.getWorldName());
+        if (world == null)
+            return false;
+        Location location = new Location(world, this.position.getX(), this.position.getY(), this.position.getZ());
+        return location.getBlock().getTypeId() == Material.WALL_SIGN.getId() && location.getBlock().getRelative(BlockFace.DOWN).getTypeId() == Material.CHEST.getId();
     }
 
     public void verifyCreationStatus(String[] lines) {
