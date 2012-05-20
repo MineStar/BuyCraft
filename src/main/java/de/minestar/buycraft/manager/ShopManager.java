@@ -10,18 +10,24 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 
 import de.minestar.buycraft.shops.UserShop;
+import de.minestar.buycraft.units.Alias;
 import de.minestar.buycraft.units.BlockVector;
+import de.minestar.buycraft.units.PersistentAlias;
 
 public class ShopManager {
 
     private DatabaseManager databaseManager;
     private HashMap<String, UserShop> usershops;
+    private HashMap<String, PersistentAlias> aliasesByPlayerName, aliasesByAliasName;
     private boolean loadSucceeded = false;
 
     public ShopManager(DatabaseManager databaseManager) {
         this.databaseManager = databaseManager;
         this.usershops = new HashMap<String, UserShop>();
+        this.aliasesByPlayerName = new HashMap<String, PersistentAlias>();
+        this.aliasesByAliasName = new HashMap<String, PersistentAlias>();
         this.loadUsershops();
+        this.loadAliases();
     }
 
     public Sign getSignAnchor(Block block) {
@@ -52,6 +58,7 @@ public class ShopManager {
         }
         return null;
     }
+
     public Sign getSignAnchor(List<Block> blockList) {
         Sign sign;
         for (Block block : blockList) {
@@ -196,7 +203,7 @@ public class ShopManager {
     }
 
     public UserShop addUsershop(BlockVector position) {
-        UserShop newShop = this.databaseManager.addUsershop(position);
+        UserShop newShop = this.databaseManager.createUsershop(position);
         if (newShop != null) {
             this.usershops.put(position.toString(), newShop);
         }
@@ -204,7 +211,62 @@ public class ShopManager {
     }
 
     public boolean removeUsershop(UserShop shop) {
-        this.usershops.remove(shop.getPosition().toString());
-        return this.databaseManager.removeUsershop(shop);
+        boolean result = this.databaseManager.removeUsershop(shop);
+        if (result) {
+            this.usershops.remove(shop.getPosition().toString());
+        }
+        return result;
+    }
+
+    public PersistentAlias addAlias(String playerName, String aliasName) {
+        PersistentAlias alias = this.databaseManager.createAlias(playerName, aliasName);
+        if (alias != null) {
+            this.aliasesByAliasName.put(alias.getAliasName().toLowerCase(), alias);
+            this.aliasesByPlayerName.put(alias.getPlayerName().toLowerCase(), alias);
+        }
+        return alias;
+    }
+
+    public Alias getAlias(String name) {
+        Alias alias = this.aliasesByPlayerName.get(name.toLowerCase());
+        if (alias == null) {
+            alias = this.aliasesByAliasName.get(name.toLowerCase());
+            if (alias == null) {
+                return new Alias(name, name);
+            }
+        }
+        return alias;
+    }
+
+    public PersistentAlias getPersistentAlias(String name) {
+        PersistentAlias alias = this.aliasesByPlayerName.get(name.toLowerCase());
+        if (alias == null) {
+            return this.aliasesByAliasName.get(name.toLowerCase());
+        }
+        return alias;
+    }
+
+    public boolean removeAlias(PersistentAlias alias) {
+        boolean result = this.databaseManager.removeAlias(alias);
+        if (result) {
+            this.aliasesByAliasName.remove(alias.getAliasName().toLowerCase());
+            this.aliasesByPlayerName.remove(alias.getPlayerName().toLowerCase());
+        }
+        return result;
+    }
+
+    public ArrayList<PersistentAlias> getAllAliases() {
+        return this.databaseManager.loadAliases();
+    }
+
+    private void loadAliases() {
+        ArrayList<PersistentAlias> aliasList = this.databaseManager.loadAliases();
+        this.loadSucceeded = (aliasList != null);
+        if (this.loadSucceeded) {
+            for (PersistentAlias alias : aliasList) {
+                this.aliasesByAliasName.put(alias.getAliasName().toLowerCase(), alias);
+                this.aliasesByPlayerName.put(alias.getPlayerName().toLowerCase(), alias);
+            }
+        }
     }
 }

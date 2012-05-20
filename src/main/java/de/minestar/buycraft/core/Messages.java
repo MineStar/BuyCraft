@@ -32,6 +32,20 @@ public class Messages {
 
     public static String ADMINS_MUST_SNEAK = "Admins müssen schleichen um einen fremden Usershop zu deaktivieren.";
 
+    // ALIASES
+    public static String NO_ALIASES_SET = "Bisher wurden keine Aliasnamen gesetzt.";
+    public static String LIST_OF_ALIASES = "Liste der Aliasnamen:";
+
+    public static String ALIAS_CREATED = "Der Aliasname wurde erfolgreich angelegt.";
+    public static String ALIAS_CREATED_ERROR = "Der Aliasname konnte nicht angelegt werden!";
+
+    public static String ALIAS_DELETED = "Der Aliasname wurde erfolgreich gelöscht.";
+    public static String ALIAS_DELETED_ERROR = "Der Aliasname konnte nicht gelöscht werden!";
+
+    public static String ALIAS_EXISTS_PLAYER = "Der Spieler hat schon einen Aliasnamen!";
+    public static String ALIAS_EXISTS_ALIAS = "Der Aliasname ist schon vergeben!";
+    public static String ALIAS_PLAYER_NOT_EXISTS = "Der Spieler hat keinen Aliasnamen!";
+
     // GENERAL
     public static String GIVE_CODE_TO_ADMIN = "Bitte diesen Code an einen Admin weitergeben!";
     public static String SHOP_CREATE_INFO = "Klicke mit dem Item in der Hand auf das Schild.";

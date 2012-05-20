@@ -129,7 +129,7 @@ public class ActionListener implements Listener {
         }
 
         // GET THE ALIAS OF THE PLAYER
-        Alias alias = this.getAlias(event.getPlayer());
+        Alias alias = this.shopManager.getAlias(event.getPlayer().getName());
 
         if (shopType.isClickOnSign()) {
             /** SIGN INTERACT */
@@ -150,8 +150,12 @@ public class ActionListener implements Listener {
             }
 
             // SHOP ACTIVATED?
-            boolean isAdminAndSneakingAndOtherShop = UtilPermissions.playerCanUseCommand(event.getPlayer(), Permission.INFINITE_SHOP_CREATE) && !this.verifyUsername(shopType.getSign().getLine(0), alias) && event.getPlayer().isSneaking();
+            boolean isAdmin = UtilPermissions.playerCanUseCommand(event.getPlayer(), Permission.INFINITE_SHOP_CREATE);
+            boolean isAdminAndSneakingAndOtherShop = isAdmin && !this.verifyUsername(shopType.getSign().getLine(0), alias) && event.getPlayer().isSneaking();
             if ((this.verifyUsername(shopType.getSign().getLine(0), alias) || isAdminAndSneakingAndOtherShop) && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                if (isAdminAndSneakingAndOtherShop && event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                    PlayerUtils.sendInfo(event.getPlayer(), Core.NAME, Messages.ADMINS_MUST_SNEAK);
+                }
                 if (!this.databaseManager.setUsershopActive(shop, !shop.isActive())) {
                     PlayerUtils.sendError(event.getPlayer(), Core.NAME, Messages.USER_SHOP_INTERNAL_ERROR_0X02);
                     PlayerUtils.sendInfo(event.getPlayer(), Core.NAME, Messages.TRY_AGAIN_OR_CONTACT_ADMIN);
@@ -167,7 +171,7 @@ public class ActionListener implements Listener {
 
             // so its another user / click on the chest => handle interact
             if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-                shop.handleSignInteract(shopType, event.getPlayer());
+                shop.handleSignInteractByOtherPlayer(shopType, event.getPlayer());
             } else {
                 shop.handleChestInteract(shopType, event.getPlayer());
             }
@@ -216,7 +220,7 @@ public class ActionListener implements Listener {
                     }
 
                     // get the alias
-                    Alias alias = this.getAlias(event.getPlayer());
+                    Alias alias = this.shopManager.getAlias(event.getPlayer().getName());
                     // admins & the user itself can only destroy the shop
                     if (UtilPermissions.playerCanUseCommand(player, Permission.INFINITE_SHOP_CREATE) || this.verifyUsername(sign.getLine(0), alias)) {
                         // the shop must be deactivated!
@@ -235,7 +239,7 @@ public class ActionListener implements Listener {
                 }
             }
         } else if (this.shopManager.isChest(event.getBlock())) {
-            // IF THE SHOPBLOCK IS A CHEST: DENY DESTROY (even for ops!)
+            // IF THE SHOPBLOCK IS A CHEST: DENY DESTROY (even for ops/admins!)
             PlayerUtils.sendError(player, Core.NAME, Messages.DESTROY_SIGN_FIRST);
             event.setCancelled(true);
         }
@@ -286,11 +290,11 @@ public class ActionListener implements Listener {
         }
 
         // get the alias of the current player
-        Alias alias = this.getAlias(event.getPlayer());
+        Alias alias = this.shopManager.getAlias(event.getPlayer().getName());
 
         // UPDATE LINE 0: $USERSHOP$ --> $ALIAS$
         if (event.getLine(0).equalsIgnoreCase("$USERSHOP$"))
-            event.setLine(0, "$" + alias.ALIAS + "$");
+            event.setLine(0, "$" + alias.getAliasName() + "$");
 
         // check if the user is the correct player
         if (!this.verifyUsername(event.getLine(0), alias)) {
@@ -300,7 +304,7 @@ public class ActionListener implements Listener {
         }
 
         // update the lines and do all neccessary checks
-        event.setLine(0, "$" + alias.ALIAS + "$");
+        event.setLine(0, "$" + alias.getAliasName() + "$");
         int[] buyRatios = ItemManager.getRatio(event.getLine(2));
         int[] sellRatios = ItemManager.getRatio(event.getLine(3));
 
@@ -358,12 +362,7 @@ public class ActionListener implements Listener {
     }
 
     private boolean verifyUsername(String line0, Alias alias) {
-        return line0.equalsIgnoreCase("$" + alias.PLAYERNAME + "$");
-    }
-
-    private Alias getAlias(Player player) {
-        // TODO: implement aliases
-        return new Alias(player.getName(), player.getName());
+        return line0.equalsIgnoreCase("$" + alias.getPlayerName() + "$") || line0.equalsIgnoreCase("$" + alias.getAliasName() + "$");
     }
 
     private void createInfiniteShop(SignChangeEvent event) {

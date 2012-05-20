@@ -13,6 +13,7 @@ import de.minestar.buycraft.shops.UserShop;
 import de.minestar.buycraft.units.BlockVector;
 import de.minestar.buycraft.units.BuyCraftInventory;
 import de.minestar.buycraft.units.BuyCraftStack;
+import de.minestar.buycraft.units.PersistentAlias;
 import de.minestar.minestarlibrary.database.AbstractDatabaseHandler;
 import de.minestar.minestarlibrary.database.DatabaseConnection;
 import de.minestar.minestarlibrary.database.DatabaseType;
@@ -27,6 +28,7 @@ public class DatabaseManager extends AbstractDatabaseHandler {
     private PreparedStatement getUsershopInventory, removeUsershopInventory;
     private PreparedStatement setShopFinished, setShopActive;
     private PreparedStatement addItemStack, getLastItemStack, updateItemStack, removeItemStack;
+    private PreparedStatement addAlias, loadAliases, getLastAlias, removeAlias;
 
     public DatabaseManager(String pluginName, File dataFolder) {
         super(pluginName, dataFolder);
@@ -54,9 +56,14 @@ public class DatabaseManager extends AbstractDatabaseHandler {
 
     @Override
     protected void createStatements(String pluginName, Connection con) throws Exception {
+        // USERSHOPS
         this.addUsershop = con.prepareStatement("INSERT INTO tbl_usershops (isActive, shopFinished, creationTime, lastUsedTime, xPos, yPos, zPos, worldName) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         this.getLastUsershop = con.prepareStatement("SELECT * FROM tbl_usershops ORDER BY ID DESC LIMIT 1");
 
+        this.loadUsershops = con.prepareStatement("SELECT * FROM tbl_usershops ORDER BY id ASC");
+        this.removeUsershop = con.prepareStatement("DELETE FROM tbl_usershops WHERE ID = ?");
+
+        // INVENTORIES
         this.addItemStack = con.prepareStatement("INSERT INTO tbl_usershops_inventories (ShopID, TypeID, SubID, Amount) VALUES (?, ?, ?, ?)");
         this.getLastItemStack = con.prepareStatement("SELECT * FROM tbl_usershops_inventories ORDER BY ID DESC LIMIT 1");
         this.getUsershopInventory = con.prepareStatement("SELECT * FROM tbl_usershops_inventories WHERE ShopID = ?");
@@ -64,15 +71,28 @@ public class DatabaseManager extends AbstractDatabaseHandler {
         this.updateItemStack = con.prepareStatement("UPDATE tbl_usershops_inventories SET Amount = ? WHERE ID = ?");
         this.removeItemStack = con.prepareStatement("DELETE FROM tbl_usershops_inventories WHERE ID = ?");
 
-        this.removeUsershop = con.prepareStatement("DELETE FROM tbl_usershops WHERE ID = ?");
         this.removeUsershopInventory = con.prepareStatement("DELETE FROM tbl_usershops_inventories WHERE ShopID = ?");
 
-        this.loadUsershops = con.prepareStatement("SELECT * FROM tbl_usershops ORDER BY id ASC");
-
+        // CHANGE SHOP-PROPERTIES
         this.setShopFinished = con.prepareStatement("UPDATE tbl_usershops SET shopFinished = ? WHERE ID = ?");
         this.setShopActive = con.prepareStatement("UPDATE tbl_usershops SET isActive = ? WHERE ID = ?");
+
+        // ALIASES
+        this.addAlias = con.prepareStatement("INSERT INTO tbl_aliases (playerName, aliasName) VALUES (?, ?)");
+        this.loadAliases = con.prepareStatement("SELECT * FROM tbl_aliases");
+        this.removeAlias = con.prepareStatement("DELETE FROM tbl_aliases WHERE ID = ?");
+        this.getLastAlias = con.prepareStatement("SELECT * FROM tbl_aliases ORDER BY ID DESC LIMIT 1");
     }
 
+    /**
+     * Create a new BuyCraftStack
+     * 
+     * @param shop
+     * @param TypeID
+     * @param SubID
+     * @param Amount
+     * @return the BuyCraftStack
+     */
     public BuyCraftStack createItemStack(UserShop shop, int TypeID, short SubID, int Amount) {
         try {
             this.addItemStack.setInt(1, shop.getShopID());
@@ -91,6 +111,12 @@ public class DatabaseManager extends AbstractDatabaseHandler {
         }
     }
 
+    /**
+     * Update a BuyCraftStack in the database
+     * 
+     * @param stack
+     * @return <b>true</b> if the update succeeded, otherwise <b>false</b>
+     */
     public boolean updateItemStack(BuyCraftStack stack) {
         try {
             this.updateItemStack.setInt(1, stack.getAmount());
@@ -98,22 +124,33 @@ public class DatabaseManager extends AbstractDatabaseHandler {
             this.updateItemStack.executeUpdate();
             return true;
         } catch (Exception e) {
-            ConsoleUtils.printException(e, Core.NAME, "Can't modify ItemStack (Amount) in database! ID=" + stack.getStackID());
+            ConsoleUtils.printException(e, Core.NAME, "Can't modify ItemStack (Amount) in database! " + stack.toString());
             return false;
         }
     }
 
+    /**
+     * Delete a single BuyCraftStack from the database
+     * 
+     * @param stack
+     * @return <b>true</b> if deletion succeeded, otherwise <b>false</b>
+     */
     public boolean removeItemStack(BuyCraftStack stack) {
         try {
             this.removeItemStack.setInt(1, stack.getStackID());
             this.removeItemStack.executeUpdate();
             return true;
         } catch (Exception e) {
-            ConsoleUtils.printException(e, Core.NAME, "Can't remove ItemStack from database! ID=" + stack.getStackID());
+            ConsoleUtils.printException(e, Core.NAME, "Can't remove ItemStack from database! " + stack.toString());
             return false;
         }
     }
 
+    /**
+     * Get the last created BuyCraftStack
+     * 
+     * @return the BuyCraftStack
+     */
     private BuyCraftStack getLastItemStack() {
         try {
             ResultSet results = this.getLastItemStack.executeQuery();
@@ -127,7 +164,13 @@ public class DatabaseManager extends AbstractDatabaseHandler {
         }
     }
 
-    public UserShop addUsershop(BlockVector position) {
+    /**
+     * Create a Usershop
+     * 
+     * @param position
+     * @return the Usershop
+     */
+    public UserShop createUsershop(BlockVector position) {
         try {
             this.addUsershop.setBoolean(1, false);
             this.addUsershop.setBoolean(2, false);
@@ -152,6 +195,11 @@ public class DatabaseManager extends AbstractDatabaseHandler {
         }
     }
 
+    /**
+     * Get the last created Usershop
+     * 
+     * @return the Usershop
+     */
     private UserShop getLastUsershop() {
         try {
             ResultSet results = this.getLastUsershop.executeQuery();
@@ -168,7 +216,7 @@ public class DatabaseManager extends AbstractDatabaseHandler {
     /**
      * Load all usershops from the database
      * 
-     * @return
+     * @return a list of usershops (with inventories)
      */
     public ArrayList<UserShop> loadUsershops() {
         ArrayList<UserShop> list = new ArrayList<UserShop>();
@@ -274,6 +322,12 @@ public class DatabaseManager extends AbstractDatabaseHandler {
         return success;
     }
 
+    /**
+     * Remove an inventory for a Usershop
+     * 
+     * @param shop
+     * @return <b>true</b> if deletion succeeded, otherwise <b>false</b>
+     */
     public boolean removeInventory(UserShop shop) {
         try {
             this.removeUsershopInventory.setInt(1, shop.getShopID());
@@ -281,6 +335,85 @@ public class DatabaseManager extends AbstractDatabaseHandler {
             return true;
         } catch (Exception e) {
             ConsoleUtils.printException(e, Core.NAME, "Can't delete usershop-inventory from database! ID=" + shop.getShopID());
+            return false;
+        }
+    }
+
+    /**
+     * Create a new alias in the database
+     * 
+     * @param playerName
+     * @param aliasName
+     * @return the alias
+     */
+    public PersistentAlias createAlias(String playerName, String aliasName) {
+        try {
+            this.addAlias.setString(1, playerName);
+            this.addAlias.setString(2, aliasName);
+            this.addAlias.executeUpdate();
+            PersistentAlias alias = this.getLastAlias();
+            if (alias == null) {
+                return null;
+            }
+            return alias;
+        } catch (Exception e) {
+            ConsoleUtils.printException(e, Core.NAME, "Can't save new alias in database!");
+            return null;
+        }
+    }
+
+    /**
+     * Get the last created alias
+     * 
+     * @return the alias
+     */
+    private PersistentAlias getLastAlias() {
+        try {
+            ResultSet results = this.getLastAlias.executeQuery();
+            while (results.next()) {
+                return new PersistentAlias(results);
+            }
+            return null;
+        } catch (Exception e) {
+            ConsoleUtils.printException(e, Core.NAME, "Can't get last alias from database!");
+            return null;
+        }
+    }
+
+    /**
+     * Load all aliases from the database
+     * 
+     * @return a list of aliases
+     */
+    public ArrayList<PersistentAlias> loadAliases() {
+        ArrayList<PersistentAlias> list = new ArrayList<PersistentAlias>();
+        try {
+            // GET SHOPS FROM DB
+            ResultSet results = this.loadAliases.executeQuery();
+            while (results.next()) {
+                list.add(new PersistentAlias(results));
+            }
+            ConsoleUtils.printInfo(Core.NAME, "Aliases loaded: " + list.size());
+            return list;
+        } catch (Exception e) {
+            ConsoleUtils.printException(e, Core.NAME, "Can't load aliases from database!");
+            return null;
+        }
+    }
+
+    /**
+     * Remove an alias from the database
+     * 
+     * @param alias
+     * @return <b>true</b> if deletion succeeded, otherwise <b>false</b>
+     */
+    public boolean removeAlias(PersistentAlias alias) {
+        try {
+            this.removeAlias.setInt(1, alias.getID());
+            this.removeAlias.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            ConsoleUtils.printException(e, Core.NAME, "Can't delete alias from database! " + alias.toString());
             return false;
         }
     }

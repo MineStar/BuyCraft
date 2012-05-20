@@ -15,6 +15,7 @@ import de.minestar.buycraft.core.Core;
 import de.minestar.buycraft.core.Messages;
 import de.minestar.buycraft.core.Permission;
 import de.minestar.buycraft.manager.ItemManager;
+import de.minestar.buycraft.units.EnumPotion;
 import de.minestar.minestarlibrary.utils.PlayerUtils;
 
 public class InfiniteShop {
@@ -151,6 +152,14 @@ public class InfiniteShop {
             itemName += ":" + itemData;
         }
 
+        // workaround for potions
+        if (itemID == Material.POTION.getId()) {
+            String tmpName = EnumPotion.getName(itemData);
+            if (tmpName != null) {
+                itemName = tmpName;
+            }
+        }
+
         // print info
         PlayerUtils.sendMessage(player, ChatColor.GOLD, Core.NAME, "Du hast " + wantAmount + "*'" + itemName + "' für " + goldAmount + "*'" + Material.GOLD_INGOT.name() + "' gekauft.");
         if (restAmount > 0) {
@@ -198,6 +207,14 @@ public class InfiniteShop {
         String itemName = ItemManager.getNameForID(itemID);
         if (itemData != 0) {
             itemName += ":" + itemData;
+        }
+
+        // workaround for potions
+        if (itemID == Material.POTION.getId()) {
+            String tmpName = EnumPotion.getName(itemData);
+            if (tmpName != null) {
+                itemName = tmpName;
+            }
         }
 
         // print info
@@ -254,12 +271,20 @@ public class InfiniteShop {
             itemName += ":" + itemData;
         }
 
+        // workaround for potions
+        if (itemID == Material.POTION.getId()) {
+            String tmpName = EnumPotion.getName(itemData);
+            if (tmpName != null) {
+                itemName = tmpName;
+            }
+        }
+
         // print infos
         if (buyRatio[0] > 0 && buyRatio[1] > 0) {
-            PlayerUtils.sendMessage(player, ChatColor.GOLD, Core.NAME, "Verkauf: " + buyRatio[0] + "*'" + itemName + "' für " + buyRatio[1] + "*'" + Material.GOLD_INGOT.name() + "'.");
+            PlayerUtils.sendMessage(player, ChatColor.BLUE, Core.NAME, "Verkauf: " + buyRatio[0] + "*'" + itemName + "' für " + buyRatio[1] + "*'" + Material.GOLD_INGOT.name() + "'.");
         }
         if (sellRatio[0] > 0 && sellRatio[1] > 0) {
-            PlayerUtils.sendMessage(player, ChatColor.GOLD, Core.NAME, "Ankauf: " + sellRatio[0] + "*'" + itemName + "' für " + sellRatio[1] + "*'" + Material.GOLD_INGOT.name() + "'.");
+            PlayerUtils.sendMessage(player, ChatColor.BLUE, Core.NAME, "Ankauf: " + sellRatio[0] + "*'" + itemName + "' für " + sellRatio[1] + "*'" + Material.GOLD_INGOT.name() + "'.");
         }
     }
 

@@ -4,5 +4,5 @@ version: ${pom.version}
 depend: [MineStarLibrary, FalseBookCore, MinestarCore]
 commands:
   buycraft:
-    description: Buycraft-related commands
+    description: BuyCraft-related commands
     usage: /<command>
