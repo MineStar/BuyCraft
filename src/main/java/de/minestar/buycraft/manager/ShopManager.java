@@ -203,6 +203,9 @@ public class ShopManager {
     }
 
     public UserShop addUsershop(BlockVector position) {
+        if (this.getUserShop(position) != null)
+            return null;
+
         UserShop newShop = this.databaseManager.createUsershop(position);
         if (newShop != null) {
             this.usershops.put(position.toString(), newShop);
@@ -219,6 +222,8 @@ public class ShopManager {
     }
 
     public PersistentAlias addAlias(String playerName, String aliasName) {
+        if (this.getAlias(playerName) != null)
+            return null;
         PersistentAlias alias = this.databaseManager.createAlias(playerName, aliasName);
         if (alias != null) {
             this.aliasesByAliasName.put(alias.getAliasName().toLowerCase(), alias);
