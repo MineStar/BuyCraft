@@ -27,7 +27,7 @@ import de.minestar.buycraft.manager.DatabaseManager;
 import de.minestar.buycraft.manager.ItemManager;
 import de.minestar.buycraft.units.BlockVector;
 import de.minestar.buycraft.units.BuyCraftInventory;
-import de.minestar.buycraft.units.BuyCraftStack;
+import de.minestar.buycraft.units.PersistentBuyCraftStack;
 import de.minestar.buycraft.units.EnumPotion;
 import de.minestar.minestarlibrary.utils.PlayerUtils;
 
@@ -78,7 +78,12 @@ public class UserShop {
         return this.getInventory();
     }
 
-    public BuyCraftStack getItem(int index) {
+    public BuyCraftInventory addItem(PersistentBuyCraftStack stack) {
+        this.inventory.addItem(stack);
+        return this.inventory;
+    }
+
+    public PersistentBuyCraftStack getItem(int index) {
         return this.inventory.getItem(index);
     }
 
@@ -86,7 +91,7 @@ public class UserShop {
         return this.inventory.getSize();
     }
 
-    public ArrayList<BuyCraftStack> getItems() {
+    public ArrayList<PersistentBuyCraftStack> getItems() {
         return this.inventory.getItems();
     }
 
@@ -558,7 +563,7 @@ public class UserShop {
 
     private void fillChest(Chest chest) {
         chest.getBlockInventory().clear();
-        for (BuyCraftStack stack : this.inventory.getItems()) {
+        for (PersistentBuyCraftStack stack : this.inventory.getItems()) {
             ItemStack itemStack = new ItemStack(stack.getTypeID());
             itemStack.setAmount(stack.getAmount());
             itemStack.setDurability(stack.getSubID());
@@ -574,7 +579,7 @@ public class UserShop {
     private void saveInventoryToDB(Chest chest) {
         this.inventory.clearItems();
         ItemStack current;
-        BuyCraftStack stack;
+        PersistentBuyCraftStack stack;
         for (int i = 0; i < chest.getInventory().getSize(); i++) {
             current = chest.getInventory().getItem(i);
             if (current == null || current.getTypeId() == Material.AIR.getId())

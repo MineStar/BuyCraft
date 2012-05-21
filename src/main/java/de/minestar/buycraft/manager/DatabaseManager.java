@@ -12,7 +12,7 @@ import de.minestar.buycraft.core.Core;
 import de.minestar.buycraft.shops.UserShop;
 import de.minestar.buycraft.units.BlockVector;
 import de.minestar.buycraft.units.BuyCraftInventory;
-import de.minestar.buycraft.units.BuyCraftStack;
+import de.minestar.buycraft.units.PersistentBuyCraftStack;
 import de.minestar.buycraft.units.PersistentAlias;
 import de.minestar.minestarlibrary.database.AbstractDatabaseHandler;
 import de.minestar.minestarlibrary.database.DatabaseConnection;
@@ -93,14 +93,14 @@ public class DatabaseManager extends AbstractDatabaseHandler {
      * @param Amount
      * @return the BuyCraftStack
      */
-    public BuyCraftStack createItemStack(UserShop shop, int TypeID, short SubID, int Amount) {
+    public PersistentBuyCraftStack createItemStack(UserShop shop, int TypeID, short SubID, int Amount) {
         try {
             this.addItemStack.setInt(1, shop.getShopID());
             this.addItemStack.setInt(2, TypeID);
             this.addItemStack.setInt(3, SubID);
             this.addItemStack.setInt(4, Amount);
             this.addItemStack.executeUpdate();
-            BuyCraftStack stack = this.getLastItemStack();
+            PersistentBuyCraftStack stack = this.getLastItemStack();
             if (stack == null) {
                 return null;
             }
@@ -117,7 +117,7 @@ public class DatabaseManager extends AbstractDatabaseHandler {
      * @param stack
      * @return <b>true</b> if the update succeeded, otherwise <b>false</b>
      */
-    public boolean updateItemStack(BuyCraftStack stack) {
+    public boolean updateItemStack(PersistentBuyCraftStack stack) {
         try {
             this.updateItemStack.setInt(1, stack.getAmount());
             this.updateItemStack.setInt(2, stack.getStackID());
@@ -135,7 +135,7 @@ public class DatabaseManager extends AbstractDatabaseHandler {
      * @param stack
      * @return <b>true</b> if deletion succeeded, otherwise <b>false</b>
      */
-    public boolean removeItemStack(BuyCraftStack stack) {
+    public boolean removeItemStack(PersistentBuyCraftStack stack) {
         try {
             this.removeItemStack.setInt(1, stack.getStackID());
             this.removeItemStack.executeUpdate();
@@ -151,11 +151,11 @@ public class DatabaseManager extends AbstractDatabaseHandler {
      * 
      * @return the BuyCraftStack
      */
-    private BuyCraftStack getLastItemStack() {
+    private PersistentBuyCraftStack getLastItemStack() {
         try {
             ResultSet results = this.getLastItemStack.executeQuery();
             while (results.next()) {
-                return new BuyCraftStack(results);
+                return new PersistentBuyCraftStack(results);
             }
             return null;
         } catch (Exception e) {
@@ -268,7 +268,7 @@ public class DatabaseManager extends AbstractDatabaseHandler {
             this.getUsershopInventory.setInt(1, ID);
             ResultSet results = this.getUsershopInventory.executeQuery();
             while (results.next()) {
-                BuyCraftStack stack = new BuyCraftStack(results);
+                PersistentBuyCraftStack stack = new PersistentBuyCraftStack(results);
                 inventory.addItem(stack);
             }
             return inventory;

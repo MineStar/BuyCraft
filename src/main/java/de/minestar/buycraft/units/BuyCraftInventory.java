@@ -7,15 +7,15 @@ import de.minestar.buycraft.shops.UserShop;
 
 public class BuyCraftInventory {
 
-    private final ArrayList<BuyCraftStack> items;
+    private final ArrayList<PersistentBuyCraftStack> items;
 
     public BuyCraftInventory() {
-        this.items = new ArrayList<BuyCraftStack>();
+        this.items = new ArrayList<PersistentBuyCraftStack>();
     }
 
     public int countGeneralStackSize() {
         int count = 0;
-        for (BuyCraftStack stack : this.items) {
+        for (PersistentBuyCraftStack stack : this.items) {
             count += stack.getAmount();
         }
         return count;
@@ -23,7 +23,7 @@ public class BuyCraftInventory {
 
     public int countItemStack(int TypeID, short SubID) {
         int count = 0;
-        for (BuyCraftStack stack : this.items) {
+        for (PersistentBuyCraftStack stack : this.items) {
             if (stack.equals(TypeID, SubID)) {
                 count += stack.getAmount();
             }
@@ -31,22 +31,22 @@ public class BuyCraftInventory {
         return count;
     }
 
-    public ArrayList<BuyCraftStack> setItems(ArrayList<BuyCraftStack> items) {
+    public ArrayList<PersistentBuyCraftStack> setItems(ArrayList<PersistentBuyCraftStack> items) {
         this.clearItems();
         this.items.addAll(items);
         return this.items;
     }
 
-    public ArrayList<BuyCraftStack> addItems(ArrayList<BuyCraftStack> items) {
+    public ArrayList<PersistentBuyCraftStack> addItems(ArrayList<PersistentBuyCraftStack> items) {
         this.items.addAll(items);
         return this.getItems();
     }
 
-    public ArrayList<BuyCraftStack> getItems() {
+    public ArrayList<PersistentBuyCraftStack> getItems() {
         return this.items;
     }
 
-    public ArrayList<BuyCraftStack> clearItems() {
+    public ArrayList<PersistentBuyCraftStack> clearItems() {
         this.items.clear();
         return this.getItems();
     }
@@ -55,7 +55,7 @@ public class BuyCraftInventory {
         return this.items.size();
     }
 
-    public BuyCraftStack getItem(int index) {
+    public PersistentBuyCraftStack getItem(int index) {
         try {
             return this.items.get(index);
         } catch (Exception e) {
@@ -63,7 +63,7 @@ public class BuyCraftInventory {
         }
     }
 
-    public ArrayList<BuyCraftStack> addItem(BuyCraftStack item) {
+    public ArrayList<PersistentBuyCraftStack> addItem(PersistentBuyCraftStack item) {
         this.items.add(item);
         return this.getItems();
     }
@@ -71,7 +71,7 @@ public class BuyCraftInventory {
     @Override
     public String toString() {
         String txt = "BuyCraftInventory={ ";
-        for (BuyCraftStack stack : this.items) {
+        for (PersistentBuyCraftStack stack : this.items) {
             txt += "\r\n" + stack.toString() + " ; ";
         }
         txt += "}";
@@ -79,7 +79,7 @@ public class BuyCraftInventory {
     }
 
     public boolean addItem(UserShop shop, int TypeID, short SubID, int Amount) {
-        BuyCraftStack stack = DatabaseManager.getInstance().createItemStack(shop, TypeID, SubID, Amount);
+        PersistentBuyCraftStack stack = DatabaseManager.getInstance().createItemStack(shop, TypeID, SubID, Amount);
         if (stack == null)
             return false;
         this.addItem(stack);
@@ -88,9 +88,9 @@ public class BuyCraftInventory {
 
     public boolean removeItem(UserShop shop, int TypeID, short SubID, int Amount) {
         // make a copy of all current itemstacks
-        ArrayList<NonPersistenBuyCraftStack> tempStacks = new ArrayList<NonPersistenBuyCraftStack>();
-        for (BuyCraftStack stack : this.items) {
-            tempStacks.add(new NonPersistenBuyCraftStack(stack.getTypeID(), stack.getSubID(), stack.getAmount()));
+        ArrayList<BuyCraftStack> tempStacks = new ArrayList<BuyCraftStack>();
+        for (PersistentBuyCraftStack stack : this.items) {
+            tempStacks.add(new BuyCraftStack(stack.getTypeID(), stack.getSubID(), stack.getAmount()));
         }
 
         // clear inventory from DB and internally
@@ -99,7 +99,7 @@ public class BuyCraftInventory {
 
         // reduce the amount of the item
         int reduceAmount = Amount;
-        for (NonPersistenBuyCraftStack stack : tempStacks) {
+        for (BuyCraftStack stack : tempStacks) {
             // wrong type => continue
             if (!stack.equals(TypeID, SubID)) {
                 continue;
@@ -121,7 +121,7 @@ public class BuyCraftInventory {
         }
 
         // finally write the new items into the database
-        for (NonPersistenBuyCraftStack stack : tempStacks) {
+        for (BuyCraftStack stack : tempStacks) {
             // Amount < 1 => continue
             if (stack.getAmount() < 1) {
                 continue;

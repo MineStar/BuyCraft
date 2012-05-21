@@ -244,6 +244,13 @@ public class BCUserShop extends BCShop implements Serializable {
         return shopFinished;
     }
 
+    /**
+     * @return the shopInventory
+     */
+    public ArrayList<BCItemStack> getShopInventory() {
+        return shopInventory;
+    }
+
     public void setShopFinished(boolean shopFinished) {
         this.shopFinished = shopFinished;
     }

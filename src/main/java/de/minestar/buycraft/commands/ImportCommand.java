@@ -13,10 +13,13 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import de.minestar.buycraft.core.Core;
+import de.minestar.buycraft.manager.DatabaseManager;
 import de.minestar.buycraft.manager.ShopManager;
 import de.minestar.buycraft.shops.UserShop;
+import de.minestar.buycraft.shops.old.BCItemStack;
 import de.minestar.buycraft.shops.old.BCUserShop;
 import de.minestar.buycraft.units.BlockVector;
+import de.minestar.buycraft.units.PersistentBuyCraftStack;
 import de.minestar.buycraft.units.PersistentAlias;
 import de.minestar.minestarlibrary.commands.AbstractCommand;
 import de.minestar.minestarlibrary.utils.ConsoleUtils;
@@ -71,7 +74,34 @@ public class ImportCommand extends AbstractCommand {
                                 if (position != null) {
                                     newShop = this.shopManager.addUsershop(position);
                                 }
-                                if (newShop != null && newShop.isValid()) {
+
+                                if (newShop == null) {
+                                    failed++;
+                                    continue;
+                                }
+
+                                boolean error = false;
+                                if (shop.getShopInventory() != null) {
+                                    for (BCItemStack oldStack : shop.getShopInventory()) {
+                                        if (oldStack.getAmount() < 1)
+                                            continue;
+                                        PersistentBuyCraftStack newStack = DatabaseManager.getInstance().createItemStack(newShop, oldStack.getId(), oldStack.getSubId(), oldStack.getAmount());
+                                        if (newStack == null) {
+                                            newShop.addItem(newStack);
+                                        } else {
+                                            error = true;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                // do we have an error?
+                                if (error) {
+                                    failed++;
+                                    continue;
+                                }
+
+                                if (newShop.isValid()) {
                                     count++;
                                 } else {
                                     failed++;
