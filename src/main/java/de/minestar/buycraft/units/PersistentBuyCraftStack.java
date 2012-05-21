@@ -69,7 +69,8 @@ public class PersistentBuyCraftStack extends BuyCraftStack {
     }
 
     /**
-     * Check if another BuyCraftStack equals this BuyCraftStack
+     * Check if another PersistentBuyCraftStack equals this
+     * PersistentBuyCraftStack
      * 
      * @param other
      * @return
