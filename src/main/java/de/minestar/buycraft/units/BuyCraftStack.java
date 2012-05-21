@@ -4,7 +4,7 @@ import java.sql.SQLException;
 
 import org.bukkit.inventory.ItemStack;
 
-public class BuyCraftStack {
+public class BuyCraftStack implements Comparable<BuyCraftStack> {
     private final int TypeID;
     private final short SubID;
     private int Amount = 1;
@@ -69,5 +69,37 @@ public class BuyCraftStack {
 
     public boolean equals(int TypeID, short SubID) {
         return this.TypeID == TypeID && this.SubID == SubID;
+    }
+
+    @Override
+    public int compareTo(BuyCraftStack other) {
+        return BlockVector.compare(this.getTypeID(), other.getTypeID());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj instanceof BuyCraftStack) {
+            return this.equals((BuyCraftStack) obj);
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if another BuyCraftStack equals this BuyCraftStack
+     * 
+     * @param other
+     * @return
+     */
+    public boolean equals(BuyCraftStack other) {
+        return (this.getTypeID() == other.getTypeID() && this.getSubID() == other.getSubID() && this.getAmount() == other.getAmount());
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.valueOf(this.getTypeID()).hashCode() + Short.valueOf(this.getSubID()).hashCode();
     }
 }

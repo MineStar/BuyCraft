@@ -55,4 +55,26 @@ public class PersistentBuyCraftStack extends BuyCraftStack {
     public String toString() {
         return "PersistentBuyCraftStack={ " + this.StackID + " = " + this.getTypeID() + " : " + this.getSubID() + " * " + this.getAmount() + " ; }";
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj instanceof PersistentBuyCraftStack) {
+            return this.equals((PersistentBuyCraftStack) obj);
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if another BuyCraftStack equals this BuyCraftStack
+     * 
+     * @param other
+     * @return
+     */
+    public boolean equals(PersistentBuyCraftStack other) {
+        return (this.getTypeID() == other.getTypeID() && this.getSubID() == other.getSubID() && this.getAmount() == other.getAmount() && this.getShopID() == other.getShopID() && this.getStackID() == other.getStackID());
+    }
 }
