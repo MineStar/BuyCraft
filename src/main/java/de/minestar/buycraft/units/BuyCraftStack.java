@@ -92,7 +92,7 @@ public class BuyCraftStack implements Comparable<BuyCraftStack> {
      * Check if another BuyCraftStack equals this BuyCraftStack
      * 
      * @param other
-     * @return
+     * @return <b>true</b> if the stacks are equal, otherwise <b>false</b>
      */
     public boolean equals(BuyCraftStack other) {
         return (this.getTypeID() == other.getTypeID() && this.getSubID() == other.getSubID() && this.getAmount() == other.getAmount());

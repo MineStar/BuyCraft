@@ -78,7 +78,7 @@ public class BlockVector implements Comparable<BlockVector> {
      * Check if another BlockVector equals this BlockVector
      * 
      * @param other
-     * @return
+     * @return <b>true</b> if the vectors are equal, otherwise <b>false</b>
      */
     public boolean equals(BlockVector other) {
         return (this.x == other.x && this.y == other.y && this.z == other.z && this.worldName.equalsIgnoreCase(other.worldName));

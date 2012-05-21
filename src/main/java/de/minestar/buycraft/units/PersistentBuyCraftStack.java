@@ -73,7 +73,7 @@ public class PersistentBuyCraftStack extends BuyCraftStack {
      * PersistentBuyCraftStack
      * 
      * @param other
-     * @return
+     * @return <b>true</b> if the stacks are equal, otherwise <b>false</b>
      */
     public boolean equals(PersistentBuyCraftStack other) {
         return (this.getTypeID() == other.getTypeID() && this.getSubID() == other.getSubID() && this.getAmount() == other.getAmount() && this.getShopID() == other.getShopID() && this.getStackID() == other.getStackID());
