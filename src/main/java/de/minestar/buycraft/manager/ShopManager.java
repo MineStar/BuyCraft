@@ -17,13 +17,13 @@ import de.minestar.buycraft.units.PersistentAlias;
 public class ShopManager {
 
     private DatabaseManager databaseManager;
-    private HashMap<String, UserShop> usershops;
+    private HashMap<BlockVector, UserShop> usershops;
     private HashMap<String, PersistentAlias> aliasesByPlayerName, aliasesByAliasName;
     private boolean loadSucceeded = false;
 
     public ShopManager(DatabaseManager databaseManager) {
         this.databaseManager = databaseManager;
-        this.usershops = new HashMap<String, UserShop>();
+        this.usershops = new HashMap<BlockVector, UserShop>();
         this.aliasesByPlayerName = new HashMap<String, PersistentAlias>();
         this.aliasesByAliasName = new HashMap<String, PersistentAlias>();
         this.loadUsershops();
@@ -109,7 +109,7 @@ public class ShopManager {
      * @return <b>true</b> if the block is a usershop, otherwise <b>false</b>.
      */
     public boolean isUserShop(BlockVector position) {
-        return this.usershops.containsKey(position.toString());
+        return this.usershops.containsKey(position);
     }
 
     /**
@@ -119,7 +119,7 @@ public class ShopManager {
      * @return the usershop
      */
     public UserShop getUserShop(BlockVector position) {
-        return this.usershops.get(position.toString());
+        return this.usershops.get(position);
     }
 
     /**
@@ -197,7 +197,7 @@ public class ShopManager {
         this.loadSucceeded = (shopList != null);
         if (this.loadSucceeded) {
             for (UserShop shop : shopList) {
-                this.usershops.put(shop.getPosition().toString(), shop);
+                this.usershops.put(shop.getPosition(), shop);
             }
         }
     }
@@ -208,7 +208,7 @@ public class ShopManager {
 
         UserShop newShop = this.databaseManager.createUsershop(position);
         if (newShop != null) {
-            this.usershops.put(position.toString(), newShop);
+            this.usershops.put(position, newShop);
         }
         return newShop;
     }
@@ -216,14 +216,15 @@ public class ShopManager {
     public boolean removeUsershop(UserShop shop) {
         boolean result = this.databaseManager.removeUsershop(shop);
         if (result) {
-            this.usershops.remove(shop.getPosition().toString());
+            this.usershops.remove(shop.getPosition());
         }
         return result;
     }
 
     public PersistentAlias addAlias(String playerName, String aliasName) {
-        if (this.getAlias(playerName) != null)
+        if (this.getPersistentAlias(playerName) != null)
             return null;
+
         PersistentAlias alias = this.databaseManager.createAlias(playerName, aliasName);
         if (alias != null) {
             this.aliasesByAliasName.put(alias.getAliasName().toLowerCase(), alias);

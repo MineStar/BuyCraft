@@ -243,8 +243,10 @@ public class DatabaseManager extends AbstractDatabaseHandler {
             ConsoleUtils.printInfo(Core.NAME, "Usershops loaded: " + list.size());
             if (notValidList.size() > 0) {
                 ConsoleUtils.printError(Core.NAME, "Usershops NOT loaded: " + notValidList.size());
+                int i = 1;
                 for (UserShop shop : notValidList) {
-                    ConsoleUtils.printInfo(Core.NAME, shop.getPosition().toString());
+                    ConsoleUtils.printInfo(Core.NAME, "#" + i + " : " + shop.getPosition().toString());
+                    ++i;
                 }
             }
             return list;

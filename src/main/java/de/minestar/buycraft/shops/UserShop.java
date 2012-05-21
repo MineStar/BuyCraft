@@ -45,7 +45,7 @@ public class UserShop {
 
     private UserShop(int ShopID, int x, int y, int z, String worldName, boolean active, boolean shopFinished, int creationTime, int lastUsedTime) {
         this.ShopID = ShopID;
-        this.position = new BlockVector(x, y, z, worldName);
+        this.position = new BlockVector(worldName, x, y, z);
         this.inventory = new BuyCraftInventory();
         this.active = active;
         this.shopFinished = shopFinished;

@@ -2,9 +2,10 @@ package de.minestar.buycraft.units;
 
 import org.bukkit.Location;
 
-public class BlockVector {
-    private int x, y, z;
+public class BlockVector implements Comparable<BlockVector> {
+    private final int x, y, z;
     private String worldName;
+    private int hashCode = 0;
 
     /**
      * Constructor
@@ -16,7 +17,7 @@ public class BlockVector {
      * @param the
      *            z
      */
-    public BlockVector(int x, int y, int z, String worldName) {
+    public BlockVector(String worldName, int x, int y, int z) {
         this.x = x;
         this.y = y;
         this.z = z;
@@ -30,7 +31,7 @@ public class BlockVector {
      *            location
      */
     public BlockVector(Location location) {
-        this(location.getBlockX(), location.getBlockY(), location.getBlockZ(), location.getWorld().getName());
+        this(location.getWorld().getName(), location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
     /**
@@ -55,50 +56,85 @@ public class BlockVector {
     }
 
     /**
-     * @param x
-     *            the x to set
-     */
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    /**
-     * @param y
-     *            the y to set
-     */
-    public void setY(int y) {
-        this.y = y;
-    }
-
-    /**
-     * @param z
-     *            the z to set
-     */
-    public void setZ(int z) {
-        this.z = z;
-    }
-
-    /**
      * @return the worldName
      */
     public String getWorldName() {
         return worldName;
     }
 
-    /**
-     * @param worldName
-     *            the worldName to set
-     */
-    public void setWorldName(String worldName) {
-        this.worldName = worldName;
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this)
+            return true;
+
+        if (obj instanceof BlockVector) {
+            return this.equals((BlockVector) obj);
+        }
+
+        return false;
     }
 
+    /**
+     * Check if another BlockVector equals this BlockVector
+     * 
+     * @param other
+     * @return
+     */
     public boolean equals(BlockVector other) {
         return (this.x == other.x && this.y == other.y && this.z == other.z && this.worldName.equalsIgnoreCase(other.worldName));
     }
 
     @Override
+    public int hashCode() {
+        if (hashCode == 0) {
+            this.hashCode = this.toString().hashCode();
+        }
+        return this.hashCode;
+    }
+
+    @Override
     public String toString() {
         return "BlockVector={ " + this.worldName + " ; " + this.x + " ; " + this.y + " ; " + this.z + " }";
+    }
+
+    /**
+     * Create a BlockVector from a given string. The string must have the same
+     * syntax as <code>@toString()</code>
+     * 
+     * @param string
+     * @return the BlockVector for this string, or null if it fails
+     */
+    public static BlockVector fromString(String string) {
+        BlockVector vector = null;
+        try {
+            string = string.replace(" ", "").replace("BlockVector={", "").replace("}", "");
+            String[] split = string.split(";");
+            vector = new BlockVector(split[0], Integer.valueOf(split[1]), Integer.valueOf(split[2]), Integer.valueOf(split[3]));
+        } catch (Exception e) {
+            vector = null;
+        }
+        return vector;
+    }
+
+    @Override
+    public int compareTo(BlockVector other) {
+        return compare(this.hashCode(), other.hashCode());
+    }
+
+    public static int compare(int x, int y) {
+        return (x < y) ? -1 : ((x == y) ? 0 : 1);
+    }
+
+    /**
+     * Returns a new BlockVector that is relative to this BlockVector with the
+     * given positions
+     * 
+     * @param x
+     * @param y
+     * @param z
+     * @return the relative BlockVector
+     */
+    public BlockVector getRelative(int x, int y, int z) {
+        return new BlockVector(this.worldName, this.x + x, this.y + y, this.z + z);
     }
 }

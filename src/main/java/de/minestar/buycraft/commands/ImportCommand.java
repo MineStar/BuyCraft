@@ -66,8 +66,11 @@ public class ImportCommand extends AbstractCommand {
                         if (splitPos.length == 3) {
                             World world = Bukkit.getWorld(split[0]);
                             if (world != null) {
-                                BlockVector position = new BlockVector(Integer.valueOf(splitPos[0]), Integer.valueOf(splitPos[1]), Integer.valueOf(splitPos[2]), split[0]);
-                                UserShop newShop = this.shopManager.addUsershop(position);
+                                BlockVector position = new BlockVector(split[0], Integer.valueOf(splitPos[0]), Integer.valueOf(splitPos[1]), Integer.valueOf(splitPos[2]));
+                                UserShop newShop = null;
+                                if (position != null) {
+                                    newShop = this.shopManager.addUsershop(position);
+                                }
                                 if (newShop != null && newShop.isValid()) {
                                     count++;
                                 } else {
@@ -80,11 +83,11 @@ public class ImportCommand extends AbstractCommand {
             } catch (Exception e) {
                 e.printStackTrace();
                 ConsoleUtils.printError(Core.NAME, "Error while reading file: " + file.getName());
+                failed++;
             }
         }
         PlayerUtils.sendInfo(player, Core.NAME, "Usershops imported: " + count + " / " + ChatColor.RED + failed);
     }
-
     @SuppressWarnings("unchecked")
     private void importAliases(Player player) {
         HashMap<String, String> aliasList;
