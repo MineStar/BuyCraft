@@ -73,7 +73,7 @@ public class BuyCraftStack implements Comparable<BuyCraftStack> {
 
     @Override
     public int compareTo(BuyCraftStack other) {
-        return BlockVector.compare(this.getTypeID(), other.getTypeID());
+        return this.getTypeID() - other.getTypeID();
     }
 
     @Override

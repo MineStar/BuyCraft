@@ -5,7 +5,7 @@ import org.bukkit.Location;
 public class BlockVector implements Comparable<BlockVector> {
     private final int x, y, z;
     private String worldName;
-    private int hashCode = 0;
+    private int hashCode = Integer.MIN_VALUE;
 
     /**
      * Constructor
@@ -75,29 +75,6 @@ public class BlockVector implements Comparable<BlockVector> {
     }
 
     /**
-     * Check if another BlockVector equals this BlockVector
-     * 
-     * @param other
-     * @return <b>true</b> if the vectors are equal, otherwise <b>false</b>
-     */
-    public boolean equals(BlockVector other) {
-        return (this.x == other.x && this.y == other.y && this.z == other.z && this.worldName.equalsIgnoreCase(other.worldName));
-    }
-
-    @Override
-    public int hashCode() {
-        if (hashCode == 0) {
-            this.hashCode = this.toString().hashCode();
-        }
-        return this.hashCode;
-    }
-
-    @Override
-    public String toString() {
-        return "BlockVector={ " + this.worldName + " ; " + this.x + " ; " + this.y + " ; " + this.z + " }";
-    }
-
-    /**
      * Create a BlockVector from a given string. The string must have the same
      * syntax as <code>@toString()</code>
      * 
@@ -116,15 +93,6 @@ public class BlockVector implements Comparable<BlockVector> {
         return vector;
     }
 
-    @Override
-    public int compareTo(BlockVector other) {
-        return compare(this.hashCode(), other.hashCode());
-    }
-
-    public static int compare(int x, int y) {
-        return (x < y) ? -1 : ((x == y) ? 0 : 1);
-    }
-
     /**
      * Returns a new BlockVector that is relative to this BlockVector with the
      * given positions
@@ -136,5 +104,33 @@ public class BlockVector implements Comparable<BlockVector> {
      */
     public BlockVector getRelative(int x, int y, int z) {
         return new BlockVector(this.worldName, this.x + x, this.y + y, this.z + z);
+    }
+
+    /**
+     * Check if another BlockVector equals this BlockVector
+     * 
+     * @param other
+     * @return <b>true</b> if the vectors are equal, otherwise <b>false</b>
+     */
+    public boolean equals(BlockVector other) {
+        return (this.x == other.x && this.y == other.y && this.z == other.z && this.worldName.equalsIgnoreCase(other.worldName));
+    }
+
+    @Override
+    public int hashCode() {
+        if (hashCode == Integer.MIN_VALUE) {
+            this.hashCode = this.toString().hashCode();
+        }
+        return this.hashCode;
+    }
+
+    @Override
+    public String toString() {
+        return "BlockVector={ " + this.worldName + " ; " + this.x + " ; " + this.y + " ; " + this.z + " }";
+    }
+
+    @Override
+    public int compareTo(BlockVector other) {
+        return this.hashCode() - other.hashCode();
     }
 }
