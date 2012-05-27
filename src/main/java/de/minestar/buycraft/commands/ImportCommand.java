@@ -81,7 +81,7 @@ public class ImportCommand extends AbstractCommand {
                                 }
 
                                 boolean error = false;
-                                if (shop.getShopInventory() != null) {
+                                if (shop.getShopInventory() != null && shop.isActive()) {
                                     for (BCItemStack oldStack : shop.getShopInventory()) {
                                         if (oldStack.getAmount() < 1)
                                             continue;
@@ -102,7 +102,11 @@ public class ImportCommand extends AbstractCommand {
                                 }
 
                                 if (newShop.isValid()) {
-                                    count++;
+                                    if (DatabaseManager.getInstance().setUsershopActive(newShop, shop.isActive()) && DatabaseManager.getInstance().setUsershopFinished(newShop, shop.isShopFinished())) {
+                                        count++;
+                                    } else {
+                                        failed++;
+                                    }
                                 } else {
                                     failed++;
                                 }
