@@ -10,21 +10,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import com.bukkit.gemo.BuyCraft.BCItemStack;
 import com.bukkit.gemo.BuyCraft.BCUserShop;
 
 import de.minestar.buycraft.core.Core;
-import de.minestar.buycraft.manager.DatabaseManager;
 import de.minestar.buycraft.manager.ShopManager;
-import de.minestar.buycraft.shops.UserShop;
-import de.minestar.buycraft.units.BlockVector;
 import de.minestar.buycraft.units.PersistentAlias;
-import de.minestar.buycraft.units.PersistentBuyCraftStack;
 import de.minestar.minestarlibrary.commands.AbstractCommand;
 import de.minestar.minestarlibrary.utils.ConsoleUtils;
 import de.minestar.minestarlibrary.utils.PlayerUtils;
