@@ -34,25 +34,25 @@ public class ShopManager {
         BlockVector position = new BlockVector(block.getLocation());
         if (this.isWallSign(block.getRelative(+1, 0, 0)) && block.getRelative(+1, 0, 0).getData() == 5) {
             Sign sign = (Sign) block.getRelative(+1, 0, 0).getState();
-            if (this.isShop(sign.getLines(), position)) {
+            if (this.isShop(sign.getLines(), new BlockVector(sign.getLocation()))) {
                 return sign;
             }
         }
         if (this.isWallSign(block.getRelative(-1, 0, 0)) && block.getRelative(-1, 0, 0).getData() == 4) {
             Sign sign = (Sign) block.getRelative(-1, 0, 0).getState();
-            if (this.isShop(sign.getLines(), position)) {
+            if (this.isShop(sign.getLines(), new BlockVector(sign.getLocation()))) {
                 return sign;
             }
         }
         if (this.isWallSign(block.getRelative(0, 0, +1)) && block.getRelative(0, 0, +1).getData() == 3) {
             Sign sign = (Sign) block.getRelative(0, 0, +1).getState();
-            if (this.isShop(sign.getLines(), position)) {
+            if (this.isShop(sign.getLines(), new BlockVector(sign.getLocation()))) {
                 return sign;
             }
         }
         if (this.isWallSign(block.getRelative(0, 0, -1)) && block.getRelative(0, 0, -1).getData() == 2) {
             Sign sign = (Sign) block.getRelative(0, 0, -1).getState();
-            if (this.isShop(sign.getLines(), position)) {
+            if (this.isShop(sign.getLines(), new BlockVector(sign.getLocation()))) {
                 return sign;
             }
         }

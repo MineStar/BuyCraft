@@ -1,9 +1,12 @@
 package de.minestar.buycraft.commands;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,15 +15,16 @@ import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import com.bukkit.gemo.BuyCraft.BCItemStack;
+import com.bukkit.gemo.BuyCraft.BCUserShop;
+
 import de.minestar.buycraft.core.Core;
 import de.minestar.buycraft.manager.DatabaseManager;
 import de.minestar.buycraft.manager.ShopManager;
 import de.minestar.buycraft.shops.UserShop;
-import de.minestar.buycraft.shops.old.BCItemStack;
-import de.minestar.buycraft.shops.old.BCUserShop;
 import de.minestar.buycraft.units.BlockVector;
-import de.minestar.buycraft.units.PersistentBuyCraftStack;
 import de.minestar.buycraft.units.PersistentAlias;
+import de.minestar.buycraft.units.PersistentBuyCraftStack;
 import de.minestar.minestarlibrary.commands.AbstractCommand;
 import de.minestar.minestarlibrary.utils.ConsoleUtils;
 import de.minestar.minestarlibrary.utils.PlayerUtils;
@@ -37,7 +41,7 @@ public class ImportCommand extends AbstractCommand {
 
     public void execute(String[] args, Player player) {
         PlayerUtils.sendInfo(player, Core.NAME, "Starting import...");
-        this.importAliases(player);
+        // this.importAliases(player);
         this.importUsershops(player);
         PlayerUtils.sendSuccess(player, Core.NAME, "Import complete.");
     }
@@ -48,6 +52,8 @@ public class ImportCommand extends AbstractCommand {
 
         File[] fileList = folder.listFiles();
         int count = 0, failed = 0;
+
+        ArrayList<BCUserShop> shops = new ArrayList<BCUserShop>();
 
         for (File file : fileList) {
             if (!file.isFile())
@@ -61,67 +67,64 @@ public class ImportCommand extends AbstractCommand {
                 ObjectInputStream objIn = new ObjectInputStream(new BufferedInputStream(new FileInputStream(file.getAbsolutePath())));
                 BCUserShop shop = (BCUserShop) objIn.readObject();
                 objIn.close();
+                if (shop != null)
+                    shops.add(shop);
 
-                if (shop != null) {
-                    String[] split = positionString.split("__");
-                    if (split.length == 2) {
-                        String[] splitPos = split[1].split("_");
-                        if (splitPos.length == 3) {
-                            World world = Bukkit.getWorld(split[0]);
-                            if (world != null) {
-                                BlockVector position = new BlockVector(split[0], Integer.valueOf(splitPos[0]), Integer.valueOf(splitPos[1]), Integer.valueOf(splitPos[2]));
-                                UserShop newShop = null;
-                                if (position != null) {
-                                    newShop = this.shopManager.addUsershop(position);
-                                }
-
-                                if (newShop == null) {
-                                    failed++;
-                                    continue;
-                                }
-
-                                boolean error = false;
-                                if (shop.getShopInventory() != null && shop.isActive()) {
-                                    for (BCItemStack oldStack : shop.getShopInventory()) {
-                                        if (oldStack.getAmount() < 1)
-                                            continue;
-                                        PersistentBuyCraftStack newStack = DatabaseManager.getInstance().createItemStack(newShop, oldStack.getId(), oldStack.getSubId(), oldStack.getAmount());
-                                        if (newStack == null) {
-                                            newShop.addItem(newStack);
-                                        } else {
-                                            error = true;
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                // do we have an error?
-                                if (error) {
-                                    failed++;
-                                    continue;
-                                }
-
-                                if (newShop.isValid()) {
-                                    if (DatabaseManager.getInstance().setUsershopActive(newShop, shop.isActive()) && DatabaseManager.getInstance().setUsershopFinished(newShop, shop.isShopFinished())) {
-                                        count++;
-                                    } else {
-                                        failed++;
-                                    }
-                                } else {
-                                    failed++;
-                                }
-                            }
-                        }
-                    }
-                }
+                /*
+                 * if (shop != null) { String[] split =
+                 * positionString.split("__"); if (split.length == 2) { String[]
+                 * splitPos = split[1].split("_"); if (splitPos.length == 3) {
+                 * World world = Bukkit.getWorld(split[0]); if (world != null) {
+                 * BlockVector position = new BlockVector(split[0],
+                 * Integer.valueOf(splitPos[0]), Integer.valueOf(splitPos[1]),
+                 * Integer.valueOf(splitPos[2])); UserShop newShop = null; if
+                 * (position != null) { newShop =
+                 * this.shopManager.addUsershop(position); }
+                 * 
+                 * if (newShop == null) { failed++; continue; }
+                 * 
+                 * boolean error = false; if (shop.getShopInventory() != null &&
+                 * shop.isActive()) { for (BCItemStack oldStack :
+                 * shop.getShopInventory()) { if (oldStack.getAmount() < 1)
+                 * continue; PersistentBuyCraftStack newStack =
+                 * DatabaseManager.getInstance().createItemStack(newShop,
+                 * oldStack.getId(), oldStack.getSubId(), oldStack.getAmount());
+                 * if (newStack == null) { newShop.addItem(newStack); } else {
+                 * error = true; break; } } }
+                 * 
+                 * // do we have an error? if (error) { failed++; continue; }
+                 * 
+                 * if (newShop.isValid()) { if
+                 * (DatabaseManager.getInstance().setUsershopActive(newShop,
+                 * shop.isActive()) &&
+                 * DatabaseManager.getInstance().setUsershopFinished(newShop,
+                 * shop.isShopFinished())) { count++; } else { failed++; } }
+                 * else { failed++; } } } } }
+                 */
             } catch (Exception e) {
                 e.printStackTrace();
                 ConsoleUtils.printError(Core.NAME, "Error while reading file: " + file.getName());
                 failed++;
             }
         }
-        PlayerUtils.sendInfo(player, Core.NAME, "Usershops imported: " + count + " / " + ChatColor.RED + failed);
+        // PlayerUtils.sendInfo(player, Core.NAME, "Usershops imported: " +
+        // count + " / " + ChatColor.RED + failed);
+
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter("plugins/BuyCraft/export.txt"));
+            for (BCUserShop shop : shops) {
+                writer.write(shop.toString());
+                writer.newLine();
+            }
+            System.out.println("exporting done");
+            writer.close();
+            PlayerUtils.sendInfo(player, Core.NAME, "Old inventories written!");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
     @SuppressWarnings("unchecked")
     private void importAliases(Player player) {
         HashMap<String, String> aliasList;

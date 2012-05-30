@@ -1,4 +1,4 @@
-package de.minestar.buycraft.shops.old;
+package com.bukkit.gemo.BuyCraft;
 
 import java.io.Serializable;
 
@@ -87,5 +87,10 @@ public class BCItemStack implements Serializable {
      */
     public void setSubId(short subId) {
         SubId = subId;
+    }
+
+    @Override
+    public String toString() {
+        return Amount + "*" + Id + ":" + SubId + ";";
     }
 }

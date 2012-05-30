@@ -1,4 +1,4 @@
-package de.minestar.buycraft.shops.old;
+package com.bukkit.gemo.BuyCraft;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -253,5 +255,34 @@ public class BCUserShop extends BCShop implements Serializable {
 
     public void setShopFinished(boolean shopFinished) {
         this.shopFinished = shopFinished;
+    }
+
+    @Override
+    public String toString() {
+        String txt = this.getX() + " / " + this.getY() + " / " + this.getZ() + " @ " + this.getWorldName() + ";";
+        try {
+            txt = this.getShopOwner() + ";";
+        } catch (Exception e) {
+            txt = this.getX() + " / " + this.getY() + " / " + this.getZ() + " @ " + this.getWorldName() + ";";
+        }
+        if (this.isActive) {
+            HashMap<String, Integer> map = new HashMap<String, Integer>();
+
+            int nowCount = 0;
+            for (BCItemStack stack : this.shopInventory) {
+                if (map.containsKey(stack.getId() + ":" + stack.getSubId())) {
+                    nowCount = map.get(stack.getId() + ":" + stack.getSubId());
+                } else {
+                    nowCount = 0;
+                }
+                nowCount += stack.getAmount();
+                map.put(stack.getId() + ":" + stack.getSubId(), nowCount);
+            }
+            for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                txt += entry.getValue() + "*" + entry.getKey() + ";";
+            }
+            return txt;
+        }
+        return "NOT ACTIVE";
     }
 }

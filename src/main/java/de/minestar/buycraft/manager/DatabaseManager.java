@@ -41,12 +41,12 @@ public class DatabaseManager extends AbstractDatabaseHandler {
         YamlConfiguration config = new YamlConfiguration();
 
         if (!configFile.exists()) {
-            DatabaseUtils.createDatabaseConfig(DatabaseType.MySQL, configFile, pluginName);
+            DatabaseUtils.createDatabaseConfig(DatabaseType.SQLLite, configFile, pluginName);
             return null;
         }
 
         config.load(configFile);
-        return new DatabaseConnection(pluginName, DatabaseType.MySQL, config);
+        return new DatabaseConnection(pluginName, DatabaseType.SQLLite, config);
     }
 
     @Override

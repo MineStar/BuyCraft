@@ -10,6 +10,8 @@ public class Messages {
     public static String INFINITE_SHOP_CREATE_SUCCESS_COMPLETE = "Servershop vollständig erstellt.";
 
     // USERSHOPS
+    public static String NAME_IS_TOO_LONG = "Dein Name ist zu lang für Usershops. Bitte wende dich an einen Admin!";
+
     public static String USER_SHOP_DESTROY_ERROR_THIS = "Du kannst diesen Usershops nicht entfernen.";
     public static String USER_SHOP_DESTROY_ERROR = "Du kannst keine Usershops entfernen.";
     public static String USER_SHOP_DESTROY_SUCCESS = "Usershop entfernt.";

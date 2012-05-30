@@ -6,7 +6,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
@@ -113,7 +112,7 @@ public class ActionListener implements Listener {
 
     private void handleUsershopInteract(PlayerInteractEvent event, ShopType shopType) {
         // check permissions, if clicked on a sign
-        if (!UtilPermissions.playerCanUseCommand(event.getPlayer(), Permission.INFINITE_SHOP_CREATE)) {
+        if (!UtilPermissions.playerCanUseCommand(event.getPlayer(), Permission.USER_SHOP_CREATE)) {
             event.setUseInteractedBlock(Event.Result.DENY);
             event.setUseItemInHand(Event.Result.DENY);
             event.setCancelled(true);
@@ -133,7 +132,7 @@ public class ActionListener implements Listener {
 
         if (shopType.isClickOnSign()) {
             /** SIGN INTERACT */
-            if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            if (event.getAction() == Action.RIGHT_CLICK_BLOCK || (event.getAction() == Action.LEFT_CLICK_BLOCK && !this.verifyUsername(shopType.getSign().getLine(0), alias) && !UtilPermissions.playerCanUseCommand(event.getPlayer(), Permission.INFINITE_SHOP_CREATE))) {
                 event.setUseInteractedBlock(Event.Result.DENY);
                 event.setUseItemInHand(Event.Result.DENY);
                 event.setCancelled(true);
@@ -189,59 +188,67 @@ public class ActionListener implements Listener {
     //
     // //////////////////////////////////////////////
 
-    private void handleShopBreak(BlockBreakEvent event) {
+    private void handleShopBreak(BlockBreakEvent event, ShopType shopType) {
         Player player = event.getPlayer();
-        if (this.shopManager.isWallSign(event.getBlock())) {
-            Sign sign = (Sign) event.getBlock().getState();
-            // handle infinite-shop
-            if (this.shopManager.isInfiniteShop(sign.getLines())) {
-                if (!UtilPermissions.playerCanUseCommand(player, Permission.INFINITE_SHOP_CREATE)) {
-                    PlayerUtils.sendError(player, Core.NAME, Messages.INFINITE_SHOP_DESTROY_ERROR);
-                    event.setCancelled(true);
-                    return;
-                } else {
-                    PlayerUtils.sendSuccess(player, Core.NAME, Messages.INFINITE_SHOP_DESTROY_SUCCESS);
-                    return;
-                }
-            }
-            // handle usershop
-            else if (this.shopManager.isUserShop(new BlockVector(sign.getLocation()))) {
-                if (!UtilPermissions.playerCanUseCommand(player, Permission.USER_SHOP_CREATE)) {
-                    PlayerUtils.sendError(player, Core.NAME, Messages.USER_SHOP_DESTROY_ERROR);
-                    event.setCancelled(true);
-                    return;
-                } else {
-                    UserShop shop = this.shopManager.getUserShop(new BlockVector(event.getBlock().getLocation()));
-                    if (shop == null) {
-                        PlayerUtils.sendError(event.getPlayer(), Core.NAME, Messages.USER_SHOP_INTERNAL_ERROR_0X00);
-                        PlayerUtils.sendInfo(event.getPlayer(), Core.NAME, Messages.GIVE_CODE_TO_ADMIN);
-                        event.setCancelled(true);
-                        return;
-                    }
 
-                    // get the alias
-                    Alias alias = this.shopManager.getAlias(event.getPlayer().getName());
-                    // admins & the user itself can only destroy the shop
-                    if (UtilPermissions.playerCanUseCommand(player, Permission.INFINITE_SHOP_CREATE) || this.verifyUsername(sign.getLine(0), alias)) {
-                        // the shop must be deactivated!
-                        if (shop.isActive()) {
-                            PlayerUtils.sendError(player, Core.NAME, Messages.USER_SHOP_DEACTIVATE_FIRST);
-                            event.setCancelled(true);
-                            return;
-                        }
-                        if (this.shopManager.removeUsershop(shop)) {
-                            PlayerUtils.sendSuccess(player, Core.NAME, Messages.USER_SHOP_DESTROY_SUCCESS);
-                        } else {
-                            PlayerUtils.sendError(player, Core.NAME, Messages.USER_SHOP_INTERNAL_ERROR_0X04);
-                            event.setCancelled(true);
-                        }
-                    }
-                }
-            }
-        } else if (this.shopManager.isChest(event.getBlock())) {
+        // tríed to break chest => return
+        if (!shopType.isClickOnSign()) {
             // IF THE SHOPBLOCK IS A CHEST: DENY DESTROY (even for ops/admins!)
             PlayerUtils.sendError(player, Core.NAME, Messages.DESTROY_SIGN_FIRST);
             event.setCancelled(true);
+            return;
+        }
+
+        if (shopType.isInfiniteShop()) {
+            // handle infinite-shops
+            if (!UtilPermissions.playerCanUseCommand(player, Permission.INFINITE_SHOP_CREATE)) {
+                PlayerUtils.sendError(player, Core.NAME, Messages.INFINITE_SHOP_DESTROY_ERROR);
+                event.setCancelled(true);
+            } else {
+                PlayerUtils.sendSuccess(player, Core.NAME, Messages.INFINITE_SHOP_DESTROY_SUCCESS);
+            }
+            return;
+        } else if (shopType.isUserShop()) {
+            // handle user-shops
+            UserShop shop = this.shopManager.getUserShop(shopType.getPosition());
+
+            // UserShop expected, but not found?
+            if (shop == null) {
+                PlayerUtils.sendError(player, Core.NAME, Messages.USER_SHOP_INTERNAL_ERROR_0X00);
+                event.setCancelled(true);
+                return;
+            }
+
+            // get alias
+            Alias alias = this.shopManager.getAlias(event.getPlayer().getName());
+
+            // UserShop must be deactivated first
+            if (shop.isActive()) {
+                if (UtilPermissions.playerCanUseCommand(event.getPlayer(), Permission.INFINITE_SHOP_CREATE) || this.verifyUsername(shopType.getSign().getLine(0), alias)) {
+                    PlayerUtils.sendError(player, Core.NAME, Messages.USER_SHOP_DEACTIVATE_FIRST);
+                } else {
+                    PlayerUtils.sendError(player, Core.NAME, Messages.USER_SHOP_DESTROY_ERROR_THIS);
+                }
+                event.setCancelled(true);
+                return;
+            }
+
+            // check permissions
+            if (UtilPermissions.playerCanUseCommand(event.getPlayer(), Permission.INFINITE_SHOP_CREATE) || this.verifyUsername(shopType.getSign().getLine(0), alias)) {
+                // remove
+                if (this.shopManager.removeUsershop(shop)) {
+                    PlayerUtils.sendSuccess(player, Core.NAME, Messages.USER_SHOP_DESTROY_SUCCESS);
+                } else {
+                    PlayerUtils.sendError(player, Core.NAME, Messages.USER_SHOP_INTERNAL_ERROR_0X04);
+                    event.setCancelled(true);
+                }
+                return;
+            } else {
+                // wrong user and not admin
+                PlayerUtils.sendError(player, Core.NAME, Messages.USER_SHOP_DESTROY_ERROR_THIS);
+                event.setCancelled(true);
+                return;
+            }
         }
     }
 
@@ -293,8 +300,16 @@ public class ActionListener implements Listener {
         Alias alias = this.shopManager.getAlias(event.getPlayer().getName());
 
         // UPDATE LINE 0: $USERSHOP$ --> $ALIAS$
-        if (event.getLine(0).equalsIgnoreCase("$USERSHOP$"))
+        if (event.getLine(0).equalsIgnoreCase("$USERSHOP$")) {
             event.setLine(0, "$" + alias.getAliasName() + "$");
+        }
+
+        // Name too long => return
+        if (event.getLine(0).length() > 15) {
+            PlayerUtils.sendError(event.getPlayer(), Core.NAME, Messages.NAME_IS_TOO_LONG);
+            SignUtils.cancelSignCreation(event);
+            return;
+        }
 
         // check if the user is the correct player
         if (!this.verifyUsername(event.getLine(0), alias)) {
@@ -336,7 +351,7 @@ public class ActionListener implements Listener {
             if (data > 0) {
                 line += ":" + data;
             }
-            event.setLine(1, line);
+            event.setLine(1, "{" + line + "}");
         }
 
         // try to create the usershop in the database
@@ -439,19 +454,25 @@ public class ActionListener implements Listener {
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
+        // event is cancelled => return
         if (event.isCancelled())
             return;
 
-        /** IS THE BLOCK A SHOP-SIGN? */
-        if (this.shopManager.isShopBlock(event.getBlock())) {
-            this.handleShopBreak(event);
-            return;
-        }
         /** IS THE BLOCK A SIGN-ANCHOR? */
-        else if (this.shopManager.getSignAnchor(event.getBlock()) != null) {
+        if (this.shopManager.getSignAnchor(event.getBlock()) != null) {
             this.handleAnchorBreak(event);
             return;
         }
+
+        // Get the shoptype
+        ShopType shopType = new ShopType(this.shopManager, event.getBlock());
+        // not a shop-sign => return;
+        if (!shopType.isShop() || shopType.getSign() == null || shopType.getChest() == null) {
+            return;
+        }
+
+        /** HANDLE SHOP-BREAK? */
+        this.handleShopBreak(event, shopType);
     }
 
     @EventHandler

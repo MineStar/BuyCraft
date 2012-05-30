@@ -1,4 +1,4 @@
-package de.minestar.buycraft.shops.old;
+package com.bukkit.gemo.BuyCraft;
 
 import java.io.Serializable;
 
