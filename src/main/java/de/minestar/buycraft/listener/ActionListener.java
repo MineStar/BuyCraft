@@ -181,7 +181,7 @@ public class ActionListener implements Listener {
             } else if (event.getAction() == Action.RIGHT_CLICK_BLOCK && !shop.isActive()) {
                 // CHECK SHOP-OWNER
                 if (!this.verifyUsername(shopType.getSign().getLine(0), alias)) {
-                    PlayerUtils.sendError(event.getPlayer(), Core.NAME, Messages.USER_SHOP_CREATE_ERROR);
+                    PlayerUtils.sendError(event.getPlayer(), Core.NAME, Messages.SHOP_NOT_ACTIVATED);
                     event.setCancelled(true);
                     return;
                 }
