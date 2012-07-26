@@ -178,10 +178,16 @@ public class ActionListener implements Listener {
             /** CHEST INTERACT */
             if (event.getAction() == Action.LEFT_CLICK_BLOCK) {
                 shop.handleChestInteract(shopType, event.getPlayer());
+            } else if (event.getAction() == Action.RIGHT_CLICK_BLOCK && !shop.isActive()) {
+                // CHECK SHOP-OWNER
+                if (!this.verifyUsername(shopType.getSign().getLine(0), alias)) {
+                    PlayerUtils.sendError(event.getPlayer(), Core.NAME, Messages.USER_SHOP_CREATE_ERROR);
+                    event.setCancelled(true);
+                    return;
+                }
             }
         }
     }
-
     // //////////////////////////////////////////////
     //
     // BLOCK-EVENTS
