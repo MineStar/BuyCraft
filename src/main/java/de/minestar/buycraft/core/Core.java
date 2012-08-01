@@ -4,7 +4,6 @@ import org.bukkit.plugin.PluginManager;
 
 import de.minestar.buycraft.commands.AddAliasCommand;
 import de.minestar.buycraft.commands.BuyCraftCommand;
-import de.minestar.buycraft.commands.ImportCommand;
 import de.minestar.buycraft.commands.ListAllAliasesCommand;
 import de.minestar.buycraft.commands.RemoveAliasCommand;
 import de.minestar.buycraft.listener.ActionListener;
@@ -64,8 +63,7 @@ public class Core extends AbstractCore {
                 new BuyCraftCommand    ("/buycraft", "", "buycraft.admin",
                             new AddAliasCommand         ("addAlias",    "<PlayerName> <AliasName>", "buycraft.admin", this.shopManager),
                             new RemoveAliasCommand      ("delAlias",    "<Name>",                   "buycraft.admin", this.shopManager),
-                            new ListAllAliasesCommand   ("listAlias",   "",                         "buycraft.admin", this.shopManager),
-                            new ImportCommand           ("import",   "",                            "buycraft.admin", this.shopManager)                
+                            new ListAllAliasesCommand   ("listAlias",   "",                         "buycraft.admin", this.shopManager)            
                         )
          );
         // @formatter: on;
