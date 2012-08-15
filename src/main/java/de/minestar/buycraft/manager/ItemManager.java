@@ -56,6 +56,7 @@ public class ItemManager {
                     }
                 }
             }
+            in.close();
         } catch (IOException e) {
             e.printStackTrace();
             ConsoleUtils.printError(Core.NAME, "Fehler beim lesen der Datei: plugins/BuyCraft/items.txt");

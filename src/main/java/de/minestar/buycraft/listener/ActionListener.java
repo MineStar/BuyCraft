@@ -56,7 +56,7 @@ public class ActionListener implements Listener {
         }
 
         // clicked on air => return
-        if (event.getClickedBlock() == null) {
+        if (Action.LEFT_CLICK_BLOCK != event.getAction() && Action.RIGHT_CLICK_BLOCK != event.getAction()) {
             return;
         }
 
@@ -87,12 +87,14 @@ public class ActionListener implements Listener {
 
         if (shopType.isClickOnSign()) {
             /** SIGN INTERACT */
-            if (shopType.getSign().getLine(1).length() < 1) {
-                event.setUseInteractedBlock(Event.Result.DENY);
-                event.setUseItemInHand(Event.Result.DENY);
-                event.setCancelled(true);
-                InfiniteShop.activateItem(event, shopType);
-                return;
+            if (event.getPlayer().isSneaking()) {
+                if (shopType.getSign().getLine(1).length() < 1) {
+                    event.setUseInteractedBlock(Event.Result.DENY);
+                    event.setUseItemInHand(Event.Result.DENY);
+                    event.setCancelled(true);
+                    InfiniteShop.activateItem(event, shopType);
+                    return;
+                }
             }
             if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
                 event.setUseInteractedBlock(Event.Result.DENY);
