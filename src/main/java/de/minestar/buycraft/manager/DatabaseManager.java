@@ -320,8 +320,7 @@ public class DatabaseManager extends AbstractDatabaseHandler {
      * Remove a usershop (and its inventory) from the database
      * 
      * @param shop
-     * @return <b>true</b> if the update succeeded without errors, otherwise
-     *         <b>false</b>
+     * @return <b>true</b> if the update succeeded without errors, otherwise <b>false</b>
      */
     public boolean removeUsershop(UserShop shop) {
         boolean success = true;

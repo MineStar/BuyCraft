@@ -93,8 +93,7 @@ public class ShopManager {
      * Check if a sign is a infinite-shopsign
      * 
      * @param lines
-     * @return <b>true</b> if the block is a infinite-shopsign, otherwise
-     *         <b>false</b>.
+     * @return <b>true</b> if the block is a infinite-shopsign, otherwise <b>false</b>.
      */
     public boolean isInfiniteShop(String[] lines) {
         if (lines[0].equalsIgnoreCase("$SHOP$"))
@@ -133,12 +132,10 @@ public class ShopManager {
     }
 
     /**
-     * Is at least one block a shopblock? Used for PlayerInteract. It will only
-     * search for a sign and a chest.
+     * Is at least one block a shopblock? Used for PlayerInteract. It will only search for a sign and a chest.
      * 
      * @param block
-     * @return <b>true</b> if the block is used for a shop, otherwise
-     *         <b>false</b>.
+     * @return <b>true</b> if the block is used for a shop, otherwise <b>false</b>.
      */
     public boolean isShopBlock(List<Block> blockList) {
         for (Block block : blockList) {
@@ -163,12 +160,10 @@ public class ShopManager {
     }
 
     /**
-     * Is a block a shopblock? Used for PlayerInteract. It will only search for
-     * a sign and a chest.
+     * Is a block a shopblock? Used for PlayerInteract. It will only search for a sign and a chest.
      * 
      * @param block
-     * @return <b>true</b> if the block is used for a shop, otherwise
-     *         <b>false</b>.
+     * @return <b>true</b> if the block is used for a shop, otherwise <b>false</b>.
      */
     public boolean isShopBlock(Block block) {
         // Is it a shopsign? (with a chest below it)
