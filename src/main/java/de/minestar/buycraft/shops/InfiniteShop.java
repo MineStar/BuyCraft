@@ -1,10 +1,8 @@
 package de.minestar.buycraft.shops;
 
-import net.minecraft.server.Packet130UpdateSign;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_4_6.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -329,9 +327,9 @@ public class InfiniteShop {
 
         // SEND UPDATE FOR CLIENTS => NEED HELP OF ORIGINAL MC-SERVERSOFTWARE
         CraftPlayer cPlayer = (CraftPlayer) player;
-        Packet130UpdateSign signPacket = null;
-        signPacket = new Packet130UpdateSign(shop.getSign().getX(), shop.getSign().getY(), shop.getSign().getZ(), shop.getSign().getLines());
-        cPlayer.getHandle().netServerHandler.sendPacket(signPacket);
+        // Packet130UpdateSign signPacket = null;
+        // signPacket = new Packet130UpdateSign(shop.getSign().getX(), shop.getSign().getY(), shop.getSign().getZ(), shop.getSign().getLines());
+        // cPlayer.getHandle().netServerHandler.sendPacket(signPacket);
         PlayerUtils.sendSuccess(cPlayer, Core.NAME, Messages.INFINITE_SHOP_CREATE_SUCCESS_COMPLETE);
     }
 }

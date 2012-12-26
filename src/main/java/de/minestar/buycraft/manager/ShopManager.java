@@ -31,7 +31,6 @@ public class ShopManager {
     }
 
     public Sign getSignAnchor(Block block) {
-        BlockVector position = new BlockVector(block.getLocation());
         if (this.isWallSign(block.getRelative(+1, 0, 0)) && block.getRelative(+1, 0, 0).getData() == 5) {
             Sign sign = (Sign) block.getRelative(+1, 0, 0).getState();
             if (this.isShop(sign.getLines(), new BlockVector(sign.getLocation()))) {

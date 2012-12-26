@@ -6,21 +6,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 
-import org.bukkit.configuration.file.YamlConfiguration;
-
 import de.minestar.buycraft.core.Core;
 import de.minestar.buycraft.shops.UserShop;
 import de.minestar.buycraft.units.BlockVector;
 import de.minestar.buycraft.units.BuyCraftInventory;
-import de.minestar.buycraft.units.PersistentBuyCraftStack;
 import de.minestar.buycraft.units.PersistentAlias;
-import de.minestar.minestarlibrary.database.AbstractDatabaseHandler;
-import de.minestar.minestarlibrary.database.DatabaseConnection;
-import de.minestar.minestarlibrary.database.DatabaseType;
+import de.minestar.buycraft.units.PersistentBuyCraftStack;
+import de.minestar.minestarlibrary.database.AbstractSQLiteHandler;
 import de.minestar.minestarlibrary.database.DatabaseUtils;
 import de.minestar.minestarlibrary.utils.ConsoleUtils;
 
-public class DatabaseManager extends AbstractDatabaseHandler {
+public class DatabaseManager extends AbstractSQLiteHandler {
 
     private static DatabaseManager INSTANCE;
 
@@ -33,20 +29,6 @@ public class DatabaseManager extends AbstractDatabaseHandler {
     public DatabaseManager(String pluginName, File dataFolder) {
         super(pluginName, dataFolder);
         INSTANCE = this;
-    }
-
-    @Override
-    protected DatabaseConnection createConnection(String pluginName, File dataFolder) throws Exception {
-        File configFile = new File(dataFolder, "sqlconfig.yml");
-        YamlConfiguration config = new YamlConfiguration();
-
-        if (!configFile.exists()) {
-            DatabaseUtils.createDatabaseConfig(DatabaseType.SQLLite, configFile, pluginName);
-            return null;
-        }
-
-        config.load(configFile);
-        return new DatabaseConnection(pluginName, DatabaseType.SQLLite, config);
     }
 
     @Override

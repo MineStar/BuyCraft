@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>BuyCraft</groupId>
   <artifactId>BuyCraft</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.4.6_1-SNAPSHOT</version>
   <name>BuyCraft</name>
   <build>
 		<resources>
@@ -54,24 +54,9 @@
 	</build>
 	<dependencies>
 		<dependency>
-			<groupId>org.bukkit</groupId>
-			<artifactId>craftbukkit</artifactId>
-			<version>1.4.2-R0.1-20121031.092235-28</version>
-		</dependency>
-		<dependency>
 			<groupId>de.minestar</groupId>
-			<artifactId>minestarlibrary</artifactId>
-			<version>1.8</version>
-		</dependency>
-		<dependency>
-			<groupId>de.minestar</groupId>
-			<artifactId>FalseBookCore</artifactId>
-			<version>0.92.3alpha</version>
-		</dependency>
-		<dependency>
-			<groupId>de.minestar</groupId>
-			<artifactId>MinestarCore</artifactId>
-			<version>1.6.4</version>
+			<artifactId>MineStarLibrary</artifactId>
+			<version>1.4.6_1</version>
 		</dependency>
 	</dependencies>
 </project>

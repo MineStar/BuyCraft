@@ -1,5 +1,7 @@
 package de.minestar.buycraft.core;
 
+import java.io.File;
+
 import org.bukkit.plugin.PluginManager;
 
 import de.minestar.buycraft.commands.AddAliasCommand;
@@ -46,7 +48,7 @@ public class Core extends AbstractCore {
 
     @Override
     protected boolean createManager() {
-        this.databaseManager = new DatabaseManager(Core.NAME, getDataFolder());
+        this.databaseManager = new DatabaseManager(Core.NAME, new File(getDataFolder(), "sqlconfig.yml"));
         if (!this.databaseManager.hasConnection())
             return false;
 

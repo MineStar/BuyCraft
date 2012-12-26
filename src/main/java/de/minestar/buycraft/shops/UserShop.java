@@ -4,8 +4,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import net.minecraft.server.Packet130UpdateSign;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -13,7 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
-import org.bukkit.craftbukkit.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_4_6.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -27,8 +25,8 @@ import de.minestar.buycraft.manager.DatabaseManager;
 import de.minestar.buycraft.manager.ItemManager;
 import de.minestar.buycraft.units.BlockVector;
 import de.minestar.buycraft.units.BuyCraftInventory;
-import de.minestar.buycraft.units.PersistentBuyCraftStack;
 import de.minestar.buycraft.units.EnumPotion;
+import de.minestar.buycraft.units.PersistentBuyCraftStack;
 import de.minestar.minestarlibrary.utils.PlayerUtils;
 
 public class UserShop {
@@ -517,9 +515,9 @@ public class UserShop {
 
         // SEND UPDATE FOR CLIENTS => NEED HELP OF ORIGINAL MC-SERVERSOFTWARE
         CraftPlayer cPlayer = (CraftPlayer) player;
-        Packet130UpdateSign signPacket = null;
-        signPacket = new Packet130UpdateSign(shopType.getSign().getX(), shopType.getSign().getY(), shopType.getSign().getZ(), shopType.getSign().getLines());
-        cPlayer.getHandle().netServerHandler.sendPacket(signPacket);
+        // Packet130UpdateSign signPacket = null;
+        // signPacket = new Packet130UpdateSign(shopType.getSign().getX(), shopType.getSign().getY(), shopType.getSign().getZ(), shopType.getSign().getLines());
+        // cPlayer.getHandle().netServerHandler.sendPacket(signPacket);
 
         this.shopFinished = DatabaseManager.getInstance().setUsershopFinished(this, true);;
         if (!this.shopFinished) {
@@ -528,8 +526,8 @@ public class UserShop {
 
             // SEND UPDATE FOR CLIENTS => NEED HELP OF ORIGINAL
             // MC-SERVERSOFTWARE
-            signPacket = new Packet130UpdateSign(shopType.getSign().getX(), shopType.getSign().getY(), shopType.getSign().getZ(), shopType.getSign().getLines());
-            cPlayer.getHandle().netServerHandler.sendPacket(signPacket);
+            // signPacket = new Packet130UpdateSign(shopType.getSign().getX(), shopType.getSign().getY(), shopType.getSign().getZ(), shopType.getSign().getLines());
+            // cPlayer.getHandle().netServerHandler.sendPacket(signPacket);
             PlayerUtils.sendError(cPlayer, Core.NAME, Messages.USER_SHOP_INTERNAL_ERROR_0X03);
             PlayerUtils.sendInfo(cPlayer, Core.NAME, Messages.TRY_AGAIN_OR_CONTACT_ADMIN);
         } else {
