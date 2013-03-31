@@ -59,4 +59,10 @@
 			<version>1.4.6_1</version>
 		</dependency>
 	</dependencies>
+	<parent>
+		<groupId>de.minestar</groupId>
+		<artifactId>MinestarPlugins</artifactId>
+		<version>1.4.6_1</version>
+		<relativePath>../MinestarPlugins</relativePath>
+	</parent>
 </project>
