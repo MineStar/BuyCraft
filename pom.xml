@@ -2,7 +2,6 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>BuyCraft</groupId>
   <artifactId>BuyCraft</artifactId>
-  <version>1.4.6_1-SNAPSHOT</version>
   <name>BuyCraft</name>
   <build>
 		<resources>
@@ -56,13 +55,13 @@
 		<dependency>
 			<groupId>de.minestar</groupId>
 			<artifactId>MineStarLibrary</artifactId>
-			<version>1.4.6_1</version>
+			<version>1.5.1_R2</version>
 		</dependency>
 	</dependencies>
 	<parent>
 		<groupId>de.minestar</groupId>
 		<artifactId>MinestarPlugins</artifactId>
-		<version>1.4.6_1</version>
+		<version>1.5.1_R2</version>
 		<relativePath>../MinestarPlugins</relativePath>
 	</parent>
 </project>
