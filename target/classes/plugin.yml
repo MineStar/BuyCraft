@@ -1,6 +1,6 @@
 name: BuyCraft
 main: de.minestar.buycraft.core.Core
-version: 1.5.1_R2
+version: 1.5.2_R1-SNAPSHOT
 depend: [MineStarLibrary, FalseBookCore, MinestarCore]
 commands:
   buycraft:
