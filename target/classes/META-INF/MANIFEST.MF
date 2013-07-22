@@ -1,14 +1,15 @@
 Manifest-Version: 1.0
 Built-By: GeMo
 Build-Jdk: 1.7.0_05
-Class-Path: MineStarLibrary-1.5.2_R1-SNAPSHOT.jar FalseBookCore-0.98al
- pha-SNAPSHOT.jar craftbukkit-1.5.2-R0.1-SNAPSHOT.jar bPermissions-1.j
+Class-Path: MineStarLibrary-1.6.2_R1-SNAPSHOT.jar FalseBookCore-0.99al
+ pha-SNAPSHOT.jar craftbukkit-1.6.2-R0.1-SNAPSHOT.jar bPermissions-1.j
  ar GroupManager-1.0-Alpha-5.jar PermissionsEx-1.jar Vault-1.jar LWC-1
  .jar SuperpermsBridge-1.2.jar permissionsBukkit-1.2.jar FalseBookBloc
- k-0.93.1alpha.jar FalseBookExtra-0.93.1alpha.jar FalseBookChat-0.93.1
- alpha.jar FalseBookCart-0.93.1alpha.jar FalseBookIC-0.93.1alpha.jar M
- oneyPit-1.1.jar MinestarCore-1.6.5.jar Illuminati-1.1.2.jar bukkit-1.
- 3.1-R1.0.jar minestarlibrary-1.9.jar VinciCode-0.0.1-SNAPSHOT.jar
+ k-0.98alpha-SNAPSHOT.jar FalseBookExtra-0.98alpha-SNAPSHOT.jar FalseB
+ ookChat-0.98alpha-SNAPSHOT.jar FalseBookCart-0.98alpha-SNAPSHOT.jar S
+ yncChest-1.0.jar FB.IC-0.97alpha.jar MoneyPit-1.5.2_R1-SNAPSHOT.jar M
+ inestarCore-1.5.2_R1-SNAPSHOT.jar Illuminati-1.1.2.jar bukkit-1.3.1-R
+ 1.0.jar minestarlibrary-1.9.jar VinciCode-0.0.1-SNAPSHOT.jar
 Sealed: true
 Created-By: Maven Integration for Eclipse
 
