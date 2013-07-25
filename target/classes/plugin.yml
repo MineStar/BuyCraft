@@ -1,8 +1,0 @@
-name: BuyCraft
-main: de.minestar.buycraft.core.Core
-version: 1.6.2_R1-SNAPSHOT
-depend: [MineStarLibrary, FalseBookCore, MinestarCore]
-commands:
-  buycraft:
-    description: BuyCraft-related commands
-    usage: /<command>
