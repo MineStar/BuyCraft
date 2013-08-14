@@ -43,7 +43,7 @@ public class Core extends AbstractCore {
     }
 
     public Core(String name) {
-        super(NAME);
+        super(name);
     }
 
     @Override
