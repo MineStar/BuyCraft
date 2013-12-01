@@ -2,6 +2,7 @@ package com.bukkit.gemo.BuyCraft;
 
 import java.io.Serializable;
 
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 public class BCItemStack implements Serializable {
@@ -41,7 +42,8 @@ public class BCItemStack implements Serializable {
     }
 
     public ItemStack getItem() {
-        ItemStack item = new ItemStack(getId());
+        Material mat = Material.matchMaterial(Integer.toString(getId()));
+        ItemStack item = new ItemStack(mat);
         item.setAmount(getAmount());
         item.setDurability(getSubId());
         return item;

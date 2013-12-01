@@ -75,7 +75,7 @@ public class ShopManager {
      * @return <b>true</b> if the block is a chest, otherwise <b>false</b>.
      */
     public boolean isChest(Block block) {
-        return block.getTypeId() == Material.CHEST.getId();
+        return block.getType().equals(Material.CHEST);
     }
 
     /**
@@ -85,7 +85,7 @@ public class ShopManager {
      * @return <b>true</b> if the block is a wallsign, otherwise <b>false</b>.
      */
     public boolean isWallSign(Block block) {
-        return block.getTypeId() == Material.WALL_SIGN.getId();
+        return block.getType().equals(Material.WALL_SIGN);
     }
 
     /**

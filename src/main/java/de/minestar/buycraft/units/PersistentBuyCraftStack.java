@@ -3,6 +3,7 @@ package de.minestar.buycraft.units;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
 public class PersistentBuyCraftStack extends BuyCraftStack {
@@ -31,7 +32,8 @@ public class PersistentBuyCraftStack extends BuyCraftStack {
      * @return the ItemStack
      */
     public ItemStack getItem() {
-        ItemStack item = new ItemStack(this.getTypeID());
+        Material mat = Material.matchMaterial(Integer.toString(getTypeID()));
+        ItemStack item = new ItemStack(mat);
         item.setAmount(this.getAmount());
         item.setDurability(this.getSubID());
         return item;

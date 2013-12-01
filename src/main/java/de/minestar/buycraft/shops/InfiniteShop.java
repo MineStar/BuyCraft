@@ -2,7 +2,7 @@ package de.minestar.buycraft.shops;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_6_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -47,8 +47,8 @@ public class InfiniteShop {
         }
 
         // test if only gold or the item is in the chest
-        int itemAmount = ItemManager.countItemInInventory(shop, Material.GOLD_INGOT.getId());
-        itemAmount += ItemManager.countItemInInventory(shop, Material.GOLD_BLOCK.getId());
+        int itemAmount = ItemManager.countItemInInventory(shop, Material.GOLD_INGOT);
+        itemAmount += ItemManager.countItemInInventory(shop, Material.GOLD_BLOCK);
         itemAmount += ItemManager.countItemInInventory(shop, itemID, itemData);
         if (itemAmount != ItemManager.countAllItemsInInventory(shop)) {
             PlayerUtils.sendError(player, Core.NAME, "Es kann nur Gold und das Item in die Kiste gelegt werden.");
@@ -56,8 +56,8 @@ public class InfiniteShop {
         }
 
         // count materials in chest
-        int goldAmount = ItemManager.countItemInInventory(shop, Material.GOLD_INGOT.getId());
-        goldAmount += (ItemManager.countItemInInventory(shop, Material.GOLD_BLOCK.getId()) * 9);
+        int goldAmount = ItemManager.countItemInInventory(shop, Material.GOLD_INGOT);
+        goldAmount += (ItemManager.countItemInInventory(shop, Material.GOLD_BLOCK) * 9);
         int materialAmount = ItemManager.countItemInInventory(shop, itemID, itemData);
 
         // only sell OR buy, not both
@@ -129,8 +129,9 @@ public class InfiniteShop {
         // clear old inventory
         shop.getChest().getInventory().clear();
 
+        Material mat = Material.matchMaterial(Integer.toString(itemID));
         // add item
-        ItemStack item = new ItemStack(itemID);
+        ItemStack item = new ItemStack(mat);
         if (itemData != 0) {
             item.setDurability(itemData);
         }
@@ -139,7 +140,7 @@ public class InfiniteShop {
 
         // add rest-gold
         if (restAmount > 0) {
-            item = new ItemStack(Material.GOLD_INGOT.getId());
+            item = new ItemStack(Material.GOLD_INGOT);
             item.setAmount(restAmount);
             shop.getChest().getInventory().addItem(item);
         }
@@ -151,7 +152,7 @@ public class InfiniteShop {
         }
 
         // workaround for potions
-        if (itemID == Material.POTION.getId()) {
+        if (mat.equals(Material.POTION)) {
             String tmpName = EnumPotion.getName(itemData);
             if (tmpName != null) {
                 itemName = tmpName;
@@ -187,13 +188,14 @@ public class InfiniteShop {
         shop.getChest().getInventory().clear();
 
         // add gold
-        ItemStack item = new ItemStack(Material.GOLD_INGOT.getId());
+        ItemStack item = new ItemStack(Material.GOLD_INGOT);
         item.setAmount(wantAmount);
         shop.getChest().getInventory().addItem(item);
 
+        Material mat = Material.matchMaterial(Integer.toString(itemID));
         // add rest-item
         if (restAmount > 0) {
-            item = new ItemStack(itemID);
+            item = new ItemStack(mat);
             if (itemData != 0) {
                 item.setDurability(itemData);
             }
@@ -208,7 +210,7 @@ public class InfiniteShop {
         }
 
         // workaround for potions
-        if (itemID == Material.POTION.getId()) {
+        if (mat.equals(Material.POTION)) {
             String tmpName = EnumPotion.getName(itemData);
             if (tmpName != null) {
                 itemName = tmpName;
@@ -270,7 +272,8 @@ public class InfiniteShop {
         }
 
         // workaround for potions
-        if (itemID == Material.POTION.getId()) {
+        Material mat = Material.matchMaterial(Integer.toString(itemID));
+        if (mat.equals(Material.POTION)) {
             String tmpName = EnumPotion.getName(itemData);
             if (tmpName != null) {
                 itemName = tmpName;
@@ -296,7 +299,7 @@ public class InfiniteShop {
         }
 
         // check item in hand
-        if (player.getItemInHand() == null || player.getItemInHand().getTypeId() == Material.AIR.getId()) {
+        if (player.getItemInHand() == null || player.getItemInHand().getType().equals(Material.AIR)) {
             PlayerUtils.sendError(player, Core.NAME, Messages.NO_ITEM_IN_HAND);
             return;
         }

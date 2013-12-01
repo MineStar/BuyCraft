@@ -171,7 +171,7 @@ public class ItemManager {
     }
 
     public static String getNameForID(int TypeID) {
-        Material material = Material.getMaterial(TypeID);
+        Material material = Material.matchMaterial(Integer.toString(TypeID));
         if (material != null) {
             return material.name();
         }
@@ -185,15 +185,23 @@ public class ItemManager {
     public static boolean isChestEmtpy(Chest chest) {
         Inventory inventory = chest.getInventory();
         for (int i = 0; i < inventory.getSize(); i++) {
-            if (inventory.getItem(i) == null || inventory.getItem(i).getTypeId() == Material.AIR.getId())
+            if (inventory.getItem(i) == null || inventory.getItem(i).getType().equals(Material.AIR))
                 continue;
             return true;
         }
         return true;
     }
 
+    public static int countItemInInventory(ShopType shop, Material mat) {
+        return ItemManager.countItemInInventory(shop.getChest(), mat, (short) 0);
+    }
+
     public static int countItemInInventory(ShopType shop, int itemID) {
         return ItemManager.countItemInInventory(shop.getChest(), itemID, (short) 0);
+    }
+
+    public static int countItemInInventory(ShopType shop, Material mat, short itemData) {
+        return ItemManager.countItemInInventory(shop.getChest(), mat, itemData);
     }
 
     public static int countItemInInventory(ShopType shop, int itemID, short itemData) {
@@ -204,13 +212,22 @@ public class ItemManager {
         return ItemManager.countItemInInventory(chest, itemID, (short) 0);
     }
 
+    public static int countItemInInventory(Chest chest, Material mat) {
+        return ItemManager.countItemInInventory(chest, mat, (short) 0);
+    }
+
     public static int countItemInInventory(Chest chest, int itemID, short itemData) {
+        Material mat = Material.matchMaterial(Integer.toString(itemID));
+        return ItemManager.countItemInInventory(chest, mat, itemData);
+    }
+
+    public static int countItemInInventory(Chest chest, Material mat, short itemData) {
         int count = 0;
         Inventory inventory = chest.getInventory();
         ItemStack item;
         for (int i = 0; i < inventory.getSize(); i++) {
             item = inventory.getItem(i);
-            if (item == null || item.getTypeId() != itemID || item.getEnchantments().size() > 0)
+            if (item == null || !item.getType().equals(mat) || item.getEnchantments().size() > 0)
                 continue;
             if (item.getDurability() == itemData) {
                 count += item.getAmount();
@@ -218,6 +235,7 @@ public class ItemManager {
         }
         return count;
     }
+
     public static int countAllItemsInInventory(ShopType shop) {
         return ItemManager.countAllItemsInInventory(shop.getChest());
     }
@@ -228,7 +246,7 @@ public class ItemManager {
         ItemStack item;
         for (int i = 0; i < inventory.getSize(); i++) {
             item = inventory.getItem(i);
-            if (item == null || item.getTypeId() == Material.AIR.getId())
+            if (item == null || item.getType().equals(Material.AIR))
                 continue;
             count += item.getAmount();
         }

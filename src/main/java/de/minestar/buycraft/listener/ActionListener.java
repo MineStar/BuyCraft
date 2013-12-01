@@ -276,7 +276,7 @@ public class ActionListener implements Listener {
             return;
 
         // search for a chest
-        if (event.getBlock().getRelative(BlockFace.DOWN).getTypeId() != Material.CHEST.getId()) {
+        if (!event.getBlock().getRelative(BlockFace.DOWN).getType().equals(Material.CHEST)) {
             PlayerUtils.sendError(event.getPlayer(), Core.NAME, Messages.CREATE_CHEST_FIRST);
             SignUtils.cancelSignCreation(event);
             return;
@@ -443,13 +443,13 @@ public class ActionListener implements Listener {
             return;
 
         // only chests are affected
-        if (event.getBlock().getTypeId() != Material.CHEST.getId())
+        if (!event.getBlock().getType().equals(Material.CHEST))
             return;
 
         // look for doublechests and check them
         ArrayList<Block> blockList = BlockUtils.getDirectNeighbours(event.getBlock(), false);
         for (Block block : blockList) {
-            if (block.getTypeId() != Material.CHEST.getId())
+            if (!block.getType().equals(Material.CHEST))
                 continue;
 
             if (this.shopManager.isShopBlock(block)) {

@@ -56,7 +56,7 @@ public class BCUserShop extends BCShop implements Serializable {
      */
     public Sign getSign() {
         Block block = this.getBlock();
-        if (block.getTypeId() != Material.WALL_SIGN.getId())
+        if (!block.getType().equals(Material.WALL_SIGN))
             return null;
 
         return ((Sign) block.getState());

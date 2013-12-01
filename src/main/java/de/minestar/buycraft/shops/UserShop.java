@@ -11,7 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
-import org.bukkit.craftbukkit.v1_6_R2.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -291,7 +291,7 @@ public class UserShop {
 
         // add rest-gold
         if (restAmount > 0) {
-            item = new ItemStack(Material.GOLD_INGOT.getId());
+            item = new ItemStack(Material.GOLD_INGOT);
             item.setAmount(restAmount);
             shop.getChest().getInventory().addItem(item);
         }
@@ -356,7 +356,7 @@ public class UserShop {
         shop.getChest().getInventory().clear();
 
         // add gold
-        ItemStack item = new ItemStack(Material.GOLD_INGOT.getId());
+        ItemStack item = new ItemStack(Material.GOLD_INGOT);
         item.setAmount(wantAmount);
         shop.getChest().getInventory().addItem(item);
 
@@ -454,7 +454,8 @@ public class UserShop {
         }
 
         // workaround for potions
-        if (itemID == Material.POTION.getId()) {
+        Material mat = Material.matchMaterial(Integer.toString(itemID));
+        if (mat.equals(Material.POTION)) {
             String tmpName = EnumPotion.getName(itemData);
             if (tmpName != null) {
                 itemName = tmpName;
@@ -484,7 +485,7 @@ public class UserShop {
         }
 
         // check item in hand
-        if (player.getItemInHand() == null || player.getItemInHand().getTypeId() == Material.AIR.getId()) {
+        if (player.getItemInHand() == null || player.getItemInHand().getType().equals(Material.AIR)) {
             PlayerUtils.sendError(player, Core.NAME, Messages.NO_ITEM_IN_HAND);
             return;
         }
@@ -553,7 +554,7 @@ public class UserShop {
         ItemStack current;
         for (int i = 0; i < chest.getInventory().getSize(); i++) {
             current = chest.getInventory().getItem(i);
-            if (current == null || current.getTypeId() == Material.AIR.getId())
+            if (current == null || current.getType().equals(Material.AIR))
                 continue;
             chest.getWorld().dropItem(location, current);
         }
@@ -580,7 +581,7 @@ public class UserShop {
         PersistentBuyCraftStack stack;
         for (int i = 0; i < chest.getInventory().getSize(); i++) {
             current = chest.getInventory().getItem(i);
-            if (current == null || current.getTypeId() == Material.AIR.getId())
+            if (current == null || current.getType().equals(Material.AIR))
                 continue;
 
             stack = DatabaseManager.getInstance().createItemStack(this, current.getTypeId(), current.getDurability(), current.getAmount());
