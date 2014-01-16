@@ -182,7 +182,8 @@ public class ActionListener implements Listener {
                 shop.handleChestInteract(shopType, event.getPlayer());
             } else if (event.getAction() == Action.RIGHT_CLICK_BLOCK && !shop.isActive()) {
                 // CHECK SHOP-OWNER
-                if (!this.verifyUsername(shopType.getSign().getLine(0), alias)) {
+                boolean isAdmin = UtilPermissions.playerCanUseCommand(event.getPlayer(), Permission.INFINITE_SHOP_CREATE);
+                if (!this.verifyUsername(shopType.getSign().getLine(0), alias) && !isAdmin) {
                     PlayerUtils.sendError(event.getPlayer(), Core.NAME, Messages.SHOP_NOT_ACTIVATED);
                     event.setCancelled(true);
                     return;
@@ -190,6 +191,7 @@ public class ActionListener implements Listener {
             }
         }
     }
+
     // //////////////////////////////////////////////
     //
     // BLOCK-EVENTS
