@@ -2,7 +2,7 @@ package de.minestar.buycraft.shops;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.craftbukkit.v1_7_R1.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_7_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -289,6 +289,7 @@ public class InfiniteShop {
         }
     }
 
+    @SuppressWarnings("deprecation")
     public static void activateItem(PlayerInteractEvent event, ShopType shop) {
         Player player = event.getPlayer();
 

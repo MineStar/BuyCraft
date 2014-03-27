@@ -193,37 +193,39 @@ public class ItemManager {
     }
 
     public static int countItemInInventory(ShopType shop, Material mat) {
-        return ItemManager.countItemInInventory(shop.getChest(), mat, (short) 0);
+        return ItemManager.countItemInInventory(shop.getChest().getInventory(), mat, (short) 0);
     }
 
     public static int countItemInInventory(ShopType shop, int itemID) {
-        return ItemManager.countItemInInventory(shop.getChest(), itemID, (short) 0);
+        return ItemManager.countItemInInventory(shop.getChest().getInventory(), itemID, (short) 0);
     }
 
     public static int countItemInInventory(ShopType shop, Material mat, short itemData) {
-        return ItemManager.countItemInInventory(shop.getChest(), mat, itemData);
+        return ItemManager.countItemInInventory(shop.getChest().getInventory(), mat, itemData);
     }
 
     public static int countItemInInventory(ShopType shop, int itemID, short itemData) {
-        return ItemManager.countItemInInventory(shop.getChest(), itemID, itemData);
+        return ItemManager.countItemInInventory(shop.getChest().getInventory(), itemID, itemData);
     }
 
     public static int countItemInInventory(Chest chest, int itemID) {
-        return ItemManager.countItemInInventory(chest, itemID, (short) 0);
+        return ItemManager.countItemInInventory(chest.getInventory(), itemID, (short) 0);
     }
 
     public static int countItemInInventory(Chest chest, Material mat) {
-        return ItemManager.countItemInInventory(chest, mat, (short) 0);
+        return ItemManager.countItemInInventory(chest.getInventory(), mat, (short) 0);
     }
 
     public static int countItemInInventory(Chest chest, int itemID, short itemData) {
-        Material mat = Material.matchMaterial(Integer.toString(itemID));
-        return ItemManager.countItemInInventory(chest, mat, itemData);
+        return ItemManager.countItemInInventory(chest.getInventory(), itemID, itemData);
     }
 
     public static int countItemInInventory(Chest chest, Material mat, short itemData) {
+        return countItemInInventory(chest.getInventory(), mat, itemData);
+    }
+
+    public static int countItemInInventory(Inventory inventory, Material mat, short itemData) {
         int count = 0;
-        Inventory inventory = chest.getInventory();
         ItemStack item;
         for (int i = 0; i < inventory.getSize(); i++) {
             item = inventory.getItem(i);
@@ -236,13 +238,21 @@ public class ItemManager {
         return count;
     }
 
-    public static int countAllItemsInInventory(ShopType shop) {
-        return ItemManager.countAllItemsInInventory(shop.getChest());
+    public static int countItemInInventory(Inventory inventory, Material mat) {
+        return ItemManager.countItemInInventory(inventory, mat, (short) 0);
     }
 
-    public static int countAllItemsInInventory(Chest chest) {
+    public static int countItemInInventory(Inventory inventory, int itemID, short itemData) {
+        Material mat = Material.matchMaterial(Integer.toString(itemID));
+        return ItemManager.countItemInInventory(inventory, mat, itemData);
+    }
+
+    public static int countItemInInventory(Inventory inventory, int itemID) {
+        return ItemManager.countItemInInventory(inventory, itemID, (short) 0);
+    }
+
+    public static int countAllItemsInInventory(Inventory inventory) {
         int count = 0;
-        Inventory inventory = chest.getInventory();
         ItemStack item;
         for (int i = 0; i < inventory.getSize(); i++) {
             item = inventory.getItem(i);
@@ -251,5 +261,13 @@ public class ItemManager {
             count += item.getAmount();
         }
         return count;
+    }
+
+    public static int countAllItemsInInventory(ShopType shop) {
+        return ItemManager.countAllItemsInInventory(shop.getChest());
+    }
+
+    public static int countAllItemsInInventory(Chest chest) {
+        return countAllItemsInInventory(chest.getInventory());
     }
 }
