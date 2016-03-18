@@ -56,7 +56,7 @@ public class UserShop {
         if (world == null)
             return false;
         Location location = new Location(world, this.position.getX(), this.position.getY(), this.position.getZ());
-        return location.getBlock().getTypeId() == Material.WALL_SIGN.getId() && location.getBlock().getRelative(BlockFace.DOWN).getTypeId() == Material.CHEST.getId();
+        return location.getBlock().getType() == Material.WALL_SIGN && location.getBlock().getRelative(BlockFace.DOWN).getType() == Material.CHEST;
     }
 
     public void verifyCreationStatus(String[] lines) {
