@@ -11,7 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_9_R2.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -485,14 +485,14 @@ public class UserShop {
         }
 
         // check item in hand
-        if (player.getItemInHand() == null || player.getItemInHand().getType().equals(Material.AIR)) {
+        if (player.getInventory().getItemInMainHand() == null || player.getInventory().getItemInMainHand().getType().equals(Material.AIR)) {
             PlayerUtils.sendError(player, Core.NAME, Messages.NO_ITEM_IN_HAND);
             return;
         }
 
         // check ItemID allowed
-        int ID = player.getItemInHand().getTypeId();
-        short data = player.getItemInHand().getDurability();
+        int ID = player.getInventory().getItemInMainHand().getTypeId();
+        short data = player.getInventory().getItemInMainHand().getDurability();
         if (!ItemManager.getInstance().isItemIDAllowed(ID)) {
             PlayerUtils.sendError(player, Core.NAME, Messages.ITEM_NOT_ALLOWED);
             return;
