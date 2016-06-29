@@ -517,7 +517,8 @@ public class ActionListener implements Listener {
             return;
 
         // not a shop-sign => return;
-        if (this.shopManager.isShopBlock(event.getRetractLocation().getBlock()) || (this.shopManager.getSignAnchor(event.getRetractLocation().getBlock()) != null)) {
+        if (this.shopManager.isShopBlock(event.getBlocks()) || (this.shopManager.getSignAnchor(event.getBlocks()) != null))
+        {
             event.setCancelled(true);
         }
     }
