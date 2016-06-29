@@ -190,8 +190,8 @@ public class UserShop {
         }
 
         // test if only gold or the item is in the chest
-        int itemAmount = ItemManager.countItemInInventory(shop, Material.GOLD_INGOT.getId());
-        itemAmount += ItemManager.countItemInInventory(shop, Material.GOLD_BLOCK.getId());
+        int itemAmount = ItemManager.countItemInInventory(shop, Material.GOLD_INGOT);
+        itemAmount += ItemManager.countItemInInventory(shop, Material.GOLD_BLOCK);
         itemAmount += ItemManager.countItemInInventory(shop, itemID, itemData);
         if (itemAmount != ItemManager.countAllItemsInInventory(shop)) {
             PlayerUtils.sendError(player, Core.NAME, "Es kann nur Gold und das Item in die Kiste gelegt werden.");
@@ -199,8 +199,8 @@ public class UserShop {
         }
 
         // count materials in chest
-        int goldAmount = ItemManager.countItemInInventory(shop, Material.GOLD_INGOT.getId());
-        goldAmount += (ItemManager.countItemInInventory(shop, Material.GOLD_BLOCK.getId()) * 9);
+        int goldAmount = ItemManager.countItemInInventory(shop, Material.GOLD_INGOT);
+        goldAmount += (ItemManager.countItemInInventory(shop, Material.GOLD_BLOCK) * 9);
         int materialAmount = ItemManager.countItemInInventory(shop, itemID, itemData);
 
         // only sell OR buy, not both
