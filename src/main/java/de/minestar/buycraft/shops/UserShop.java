@@ -11,7 +11,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Chest;
-import org.bukkit.craftbukkit.v1_8_R3.entity.CraftPlayer;
+import org.bukkit.craftbukkit.v1_10_R1.entity.CraftPlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -56,7 +56,7 @@ public class UserShop {
         if (world == null)
             return false;
         Location location = new Location(world, this.position.getX(), this.position.getY(), this.position.getZ());
-        return location.getBlock().getTypeId() == Material.WALL_SIGN.getId() && location.getBlock().getRelative(BlockFace.DOWN).getTypeId() == Material.CHEST.getId();
+        return location.getBlock().getType() == Material.WALL_SIGN && location.getBlock().getRelative(BlockFace.DOWN).getType() == Material.CHEST;
     }
 
     public void verifyCreationStatus(String[] lines) {
@@ -190,8 +190,8 @@ public class UserShop {
         }
 
         // test if only gold or the item is in the chest
-        int itemAmount = ItemManager.countItemInInventory(shop, Material.GOLD_INGOT.getId());
-        itemAmount += ItemManager.countItemInInventory(shop, Material.GOLD_BLOCK.getId());
+        int itemAmount = ItemManager.countItemInInventory(shop, Material.GOLD_INGOT);
+        itemAmount += ItemManager.countItemInInventory(shop, Material.GOLD_BLOCK);
         itemAmount += ItemManager.countItemInInventory(shop, itemID, itemData);
         if (itemAmount != ItemManager.countAllItemsInInventory(shop)) {
             PlayerUtils.sendError(player, Core.NAME, "Es kann nur Gold und das Item in die Kiste gelegt werden.");
@@ -199,8 +199,8 @@ public class UserShop {
         }
 
         // count materials in chest
-        int goldAmount = ItemManager.countItemInInventory(shop, Material.GOLD_INGOT.getId());
-        goldAmount += (ItemManager.countItemInInventory(shop, Material.GOLD_BLOCK.getId()) * 9);
+        int goldAmount = ItemManager.countItemInInventory(shop, Material.GOLD_INGOT);
+        goldAmount += (ItemManager.countItemInInventory(shop, Material.GOLD_BLOCK) * 9);
         int materialAmount = ItemManager.countItemInInventory(shop, itemID, itemData);
 
         // only sell OR buy, not both
@@ -485,14 +485,14 @@ public class UserShop {
         }
 
         // check item in hand
-        if (player.getItemInHand() == null || player.getItemInHand().getType().equals(Material.AIR)) {
+        if (player.getInventory().getItemInMainHand() == null || player.getInventory().getItemInMainHand().getType().equals(Material.AIR)) {
             PlayerUtils.sendError(player, Core.NAME, Messages.NO_ITEM_IN_HAND);
             return;
         }
 
         // check ItemID allowed
-        int ID = player.getItemInHand().getTypeId();
-        short data = player.getItemInHand().getDurability();
+        int ID = player.getInventory().getItemInMainHand().getTypeId();
+        short data = player.getInventory().getItemInMainHand().getDurability();
         if (!ItemManager.getInstance().isItemIDAllowed(ID)) {
             PlayerUtils.sendError(player, Core.NAME, Messages.ITEM_NOT_ALLOWED);
             return;
